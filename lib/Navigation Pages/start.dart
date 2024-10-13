@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:slider_button/slider_button.dart';
+import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/db/mydb.dart';
 
@@ -15,41 +16,95 @@ class StartTimePage extends StatefulWidget {
 }
 
 class _StartTimePageState extends State<StartTimePage> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+
   bool _isStartWork = false;
   bool _finishWork = false;
+
   DateTime? workStartTime;
   DateTime? workFinishTime;
   Future<void> startWork() async {
+    bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
+    if (!mounted) return;
+
+    if (isAlreadStartedWork) {
+      await completedWork();
+      return;
+    }
     workStartTime = DateTime.now();
     TrackingDB db = TrackingDB();
-    WorkSession workSession = WorkSession(
-        startTime: workStartTime.toString(),
-        endTime: DateTime.now().toString());
-    //await db.deleteDB();
+
+    WorkSession workSession =
+        WorkSession(startTime: workStartTime.toString(), endTime: '');
+    // await db.deleteDB();
     await db.insertData(tableName: 'work_sessions', data: workSession.toMap());
+    // Constants.showInSnackBar(value: 'Test', context: context);
+
+    print(isAlreadStartedWork);
     if (!mounted) return;
     setState(() {
       _isStartWork = true;
     });
   }
 
-  completedWork() async {
+  Future<bool> isAlreadyStartedWorkDay() async {
+    TrackingDB db = TrackingDB();
+    String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    List<Map<String, dynamic>> workSession = await db.readData(
+            sql:
+                'select * from work_sessions where isCompleted=0 OR isCompleted =1 and substr(startTime,1,10) ="$dateToday"')
+        as List<Map<String, dynamic>>;
+    if (workSession.isNotEmpty) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getDataSameDateLikeToday() async {
+    Map<String, dynamic> workDay = {};
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
     List<Map<String, dynamic>> works = await db.readData(
         sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
 
     for (Map<String, dynamic> work in works) {
-      DateTime? startTimeToday = DateFormat('yyyy-MM-dd HH:mm:ss')
-          .tryParse(work['startTime'])!
-          .add(Duration(days: 0));
+      DateTime? startTimeToday =
+          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(work['startTime'])!;
 
+// check if data date same like today
       bool isSameDate = areDatesSame(startTimeToday, DateTime.now());
       if (isSameDate) {
-        print(startTimeToday);
-      } else {
-        print('not match');
+        workDay = work;
       }
+    }
+    return workDay;
+  }
+
+  completedWork() async {
+    TrackingDB db = TrackingDB();
+    workFinishTime = DateTime.now();
+    Map<String, dynamic> workDay = await getDataSameDateLikeToday();
+    if (!mounted) return;
+    // check if not completed and endTime not filled
+    if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
+      Map<String, dynamic> updateData = {
+        'endTime': workFinishTime.toString(),
+        'isCompleted': 1
+      };
+      await db.updateData(
+          tableName: 'work_sessions',
+          data: updateData,
+          columnId: 'id',
+          id: workDay['id']);
+      if (!mounted) return;
+      setState(() {
+        _finishWork = true;
+      });
+    } else {
+      if (!mounted) return;
+      Constants.showInSnackBar(
+          value: 'You work is already finished', context: context);
     }
   }
 
@@ -73,6 +128,7 @@ class _StartTimePageState extends State<StartTimePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: InkWell(
@@ -107,13 +163,15 @@ class _StartTimePageState extends State<StartTimePage> {
                   return false;
                 },
                 titleTracker: 'Working Time',
-                isStart: _isStartWork,
-                sliderLabel: _isStartWork
+                isStart: _isStartWork || _finishWork,
+                sliderLabel: _isStartWork && !_finishWork
                     ? "Work started at: ${DateFormat('HH:mm:ss a').format(workStartTime!)}"
-                    : 'Start work'),
+                    : _finishWork
+                        ? "Work finished at: ${DateFormat('HH:mm:ss a').format(workFinishTime!)}"
+                        : 'Start work'),
             TrackSlider(
                 action: () async {
-                  await completedWork();
+                  await readWork();
                   return false;
                 },
                 titleTracker: 'Break',

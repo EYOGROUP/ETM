@@ -54,13 +54,13 @@ class TrackingDB {
   Future<int> updateData(
       {required String tableName,
       required Map<String, dynamic> data,
-      final rowId,
+      final columnId,
       int? id}) async {
     Database? myDB = await db;
     int response = await myDB!.update(
       tableName,
       data,
-      where: '$rowId=?',
+      where: '$columnId=?',
       whereArgs: [id],
     );
     await myDB.close();
