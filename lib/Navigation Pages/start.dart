@@ -16,19 +16,58 @@ class StartTimePage extends StatefulWidget {
 
 class _StartTimePageState extends State<StartTimePage> {
   bool _isStartWork = false;
+  bool _finishWork = false;
   DateTime? workStartTime;
+  DateTime? workFinishTime;
   Future<void> startWork() async {
     workStartTime = DateTime.now();
     TrackingDB db = TrackingDB();
     WorkSession workSession = WorkSession(
-        startTime: workStartTime!.toIso8601String(),
-        endTime: DateTime.now().toIso8601String());
-    // await db.deleteDB();
+        startTime: workStartTime.toString(),
+        endTime: DateTime.now().toString());
+    //await db.deleteDB();
     await db.insertData(tableName: 'work_sessions', data: workSession.toMap());
     if (!mounted) return;
     setState(() {
       _isStartWork = true;
     });
+  }
+
+  completedWork() async {
+    TrackingDB db = TrackingDB();
+    workFinishTime = DateTime.now();
+    List<Map<String, dynamic>> works = await db.readData(
+        sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+
+    for (Map<String, dynamic> work in works) {
+      DateTime? startTimeToday = DateFormat('yyyy-MM-dd HH:mm:ss')
+          .tryParse(work['startTime'])!
+          .add(Duration(days: 0));
+
+      bool isSameDate = areDatesSame(startTimeToday, DateTime.now());
+      if (isSameDate) {
+        print(startTimeToday);
+      } else {
+        print('not match');
+      }
+    }
+  }
+
+  readWork() async {
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> works = await db.readData(
+        sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+    print(works);
+  }
+
+  bool areDatesSame(DateTime date1, DateTime date2) {
+    if (date1.day == date2.day &&
+        date1.month == date2.month &&
+        date1.year == date2.year) {
+      return true;
+    } else {
+      return false;
+    }
   }
 
   @override
@@ -73,7 +112,10 @@ class _StartTimePageState extends State<StartTimePage> {
                     ? "Work started at: ${DateFormat('HH:mm:ss a').format(workStartTime!)}"
                     : 'Start work'),
             TrackSlider(
-                action: () async {},
+                action: () async {
+                  await completedWork();
+                  return false;
+                },
                 titleTracker: 'Break',
                 sliderLabel: 'Start break'),
           ],

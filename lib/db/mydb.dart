@@ -51,6 +51,22 @@ class TrackingDB {
     return myData;
   }
 
+  Future<int> updateData(
+      {required String tableName,
+      required Map<String, dynamic> data,
+      final rowId,
+      int? id}) async {
+    Database? myDB = await db;
+    int response = await myDB!.update(
+      tableName,
+      data,
+      where: '$rowId=?',
+      whereArgs: [id],
+    );
+    await myDB.close();
+    return response;
+  }
+
   deleteDB() async {
     Database? myDB = await db;
     deleteDatabase(myDB!.path);
