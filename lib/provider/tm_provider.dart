@@ -24,7 +24,7 @@ class TimeManagementPovider with ChangeNotifier {
       {required BuildContext context, required bool valueTheme}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     if (!context.mounted) return;
-    print(valueTheme);
+
     _isDark = valueTheme;
     await prefs.setBool('isDark', valueTheme);
 
