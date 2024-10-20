@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:time_management/Navigation%20Pages/contact_us.dart';
 import 'package:time_management/provider/tm_provider.dart';
 
 class InfosPage extends StatefulWidget {
@@ -33,15 +34,14 @@ class _InfosPageState extends State<InfosPage> {
           children: [
             ListTile(
               title: const Text('Contact Us'),
-              trailing: Icon(Platform.isIOS
-                  ? Icons.arrow_forward_ios_rounded
-                  : Icons.arrow_forward_outlined),
-            ),
-            ListTile(
-              title: const Text('Give Feedback'),
-              trailing: Icon(Platform.isIOS
-                  ? Icons.arrow_forward_ios_rounded
-                  : Icons.arrow_forward_outlined),
+              trailing: InkWell(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const ContactUs(),
+                )),
+                child: Icon(Platform.isIOS
+                    ? Icons.arrow_forward_ios_rounded
+                    : Icons.arrow_forward_outlined),
+              ),
             ),
             ListTile(
               title: const Text('Privacy Policy'),
@@ -68,10 +68,14 @@ class _InfosPageState extends State<InfosPage> {
               ),
             ),
             const Spacer(),
-            const Text.rich(TextSpan(children: [
-              TextSpan(text: 'App Version '),
-              TextSpan(text: '1.00'),
-            ]))
+            const Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(text: 'App Version '),
+                  TextSpan(text: '1.00'),
+                ],
+              ),
+            )
           ],
         ),
       ),
