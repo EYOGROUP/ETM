@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:time_management/controller/architecture.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;

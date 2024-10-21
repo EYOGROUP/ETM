@@ -19,12 +19,12 @@ class WorkSession {
 }
 
 class BreakSession {
-  final int id;
+  int? id;
   final int workSessionId;
   final String breakStartTime;
   final String breakEndTime;
   BreakSession(
-      {required this.id,
+      {this.id,
       required this.workSessionId,
       required this.breakStartTime,
       required this.breakEndTime});

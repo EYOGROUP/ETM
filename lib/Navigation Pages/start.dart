@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -23,6 +24,15 @@ class _StartTimePageState extends State<StartTimePage> {
 
   DateTime? workStartTime;
   DateTime? workFinishTime;
+  bool isInitFinished = false;
+  int numberOfBreaks = 0;
+  Timer? _timer; // Timer for periodic updates
+  bool _isDisposed = false;
+  String point = '';
+  double _sliderValue = 0.0;
+  bool _isWorking = false;
+  String _statusMessage = "Slide to Start Work";
+
   Future<void> startWork() async {
     bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
     if (!mounted) return;
@@ -111,7 +121,7 @@ class _StartTimePageState extends State<StartTimePage> {
   readWork() async {
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> works = await db.readData(
-        sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+        sql: "select * from work_sessions ") as List<Map<String, dynamic>>;
     print(works);
   }
 
@@ -125,6 +135,198 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
+  Future<bool> isAlreadyClosedBreak(
+      {required Map<String, dynamic> getDayWorkData}) async {
+    bool isAlreadyClosedBreak = false;
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> breakSessions = await db.readData(
+            sql:
+                "select * from break_sessions where workSessionId =${getDayWorkData['id']} and breakEndTime <>''")
+        as List<Map<String, dynamic>>;
+    if (context.mounted) {
+      if (breakSessions.isNotEmpty) {
+        isAlreadyClosedBreak = true;
+      }
+    }
+    return isAlreadyClosedBreak;
+  }
+
+  Future<bool> isBreakTooken(
+      {required Map<String, dynamic> getWorkDayData}) async {
+    bool isBreakTooken = false;
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> breakSessions = await db.readData(
+            sql:
+                "select * from break_sessions where workSessionId =${getWorkDayData['id']} ")
+        as List<Map<String, dynamic>>;
+    if (breakSessions.isNotEmpty) {
+      isBreakTooken = true;
+    }
+    return isBreakTooken;
+  }
+
+  Future<bool> isFinishedWorkForToday(
+      {required Map<String, dynamic> getWorkDayData}) async {
+    bool isFinishedWorkForToday = false;
+    if (getWorkDayData['endTimeendTime'] != '' &&
+        getWorkDayData['isCompleted'] == 1) {
+      isFinishedWorkForToday = true;
+    }
+    return isFinishedWorkForToday;
+  }
+
+  Future<Map<String, dynamic>> getNotClosedBreak(
+      {required Map<String, dynamic> getDayWorkData}) async {
+    Map<String, dynamic> notClosedBreak = {};
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> breakSessions = await db.readData(
+            sql:
+                "select * from break_sessions where workSessionId =${getDayWorkData['id']} and breakEndTime =''")
+        as List<Map<String, dynamic>>;
+    if (context.mounted) {
+      if (breakSessions.isNotEmpty) {
+        notClosedBreak = breakSessions.first;
+      }
+    }
+    return notClosedBreak;
+  }
+
+  Future<void> takeOrFinishBreak() async {
+    DateTime breakTime = DateTime.now();
+    Map<String, dynamic> getWorkDayData = await getDataSameDateLikeToday();
+    if (!mounted) return;
+    if (getWorkDayData.isNotEmpty) {
+      bool isWorkAlreadyStarted = await isAlreadyStartedWorkDay();
+      if (!mounted) return;
+      if (isWorkAlreadyStarted) {
+        print('is Started work');
+        bool isFinishedWork =
+            await isFinishedWorkForToday(getWorkDayData: getWorkDayData);
+        if (!mounted) return;
+        if (isFinishedWork) {
+          return Constants.showInSnackBar(
+              value:
+                  'You finished your work, no Break more available for you work today!',
+              context: context);
+        } else {
+          // here to start process for the break
+          bool isBreakTookenCheck =
+              await isBreakTooken(getWorkDayData: getWorkDayData);
+          if (!mounted) return;
+          bool isAlreadyClosedBreakCheck =
+              await isAlreadyClosedBreak(getDayWorkData: getWorkDayData);
+          if (!mounted) return;
+          if (!isBreakTookenCheck || isAlreadyClosedBreakCheck) {
+            await insertNewBreak(
+                getWorkDayData: getWorkDayData, breakTime: breakTime);
+          } else {
+            // finish Break
+            TrackingDB db = TrackingDB();
+            Map<String, dynamic> breakSession =
+                await getNotClosedBreak(getDayWorkData: getWorkDayData);
+            if (!mounted) return;
+            Map<String, dynamic> endTimeUpdate = {
+              'breakEndTime': breakTime.toString(),
+            };
+            await db.updateData(
+                tableName: 'break_sessions',
+                data: endTimeUpdate,
+                columnId: 'id',
+                id: breakSession['id']);
+          }
+        }
+      }
+
+      print(
+          "is Break tooken ${await isBreakTooken(getWorkDayData: getWorkDayData)}");
+      print(
+          "is break already Closed: ${await isAlreadyClosedBreak(getDayWorkData: getWorkDayData)}");
+      debugPrint('okey Take break');
+    }
+  }
+
+  readBreaks() async {
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> works = await db.readData(
+        sql: "select * from break_sessions ") as List<Map<String, dynamic>>;
+    print(works);
+  }
+
+  Future<void> insertNewBreak(
+      {required Map<String, dynamic> getWorkDayData,
+      required DateTime breakTime}) async {
+    TrackingDB db = TrackingDB();
+    BreakSession breakSession = BreakSession(
+        workSessionId: getWorkDayData['id'],
+        breakStartTime: breakTime.toString(),
+        breakEndTime: '');
+    await db.insertData(
+        tableName: 'break_sessions', data: breakSession.toMap());
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        await getNumberOfBreaks();
+        stopLoadingAnimation();
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _timer?.cancel(); // Cancel the timer if it's running
+    super.dispose();
+  }
+
+  Future<void> getNumberOfBreaks() async {
+    numberOfBreaks = 0;
+    TrackingDB db = TrackingDB();
+    startLoadingAnimation();
+    Map<String, dynamic> getWorkDay = await getDataSameDateLikeToday();
+
+    if (getWorkDay['id'] != null) {
+      List<Map<String, dynamic>> breakSessions = await db.readData(
+              sql:
+                  "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
+          as List<Map<String, dynamic>>;
+
+      if (mounted && !_isDisposed) {
+        setState(() {
+          numberOfBreaks = breakSessions.length;
+          isInitFinished = true;
+        });
+        startLoadingAnimation(); // End the loading animation
+      }
+    }
+  }
+
+  void startLoadingAnimation() {
+    _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+      if (_isDisposed) {
+        timer.cancel();
+        return;
+      }
+
+      if (mounted) {
+        setState(() {
+          point += '.';
+          if (point.length > 6) {
+            point = ''; // Reset the dots after 6
+          }
+        });
+      }
+    });
+  }
+
+  void stopLoadingAnimation() {
+    _timer?.cancel();
+  }
+
+  double _workHours = 0;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,25 +359,97 @@ class _StartTimePageState extends State<StartTimePage> {
                   fontSize: MediaQuery.of(context).size.height * 0.03,
                   fontWeight: FontWeight.bold),
             ),
+            // TrackSlider(
+            //     action: () async {
+            //       await startWork();
+            //       return false;
+            //     },
+            //     titleTracker: 'Working Time',
+            //     isStart: _isStartWork || _finishWork,
+            //     sliderLabel: _isStartWork && !_finishWork
+            //         ? "Work started at: ${DateFormat('HH:mm:ss a').format(workStartTime!)}"
+            //         : _finishWork
+            //             ? "Work finished at: ${DateFormat('HH:mm:ss a').format(workFinishTime!)}"
+            //             : 'Start work'),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Gap(MediaQuery.of(context).size.height * 0.06),
+                Text(
+                  'WorDaay',
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: MediaQuery.of(context).size.height * 0.02),
+                ),
+                Gap(MediaQuery.of(context).size.height * 0.02),
+                SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.99,
+                  child: SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      thumbShape: RoundSliderThumbShape(
+                          enabledThumbRadius:
+                              MediaQuery.of(context).size.aspectRatio * 73),
+                      trackHeight: MediaQuery.of(context).size.height * 0.08,
+                    ),
+                    child: Slider(
+                      value: _sliderValue,
+                      min: 0.0,
+                      max: 1.0,
+                      inactiveColor: _isWorking ? Colors.red : Colors.green,
+                      thumbColor: Theme.of(context).colorScheme.primary,
+                      onChangeStart: (value) => value,
+                      onChanged: (value) {
+                        setState(() {
+                          _sliderValue = value;
+                        });
+                        if (value == 1.0) {
+                          // If slider reaches max, toggle between start and end work
+                          if (!_isWorking) {
+                            setState(() {
+                              _isWorking = true;
+                              print(_isWorking);
+                            });
+                          } else {
+                            setState(() {
+                              _isWorking = false;
+                            });
+                          }
+                          setState(() {
+                            _sliderValue = 0;
+                          });
+                        }
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
             TrackSlider(
                 action: () async {
-                  await startWork();
-                  return false;
-                },
-                titleTracker: 'Working Time',
-                isStart: _isStartWork || _finishWork,
-                sliderLabel: _isStartWork && !_finishWork
-                    ? "Work started at: ${DateFormat('HH:mm:ss a').format(workStartTime!)}"
-                    : _finishWork
-                        ? "Work finished at: ${DateFormat('HH:mm:ss a').format(workFinishTime!)}"
-                        : 'Start work'),
-            TrackSlider(
-                action: () async {
+                  await readBreaks();
+                  await takeOrFinishBreak();
                   await readWork();
                   return false;
                 },
                 titleTracker: 'Break',
                 sliderLabel: 'Start break'),
+            Gap(MediaQuery.of(context).size.height * 0.04),
+            ListTile(
+              leading: const Text(
+                'Number of Breaks',
+                style: TextStyle(fontSize: 16.0),
+              ),
+              trailing: Text(
+                isInitFinished
+                    ? numberOfBreaks <= 1
+                        ? '$numberOfBreaks Break'
+                        : '$numberOfBreaks Breaks'
+                    : point,
+                style: const TextStyle(
+                  fontSize: 14.0,
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -187,13 +461,13 @@ class TrackSlider extends StatelessWidget {
   final Future<bool?> Function() action;
   final String titleTracker;
   final String sliderLabel;
-  bool? isStart;
-  TrackSlider(
+  final bool isStart;
+  const TrackSlider(
       {super.key,
       required this.action,
       required this.titleTracker,
       required this.sliderLabel,
-      this.isStart});
+      this.isStart = false});
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +489,6 @@ class TrackSlider extends StatelessWidget {
           width: MediaQuery.of(context).size.width * 0.9,
           alignLabel: Alignment.center,
           buttonColor: Theme.of(context).colorScheme.primary,
-          shimmer: true,
           highlightedColor: Theme.of(context).colorScheme.primary,
           baseColor: Theme.of(context).colorScheme.onSurface,
           label: Text(
@@ -223,7 +496,7 @@ class TrackSlider extends StatelessWidget {
             style: TextStyle(
                 color: Theme.of(context).colorScheme.secondary,
                 fontWeight: FontWeight.w500,
-                fontSize: isStart != null ? 12 : 17),
+                fontSize: isStart ? 12 : 17),
           ),
           icon: Icon(
             Icons.arrow_circle_right_outlined,
