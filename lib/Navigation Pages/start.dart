@@ -395,8 +395,6 @@ class _StartTimePageState extends State<StartTimePage> {
                                   MediaQuery.of(context).size.aspectRatio * 73),
                           trackHeight:
                               MediaQuery.of(context).size.height * 0.08,
-                          activeTrackColor: Colors.green.withOpacity(0.6),
-                          inactiveTrackColor: Colors.red.withOpacity(0.6),
                         ),
                         child: Slider(
                           activeColor: Theme.of(context).colorScheme.secondary,
@@ -427,7 +425,7 @@ class _StartTimePageState extends State<StartTimePage> {
                             setState(() {
                               _sliderValue = value;
                             });
-                            if (value == 1.0) {
+                            if (value == 5.0) {
                               // If slider reaches max, toggle between start and end work
                               if (!_isWorking) {
                                 setState(() {
