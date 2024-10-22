@@ -32,6 +32,7 @@ class _StartTimePageState extends State<StartTimePage> {
   double _sliderValue = 0.0;
   bool _isWorking = false;
   String _statusMessage = "Slide to Start Work";
+  bool isThumbStartTouchingText = false;
 
   Future<void> startWork() async {
     bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
@@ -293,11 +294,11 @@ class _StartTimePageState extends State<StartTimePage> {
               sql:
                   "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
           as List<Map<String, dynamic>>;
-
       if (mounted && !_isDisposed) {
         setState(() {
           numberOfBreaks = breakSessions.length;
           isInitFinished = true;
+          _isDisposed = true;
         });
         startLoadingAnimation(); // End the loading animation
       }
@@ -376,51 +377,90 @@ class _StartTimePageState extends State<StartTimePage> {
               children: [
                 Gap(MediaQuery.of(context).size.height * 0.06),
                 Text(
-                  'WorDaay',
+                  'Working Time',
                   style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: MediaQuery.of(context).size.height * 0.02),
                 ),
                 Gap(MediaQuery.of(context).size.height * 0.02),
-                SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.99,
-                  child: SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      thumbShape: RoundSliderThumbShape(
-                          enabledThumbRadius:
-                              MediaQuery.of(context).size.aspectRatio * 73),
-                      trackHeight: MediaQuery.of(context).size.height * 0.08,
-                    ),
-                    child: Slider(
-                      value: _sliderValue,
-                      min: 0.0,
-                      max: 1.0,
-                      inactiveColor: _isWorking ? Colors.red : Colors.green,
-                      thumbColor: Theme.of(context).colorScheme.primary,
-                      onChangeStart: (value) => value,
-                      onChanged: (value) {
-                        setState(() {
-                          _sliderValue = value;
-                        });
-                        if (value == 1.0) {
-                          // If slider reaches max, toggle between start and end work
-                          if (!_isWorking) {
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.99,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          thumbShape: RoundSliderThumbShape(
+                              enabledThumbRadius:
+                                  MediaQuery.of(context).size.aspectRatio * 73),
+                          trackHeight:
+                              MediaQuery.of(context).size.height * 0.08,
+                          activeTrackColor: Colors.green.withOpacity(0.6),
+                          inactiveTrackColor: Colors.red.withOpacity(0.6),
+                        ),
+                        child: Slider(
+                          activeColor: Theme.of(context).colorScheme.secondary,
+                          value: _sliderValue,
+                          min: 0.0,
+                          max: 5.0,
+                          inactiveColor: _isWorking ? Colors.red : Colors.green,
+                          thumbColor: Theme.of(context).colorScheme.secondary,
+                          onChangeStart: (value) => print(value),
+                          onChangeEnd: (value) {
                             setState(() {
-                              _isWorking = true;
-                              print(_isWorking);
+                              _sliderValue = 0;
+                              isThumbStartTouchingText = false;
                             });
-                          } else {
+                          },
+                          onChanged: (value) {
+                            print(value);
+                            if (value > 0.99) {
+                              setState(() {
+                                isThumbStartTouchingText = true;
+                              });
+                            }
+                            if (value >= 4.0) {
+                              setState(() {
+                                isThumbStartTouchingText = false;
+                              });
+                            }
                             setState(() {
-                              _isWorking = false;
+                              _sliderValue = value;
                             });
-                          }
-                          setState(() {
-                            _sliderValue = 0;
-                          });
-                        }
-                      },
+                            if (value == 1.0) {
+                              // If slider reaches max, toggle between start and end work
+                              if (!_isWorking) {
+                                setState(() {
+                                  _isWorking = true;
+                                  print(_isWorking);
+                                });
+                              } else {
+                                setState(() {
+                                  _isWorking = false;
+                                });
+                              }
+                              setState(() {
+                                _sliderValue = 0;
+                              });
+                            }
+                          },
+                        ),
+                      ),
                     ),
-                  ),
+                    !isThumbStartTouchingText
+                        ? IgnorePointer(
+                            child: Text(
+                              'Start Work',
+                              style: TextStyle(
+                                  color: Theme.of(context)
+                                      .colorScheme
+                                      .inverseSurface,
+                                  fontWeight: FontWeight.w500,
+                                  fontSize: 1 == 2 ? 12 : 20),
+                            ),
+                          )
+                        : Container(),
+                  ],
                 ),
               ],
             ),
