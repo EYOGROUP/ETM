@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/constants.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class WelcomePage extends StatelessWidget {
   const WelcomePage({super.key});
@@ -32,14 +33,21 @@ class WelcomePage extends StatelessWidget {
                   children: [
                     Gap(MediaQuery.of(context).size.height * 0.04),
                     Text(
-                      'Welcome to ETM!',
+                      '${AppLocalizations.of(context)?.welcomeTo} ETM!',
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.secondary,
-                          fontSize: MediaQuery.of(context).size.width * 0.1,
+                          fontSize: MediaQuery.of(context).size.width * 0.09,
                           fontWeight: FontWeight.bold),
                     ),
                     Gap(MediaQuery.of(context).size.height * 0.0009),
-                    const Text('Track your time locally, no login required.'),
+                    Center(
+                      child: Text(
+                        AppLocalizations.of(context)!.subtitleWelcomePage,
+                        style: TextStyle(
+                          fontSize: MediaQuery.of(context).size.width * 0.03,
+                        ),
+                      ),
+                    ),
                     Gap(MediaQuery.of(context).size.height * 0.05),
                     Gap(MediaQuery.of(context).size.height * 0.2),
                     ElevatedButton(
@@ -54,7 +62,7 @@ class WelcomePage extends StatelessWidget {
                               builder: (context) => const PagesController(),
                             )),
                         child: Text(
-                          'Start Now',
+                          AppLocalizations.of(context)!.startNow,
                           style: TextStyle(
                               fontSize: 22.0,
                               color: Theme.of(context).colorScheme.secondary),

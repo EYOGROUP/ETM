@@ -7,6 +7,7 @@ import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/contact_us.dart';
 import 'package:time_management/provider/tm_provider.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class InfosPage extends StatefulWidget {
   const InfosPage({super.key});
@@ -18,12 +19,13 @@ class InfosPage extends StatefulWidget {
 class _InfosPageState extends State<InfosPage> {
   @override
   Widget build(BuildContext context) {
+    final getLabels = AppLocalizations.of(context)!;
     final tmProvider =
         Provider.of<TimeManagementPovider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        title: const Text('Infos'),
+        title: Text(getLabels.infos),
         centerTitle: true,
       ),
       body: Padding(
@@ -33,7 +35,7 @@ class _InfosPageState extends State<InfosPage> {
         child: Column(
           children: [
             ListTile(
-              title: const Text('Contact Us'),
+              title: Text(getLabels.contactUs),
               trailing: InkWell(
                 onTap: () => Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) => const ContactUs(),
@@ -44,20 +46,20 @@ class _InfosPageState extends State<InfosPage> {
               ),
             ),
             ListTile(
-              title: const Text('Privacy Policy'),
+              title: Text(getLabels.privacyPolicy),
               trailing: Icon(Platform.isIOS
                   ? Icons.arrow_forward_ios_rounded
                   : Icons.arrow_forward_outlined),
             ),
             ListTile(
-              title: const Text('Tems of Use'),
+              title: Text(getLabels.termOfUse),
               trailing: Icon(Platform.isIOS
                   ? Icons.arrow_forward_ios_rounded
                   : Icons.arrow_forward_outlined),
             ),
             Gap(MediaQuery.of(context).size.height * 0.02),
             ListTile(
-              title: const Text('Theme Mode'),
+              title: Text(getLabels.themeMode),
               trailing: DayNightSwitcher(
                 isDarkModeEnabled: tmProvider.isDarkGet,
                 onStateChanged: (bool isDarkModeEnabled) async {
@@ -68,11 +70,11 @@ class _InfosPageState extends State<InfosPage> {
               ),
             ),
             const Spacer(),
-            const Text.rich(
+            Text.rich(
               TextSpan(
                 children: [
-                  TextSpan(text: 'App Version '),
-                  TextSpan(text: '1.00'),
+                  TextSpan(text: getLabels.appVersion),
+                  const TextSpan(text: ' 1.00'),
                 ],
               ),
             )

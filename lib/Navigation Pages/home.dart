@@ -8,6 +8,7 @@ import 'package:slider_button/slider_button.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/db/mydb.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class StartTimePage extends StatefulWidget {
   const StartTimePage({super.key});
@@ -21,6 +22,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
   bool _isStartWork = false;
   bool _finishWork = false;
+  double _workHours = 0;
 
   DateTime? workStartTime;
   DateTime? workFinishTime;
@@ -29,10 +31,18 @@ class _StartTimePageState extends State<StartTimePage> {
   Timer? _timer; // Timer for periodic updates
   bool _isDisposed = false;
   String point = '';
-  double _sliderValue = 0.0;
+  double _sliderWorkValue = 0.0;
   bool _isWorking = false;
-  String _statusMessage = "Slide to Start Work";
   bool isThumbStartTouchingText = false;
+  String sliderForWorkingTime = '';
+  bool isSmallLabel = false;
+
+// variable for Break
+  String sliderForBreakTime = "";
+  bool _isBreak = false;
+  bool isSmallBreakSliderLabel = false;
+  double _sliderBreakValue = 0.0;
+  bool isThumbBreakStartTouchingText = false;
 
   Future<void> startWork() async {
     bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
@@ -268,8 +278,11 @@ class _StartTimePageState extends State<StartTimePage> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
+        sliderForWorkingTime = AppLocalizations.of(context)!.startWork;
+        sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
         await getNumberOfBreaks();
         stopLoadingAnimation();
       },
@@ -288,20 +301,29 @@ class _StartTimePageState extends State<StartTimePage> {
     TrackingDB db = TrackingDB();
     startLoadingAnimation();
     Map<String, dynamic> getWorkDay = await getDataSameDateLikeToday();
-
-    if (getWorkDay['id'] != null) {
-      List<Map<String, dynamic>> breakSessions = await db.readData(
-              sql:
-                  "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
-          as List<Map<String, dynamic>>;
-      if (mounted && !_isDisposed) {
-        setState(() {
-          numberOfBreaks = breakSessions.length;
-          isInitFinished = true;
-          _isDisposed = true;
-        });
-        startLoadingAnimation(); // End the loading animation
+    try {
+      if (getWorkDay['id'] != null) {
+        List<Map<String, dynamic>> breakSessions = await db.readData(
+                sql:
+                    "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
+            as List<Map<String, dynamic>>;
+        if (mounted && !_isDisposed) {
+          setState(() {
+            numberOfBreaks = breakSessions.length;
+            isInitFinished = true;
+            _isDisposed = true;
+          });
+          startLoadingAnimation(); // End the loading animation
+        }
       }
+    } catch (error) {
+      if (mounted) {
+        Constants.showInSnackBar(value: error.toString(), context: context);
+      }
+    } finally {
+      setState(() {
+        isInitFinished = true;
+      });
     }
   }
 
@@ -327,25 +349,25 @@ class _StartTimePageState extends State<StartTimePage> {
     _timer?.cancel();
   }
 
-  double _workHours = 0;
   @override
   Widget build(BuildContext context) {
+    final getLabels = AppLocalizations.of(context)!;
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
         automaticallyImplyLeading: false,
         leading: InkWell(
-          onTap: () => Navigator.of(context).pop(),
+          onTap: () => Navigator.of(context).pop<Object?>(),
           child: Icon(Platform.isIOS
               ? Icons.arrow_back_ios_new_outlined
               : Icons.arrow_back_outlined),
         ),
-        title: const Text('Start'),
+        title: Text(getLabels.home),
         centerTitle: true,
       ),
       body: Container(
         padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.06,
+            horizontal: MediaQuery.of(context).size.width * 0.04,
             vertical: MediaQuery.of(context).size.height * 0.015),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -353,9 +375,9 @@ class _StartTimePageState extends State<StartTimePage> {
             Align(
                 alignment: Alignment.topRight,
                 child: Text(
-                    "Today the, ${DateFormat('M/d/y').format(DateTime.now())}")),
+                    "${getLabels.todayThe}, ${DateFormat(getLabels.dateFormat).format(DateTime.now())}")),
             Text(
-              'Welcome User !',
+              getLabels.welcome,
               style: TextStyle(
                   fontSize: MediaQuery.of(context).size.height * 0.03,
                   fontWeight: FontWeight.bold),
@@ -372,7 +394,7 @@ class _StartTimePageState extends State<StartTimePage> {
             //         : _finishWork
             //             ? "Work finished at: ${DateFormat('HH:mm:ss a').format(workFinishTime!)}"
             //             : 'Start work'),
-            Column(
+            /* Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Gap(MediaQuery.of(context).size.height * 0.06),
@@ -383,7 +405,7 @@ class _StartTimePageState extends State<StartTimePage> {
                       fontSize: MediaQuery.of(context).size.height * 0.02),
                 ),
                 Gap(MediaQuery.of(context).size.height * 0.02),
-                Stack(
+                /*   Stack(
                   alignment: Alignment.center,
                   children: [
                     SizedBox(
@@ -397,17 +419,19 @@ class _StartTimePageState extends State<StartTimePage> {
                               MediaQuery.of(context).size.height * 0.08,
                         ),
                         child: Slider(
-                          activeColor: Theme.of(context).colorScheme.secondary,
+                          activeColor: Theme.of(context).colorScheme.primary,
                           value: _sliderValue,
                           min: 0.0,
                           max: 5.0,
                           inactiveColor: _isWorking ? Colors.red : Colors.green,
-                          thumbColor: Theme.of(context).colorScheme.secondary,
+                          thumbColor: Theme.of(context).colorScheme.primary,
                           onChangeStart: (value) => print(value),
                           onChangeEnd: (value) {
                             setState(() {
                               _sliderValue = 0;
                               isThumbStartTouchingText = false;
+                              sliderForWorkingTime = 'Start work!';
+                              isLabelSmall = false;
                             });
                           },
                           onChanged: (value) {
@@ -420,6 +444,8 @@ class _StartTimePageState extends State<StartTimePage> {
                             if (value >= 4.0) {
                               setState(() {
                                 isThumbStartTouchingText = false;
+                                sliderForWorkingTime = 'Work will start now!';
+                                isLabelSmall = true;
                               });
                             }
                             setState(() {
@@ -448,21 +474,161 @@ class _StartTimePageState extends State<StartTimePage> {
                     !isThumbStartTouchingText
                         ? IgnorePointer(
                             child: Text(
-                              'Start Work',
+                              sliderForWorkingTime,
                               style: TextStyle(
                                   color: Theme.of(context)
                                       .colorScheme
                                       .inverseSurface,
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 1 == 2 ? 12 : 20),
+                                  fontSize: isLabelSmall ? 12 : 20),
                             ),
                           )
                         : Container(),
                   ],
                 ),
+               */
+              ],
+            ),*/
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Gap(MediaQuery.of(context).size.height * 0.06),
+                Text(
+                  getLabels.workTime,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: MediaQuery.of(context).size.height * 0.02),
+                ),
+                Gap(MediaQuery.of(context).size.height * 0.02),
+                TrackSlider(
+                    sliderValue: _sliderWorkValue,
+                    inactiveColorl: _isWorking
+                        ? Theme.of(context).colorScheme.errorContainer
+                        : Theme.of(context).colorScheme.inversePrimary,
+                    onChangeStart: (value) => print(value),
+                    onChangeEnd: (value) {
+                      setState(() {
+                        _sliderWorkValue = 0;
+                        isThumbStartTouchingText = false;
+                        sliderForWorkingTime = _isWorking
+                            ? getLabels.stopWork
+                            : getLabels.startWork;
+                        isSmallLabel = false;
+                      });
+                    },
+                    onChanged: (value) {
+                      print(value);
+                      if (value > 0.99) {
+                        setState(() {
+                          isThumbStartTouchingText = true;
+                        });
+                      }
+                      if (value >= 3.5) {
+                        setState(() {
+                          isThumbStartTouchingText = false;
+                          sliderForWorkingTime = _isWorking
+                              ? getLabels.theWorkWillFinishNow
+                              : getLabels.workWillStartNow;
+                          isSmallLabel = true;
+                        });
+                      }
+                      setState(() {
+                        _sliderWorkValue = value;
+                      });
+                      if (value == 5.0) {
+                        // If slider reaches max, toggle between start and end work
+                        if (!_isWorking) {
+                          setState(() {
+                            _isWorking = true;
+                            print(_isWorking);
+                          });
+                        } else {
+                          setState(() {
+                            _isWorking = false;
+                          });
+                        }
+                        setState(() {
+                          _sliderWorkValue = 0;
+                        });
+                      }
+                    },
+                    isThumbStartTouchingText: isThumbStartTouchingText,
+                    sliderForWorkingTimeLabel: sliderForWorkingTime,
+                    isSmallLabel: isSmallLabel)
               ],
             ),
-            TrackSlider(
+
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Gap(MediaQuery.of(context).size.height * 0.06),
+                Text(
+                  getLabels.breakTime,
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: MediaQuery.of(context).size.height * 0.02),
+                ),
+                Gap(MediaQuery.of(context).size.height * 0.02),
+                TrackSlider(
+                    sliderValue: _sliderBreakValue,
+                    inactiveColorl: _isBreak
+                        ? Theme.of(context).colorScheme.errorContainer
+                        : Theme.of(context).colorScheme.inversePrimary,
+                    onChangeStart: (value) => print(value),
+                    onChangeEnd: (value) {
+                      setState(() {
+                        _sliderBreakValue = 0;
+                        isThumbBreakStartTouchingText = false;
+                        sliderForBreakTime = _isBreak
+                            ? getLabels.stopBreak
+                            : getLabels.startBreak;
+                        isSmallBreakSliderLabel = false;
+                      });
+                    },
+                    onChanged: (value) {
+                      print(value);
+                      if (value > 0.99) {
+                        setState(() {
+                          isThumbBreakStartTouchingText = true;
+                        });
+                      }
+                      if (value >= 3.5) {
+                        setState(() {
+                          isThumbBreakStartTouchingText = false;
+
+                          sliderForBreakTime = _isBreak
+                              ? getLabels.theBreakWillEndNow
+                              : getLabels.theBreakWillStartNow;
+                          isSmallBreakSliderLabel = true;
+                        });
+                      }
+                      setState(() {
+                        _sliderBreakValue = value;
+                      });
+                      if (value == 5.0) {
+                        // If slider reaches max, toggle between start and end work
+                        if (!_isBreak) {
+                          setState(() {
+                            _isBreak = true;
+                            print(_isBreak);
+                          });
+                        } else {
+                          setState(() {
+                            _isBreak = false;
+                          });
+                        }
+                        setState(() {
+                          _sliderBreakValue = 0;
+                        });
+                      }
+                    },
+                    isThumbStartTouchingText: isThumbBreakStartTouchingText,
+                    sliderForWorkingTimeLabel: sliderForBreakTime,
+                    isSmallLabel: isSmallBreakSliderLabel)
+              ],
+            ),
+
+            TrackSliderOld(
                 action: () async {
                   await readBreaks();
                   await takeOrFinishBreak();
@@ -473,15 +639,15 @@ class _StartTimePageState extends State<StartTimePage> {
                 sliderLabel: 'Start break'),
             Gap(MediaQuery.of(context).size.height * 0.04),
             ListTile(
-              leading: const Text(
-                'Number of Breaks',
-                style: TextStyle(fontSize: 16.0),
+              leading: Text(
+                getLabels.numOfBreaks,
+                style: const TextStyle(fontSize: 16.0),
               ),
               trailing: Text(
                 isInitFinished
                     ? numberOfBreaks <= 1
-                        ? '$numberOfBreaks Break'
-                        : '$numberOfBreaks Breaks'
+                        ? '$numberOfBreaks ${getLabels.breakLabel}'
+                        : '$numberOfBreaks ${getLabels.breaks}'
                     : point,
                 style: const TextStyle(
                   fontSize: 14.0,
@@ -495,12 +661,12 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 }
 
-class TrackSlider extends StatelessWidget {
+class TrackSliderOld extends StatelessWidget {
   final Future<bool?> Function() action;
   final String titleTracker;
   final String sliderLabel;
   final bool isStart;
-  const TrackSlider(
+  const TrackSliderOld(
       {super.key,
       required this.action,
       required this.titleTracker,
@@ -542,6 +708,69 @@ class TrackSlider extends StatelessWidget {
             color: Theme.of(context).colorScheme.inversePrimary,
           ),
         ),
+      ],
+    );
+  }
+}
+
+class TrackSlider extends StatelessWidget {
+  final double sliderValue;
+  final Color inactiveColorl;
+  final Function(double)? onChangeStart;
+  final Function(double)? onChangeEnd;
+  final Function(double)? onChanged;
+  final bool isThumbStartTouchingText;
+  final String sliderForWorkingTimeLabel;
+  final bool isSmallLabel;
+  const TrackSlider(
+      {super.key,
+      required this.sliderValue,
+      required this.inactiveColorl,
+      required this.onChangeStart,
+      required this.onChangeEnd,
+      required this.onChanged,
+      required this.isThumbStartTouchingText,
+      required this.sliderForWorkingTimeLabel,
+      required this.isSmallLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          width: MediaQuery.of(context).size.width * 0.99,
+          child: SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              thumbShape: RoundSliderThumbShape(
+                  enabledThumbRadius:
+                      MediaQuery.of(context).size.aspectRatio * 73),
+              trackHeight: MediaQuery.of(context).size.height * 0.08,
+            ),
+            child: Slider(
+              activeColor: Theme.of(context).colorScheme.tertiaryContainer,
+              value: sliderValue,
+              min: 0.0,
+              max: 5.0,
+              inactiveColor: inactiveColorl,
+              thumbColor: Theme.of(context).colorScheme.onSurface,
+              onChangeStart: onChangeStart,
+              onChangeEnd: onChangeEnd,
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+        !isThumbStartTouchingText
+            ? IgnorePointer(
+                child: Text(
+                  sliderForWorkingTimeLabel,
+                  style: TextStyle(
+                      color: Theme.of(context).colorScheme.inverseSurface,
+                      fontWeight: FontWeight.w500,
+                      fontSize: isSmallLabel ? 12 : 20),
+                ),
+              )
+            : Container(),
       ],
     );
   }

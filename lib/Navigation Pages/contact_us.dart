@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:time_management/constants.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class ContactUs extends StatefulWidget {
   const ContactUs({
@@ -20,15 +21,7 @@ class _ContactUsState extends State<ContactUs> {
   final TextEditingController _descriptionController = TextEditingController();
   final _globalKey = GlobalKey<FormState>();
   String _reasonChoosed = '';
-  final List<String> _reasons = [
-    'Technical Support',
-    'Feature Request',
-    'Time Tracking Errors',
-    'App Performance',
-    'Feedback',
-    'Report a Bug',
-    'Other'
-  ];
+  List<String>? _reasons;
 
   @override
   void dispose() {
@@ -45,13 +38,34 @@ class _ContactUsState extends State<ContactUs> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        final getLablels = AppLocalizations.of(context)!;
+        _reasons = [
+          getLablels.technicalSupport,
+          getLablels.featureRequest,
+          getLablels.timeTrackingErrors,
+          getLablels.appPerformance,
+          getLablels.feedback,
+          getLablels.reportABug,
+          getLablels.other
+        ];
+        setState(() {});
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final getLabels = AppLocalizations.of(context)!;
     return Form(
       key: _globalKey,
       child: Scaffold(
         appBar: AppBar(
           centerTitle: true,
-          title: const Text('Contact Us'),
+          title: Text(getLabels.contactUs),
           automaticallyImplyLeading: false,
           leading: InkWell(
             onTap: () => Navigator.of(context).pop(),
@@ -66,8 +80,7 @@ class _ContactUsState extends State<ContactUs> {
                     try {
                       if (_reasonChoosed == '') {
                         return Constants.showInSnackBar(
-                            value:
-                                'please choose a reason why you want to contact us',
+                            value: getLabels.pleaseChooseAReason,
                             context: context);
                       }
 
@@ -75,7 +88,7 @@ class _ContactUsState extends State<ContactUs> {
                         scheme: 'mailto',
                         query: encodeQueryParameters(<String, String>{
                           'subject':
-                              '$_reasonChoosed / From (${_nameController.text})',
+                              '$_reasonChoosed / ${getLabels.from} (${_nameController.text})',
                           'body': _descriptionController.text,
                           'to': 'younesoffi.dahbi@gmail.com',
                         }),
@@ -83,7 +96,8 @@ class _ContactUsState extends State<ContactUs> {
 
                       if (!await launchUrl(emailLaunchUri,
                           mode: LaunchMode.externalApplication)) {
-                        throw Exception('Could not launch $emailLaunchUri');
+                        throw Exception(
+                            '${getLabels.couldNotLaunch} $emailLaunchUri');
                       }
                     } catch (error) {
                       if (!context.mounted) return;
@@ -92,9 +106,10 @@ class _ContactUsState extends State<ContactUs> {
                     }
                   }
                 },
-                child: const Text(
-                  'Send',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                child: Text(
+                  getLabels.send,
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
                 ))
           ],
         ),
@@ -108,8 +123,8 @@ class _ContactUsState extends State<ContactUs> {
               children: [
                 TitleWithTextfield(
                   controller: _nameController,
-                  fieldName: 'Name:*',
-                  fieldCaption: 'Enter your name',
+                  fieldName: '${getLabels.name}:*',
+                  fieldCaption: getLabels.enterYourFullName,
                   isFlexibelField: false,
                 ),
                 Container(
@@ -118,9 +133,9 @@ class _ContactUsState extends State<ContactUs> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Reason:*',
-                          style: TextStyle(
+                        Text(
+                          '${getLabels.reason}:*',
+                          style: const TextStyle(
                               fontSize: 22, fontWeight: FontWeight.bold),
                         ),
                         Gap(MediaQuery.of(context).size.height * 0.02),
@@ -131,10 +146,10 @@ class _ContactUsState extends State<ContactUs> {
                               MediaQuery.of(context).size.height * 0.02),
                           value: _reasonChoosed != '' ? _reasonChoosed : null,
                           items: _reasons
-                              .map((reason) => DropdownMenuItem(
+                              ?.map((reason) => DropdownMenuItem(
                                   value: reason, child: Text(reason)))
                               .toList(),
-                          hint: const Text('Choose a reason'),
+                          hint: Text(getLabels.chooseAReason),
                           onChanged: (value) {
                             setState(() {
                               _reasonChoosed = value!;
@@ -145,8 +160,8 @@ class _ContactUsState extends State<ContactUs> {
                     )),
                 TitleWithTextfield(
                   controller: _descriptionController,
-                  fieldName: 'Description:*',
-                  fieldCaption: 'Write...',
+                  fieldName: '${getLabels.description}:*',
+                  fieldCaption: '${getLabels.write}...',
                   isFlexibelField: true,
                 ),
               ],
@@ -174,6 +189,7 @@ class TitleWithTextfield extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final getLabels = AppLocalizations.of(context)!;
     return Container(
       margin:
           EdgeInsets.only(bottom: MediaQuery.of(context).size.height * 0.04),
@@ -190,12 +206,12 @@ class TitleWithTextfield extends StatelessWidget {
             maxLength: isFlexibelField ? 300 : null,
             keyboardType: TextInputType.name,
             decoration: InputDecoration(
-              hintText: fieldCaption,
-            ),
+                hintText: fieldCaption,
+                hintStyle: const TextStyle(fontSize: 14.0)),
             controller: controller,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             validator: (value) {
-              return value!.isEmpty ? 'field must not be empty' : null;
+              return value!.isEmpty ? getLabels.fieldMustNotBeEmpty : null;
             },
           ),
         ],

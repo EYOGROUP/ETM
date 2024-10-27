@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:time_management/Navigation%20Pages/infos.dart';
-import 'package:time_management/Navigation%20Pages/start.dart';
+import 'package:time_management/Navigation%20Pages/home.dart';
+import 'package:time_management/Navigation%20Pages/work_archieves.dart';
 
 class PagesController extends StatefulWidget {
   const PagesController({super.key});
@@ -19,7 +20,6 @@ class _PagesControllerState extends State<PagesController> {
   ];
   @override
   void dispose() {
-    // TODO: implement dispose
     super.dispose();
     _pageController.dispose();
   }
@@ -29,9 +29,10 @@ class _PagesControllerState extends State<PagesController> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        children: [
+        physics: const NeverScrollableScrollPhysics(),
+        children: const [
           StartTimePage(),
-          StartTimePage(),
+          WorkArchieves(),
           InfosPage(),
         ],
       ),
