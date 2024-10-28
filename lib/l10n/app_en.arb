@@ -44,6 +44,27 @@
   "couldNotLaunch": "Could not launch",
   "enterYourFullName": "Enter your full name",
   "archives": "Archives",
-  "chooseDate": "Choose date"
+  "chooseDate": "Choose date",
+  "startYourWorkBeforeBreak": "Start your work before taking a break",
+  "youWork": "You work: {times} {timesLabel}.",
+  "@youWork": {
+    "placeholders": {
+      "times": {
+        "type": "int",
+        "format": "decimalPattern",
+        "example": "123"
+      },
+       "timesLabel": {
+        "type": "String"
+       }
+    }
+  },
+  "hours": "hours",
+  "hour": "hour",
+  "noMoreBreaksAvailable": "You finished your work, no more breaks available for your work today!",
+  "workFinishedForToday": "Your work is already finished for today",
+  "minute": "minute",
+  "minutes": "minutes"
+
 
 }

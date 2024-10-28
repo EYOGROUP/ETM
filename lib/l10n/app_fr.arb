@@ -44,6 +44,28 @@
   "couldNotLaunch": "Impossible de lancer",
   "enterYourFullName": "Entrez votre nom complet",
   "archives": "Archives",
-  "chooseDate": "Choisissez une date"
+  "chooseDate": "Choisissez une date",
+  "startYourWorkBeforeBreak": "Commencez votre travail avant de prendre une pause",
+  "youWork": "Vous travaillez: {times} {timesLabel}.",
+  "@youWork": {
+    "placeholders": {
+       "times": {
+        "type": "int",
+        "format": "decimalPattern",
+        "example": "123"
+      },
+       "timesLabel": {
+        "type": "String"
+       }
+  }
+  },
+  "hours": "heures",
+  "hour": "heure",
+  "noMoreBreaksAvailable": "Vous avez terminé votre travail, plus de pauses disponibles pour votre travail aujourd'hui !",
+  "workFinishedForToday": "Votre travail est déjà terminé pour aujourd'hui",
+  "minute": "minute",
+  "minutes": "minutes"
+
+
 
 }

@@ -43,6 +43,8 @@ class _StartTimePageState extends State<StartTimePage> {
   bool isSmallBreakSliderLabel = false;
   double _sliderBreakValue = 0.0;
   bool isThumbBreakStartTouchingText = false;
+  bool isInhours = false;
+  int workedTime = 0;
 
   Future<void> startWork() async {
     bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
@@ -52,6 +54,7 @@ class _StartTimePageState extends State<StartTimePage> {
       await completedWork();
       return;
     }
+
     workStartTime = DateTime.now();
     TrackingDB db = TrackingDB();
 
@@ -61,7 +64,6 @@ class _StartTimePageState extends State<StartTimePage> {
     await db.insertData(tableName: 'work_sessions', data: workSession.toMap());
     // Constants.showInSnackBar(value: 'Test', context: context);
 
-    print(isAlreadStartedWork);
     if (!mounted) return;
     setState(() {
       _isStartWork = true;
@@ -73,12 +75,41 @@ class _StartTimePageState extends State<StartTimePage> {
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
     List<Map<String, dynamic>> workSession = await db.readData(
             sql:
-                'select * from work_sessions where isCompleted=0 OR isCompleted =1 and substr(startTime,1,10) ="$dateToday"')
+                'select * from work_sessions where (isCompleted=0 and substr(startTime,1,10) ="$dateToday") OR (isCompleted =1 and substr(startTime,1,10) ="$dateToday")')
         as List<Map<String, dynamic>>;
     if (workSession.isNotEmpty) {
       return true;
     } else {
       return false;
+    }
+  }
+
+  Future<void> checkIfWorkAndBreakForTodayNotFinished() async {
+    final getLabels = AppLocalizations.of(context)!;
+    TrackingDB db = TrackingDB();
+    String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    List<Map<String, dynamic>> workSession = await db.readData(
+            sql:
+                'select * from work_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
+        as List<Map<String, dynamic>>;
+    if (workSession.isNotEmpty) {
+      bool isBreak = await isBreakTooken(getWorkDayData: workSession.first);
+      bool isClosedBreak =
+          await isAlreadyClosedBreak(getDayWorkData: workSession.first);
+      if (isBreak && !isClosedBreak) {
+        setState(() {
+          _isBreak = true;
+          sliderForBreakTime = getLabels.stopBreak;
+        });
+      }
+      setState(() {
+        _isStartWork = true;
+        sliderForWorkingTime = getLabels.stopWork;
+      });
+    } else {
+      setState(() {
+        _isStartWork = false;
+      });
     }
   }
 
@@ -103,11 +134,15 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   completedWork() async {
+    final getLabels = AppLocalizations.of(context)!;
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
     Map<String, dynamic> workDay = await getDataSameDateLikeToday();
     if (!mounted) return;
     // check if not completed and endTime not filled
+    if (workDay.isEmpty) {
+      return;
+    }
     if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
       Map<String, dynamic> updateData = {
         'endTime': workFinishTime.toString(),
@@ -125,7 +160,7 @@ class _StartTimePageState extends State<StartTimePage> {
     } else {
       if (!mounted) return;
       Constants.showInSnackBar(
-          value: 'You work is already finished', context: context);
+          value: getLabels.workFinishedForToday, context: context);
     }
   }
 
@@ -133,7 +168,39 @@ class _StartTimePageState extends State<StartTimePage> {
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> works = await db.readData(
         sql: "select * from work_sessions ") as List<Map<String, dynamic>>;
+    DateTime? start =
+        DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['startTime']);
+    DateTime? endTime =
+        DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['endTime']);
+    print(endTime!.difference(start!).inMinutes);
     print(works);
+  }
+
+  getHoursOrMinutesWorkedForToday() async {
+    Map<String, dynamic> workDay = await getDataSameDateLikeToday();
+    if (workDay.isEmpty || workDay['isCompleted'] == 0) {
+      return;
+    }
+    print(workDay);
+    startLoadingAnimation();
+
+    DateTime? start =
+        DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['startTime']);
+    DateTime? endTime =
+        DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['endTime']);
+    int hours = endTime!.difference(start!).inHours;
+    if (hours > 0) {
+      setState(() {
+        isInhours = true;
+        workedTime = hours;
+      });
+    } else {
+      int inMinutes = endTime.difference(start).inMinutes;
+      setState(() {
+        workedTime = inMinutes;
+      });
+    }
+    print(workedTime);
   }
 
   bool areDatesSame(DateTime date1, DateTime date2) {
@@ -148,15 +215,15 @@ class _StartTimePageState extends State<StartTimePage> {
 
   Future<bool> isAlreadyClosedBreak(
       {required Map<String, dynamic> getDayWorkData}) async {
-    bool isAlreadyClosedBreak = false;
+    bool isAlreadyClosedBreak = true;
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> breakSessions = await db.readData(
             sql:
-                "select * from break_sessions where workSessionId =${getDayWorkData['id']} and breakEndTime <>''")
+                "select * from break_sessions where workSessionId =${getDayWorkData['id']} and breakEndTime =''")
         as List<Map<String, dynamic>>;
     if (context.mounted) {
       if (breakSessions.isNotEmpty) {
-        isAlreadyClosedBreak = true;
+        isAlreadyClosedBreak = false;
       }
     }
     return isAlreadyClosedBreak;
@@ -203,6 +270,7 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   Future<void> takeOrFinishBreak() async {
+    final getLabels = AppLocalizations.of(context)!;
     DateTime breakTime = DateTime.now();
     Map<String, dynamic> getWorkDayData = await getDataSameDateLikeToday();
     if (!mounted) return;
@@ -216,9 +284,7 @@ class _StartTimePageState extends State<StartTimePage> {
         if (!mounted) return;
         if (isFinishedWork) {
           return Constants.showInSnackBar(
-              value:
-                  'You finished your work, no Break more available for you work today!',
-              context: context);
+              value: getLabels.noMoreBreaksAvailable, context: context);
         } else {
           // here to start process for the break
           bool isBreakTookenCheck =
@@ -226,10 +292,16 @@ class _StartTimePageState extends State<StartTimePage> {
           if (!mounted) return;
           bool isAlreadyClosedBreakCheck =
               await isAlreadyClosedBreak(getDayWorkData: getWorkDayData);
+
           if (!mounted) return;
           if (!isBreakTookenCheck || isAlreadyClosedBreakCheck) {
+            print(isAlreadyClosedBreakCheck);
             await insertNewBreak(
                 getWorkDayData: getWorkDayData, breakTime: breakTime);
+            if (!mounted) return;
+            setState(() {
+              _isBreak = true;
+            });
           } else {
             // finish Break
             TrackingDB db = TrackingDB();
@@ -244,15 +316,17 @@ class _StartTimePageState extends State<StartTimePage> {
                 data: endTimeUpdate,
                 columnId: 'id',
                 id: breakSession['id']);
+            numberOfBreaks += 1;
+            if (!mounted) return;
+            setState(() {
+              _isBreak = false;
+            });
           }
         }
       }
-
-      print(
-          "is Break tooken ${await isBreakTooken(getWorkDayData: getWorkDayData)}");
-      print(
-          "is break already Closed: ${await isAlreadyClosedBreak(getDayWorkData: getWorkDayData)}");
-      debugPrint('okey Take break');
+    } else {
+      Constants.showInSnackBar(
+          value: getLabels.startYourWorkBeforeBreak, context: context);
     }
   }
 
@@ -284,6 +358,8 @@ class _StartTimePageState extends State<StartTimePage> {
         sliderForWorkingTime = AppLocalizations.of(context)!.startWork;
         sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
         await getNumberOfBreaks();
+        await getHoursOrMinutesWorkedForToday();
+        await checkIfWorkAndBreakForTodayNotFinished();
         stopLoadingAnimation();
       },
     );
@@ -382,113 +458,6 @@ class _StartTimePageState extends State<StartTimePage> {
                   fontSize: MediaQuery.of(context).size.height * 0.03,
                   fontWeight: FontWeight.bold),
             ),
-            // TrackSlider(
-            //     action: () async {
-            //       await startWork();
-            //       return false;
-            //     },
-            //     titleTracker: 'Working Time',
-            //     isStart: _isStartWork || _finishWork,
-            //     sliderLabel: _isStartWork && !_finishWork
-            //         ? "Work started at: ${DateFormat('HH:mm:ss a').format(workStartTime!)}"
-            //         : _finishWork
-            //             ? "Work finished at: ${DateFormat('HH:mm:ss a').format(workFinishTime!)}"
-            //             : 'Start work'),
-            /* Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Gap(MediaQuery.of(context).size.height * 0.06),
-                Text(
-                  'Working Time',
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: MediaQuery.of(context).size.height * 0.02),
-                ),
-                Gap(MediaQuery.of(context).size.height * 0.02),
-                /*   Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.99,
-                      child: SliderTheme(
-                        data: SliderTheme.of(context).copyWith(
-                          thumbShape: RoundSliderThumbShape(
-                              enabledThumbRadius:
-                                  MediaQuery.of(context).size.aspectRatio * 73),
-                          trackHeight:
-                              MediaQuery.of(context).size.height * 0.08,
-                        ),
-                        child: Slider(
-                          activeColor: Theme.of(context).colorScheme.primary,
-                          value: _sliderValue,
-                          min: 0.0,
-                          max: 5.0,
-                          inactiveColor: _isWorking ? Colors.red : Colors.green,
-                          thumbColor: Theme.of(context).colorScheme.primary,
-                          onChangeStart: (value) => print(value),
-                          onChangeEnd: (value) {
-                            setState(() {
-                              _sliderValue = 0;
-                              isThumbStartTouchingText = false;
-                              sliderForWorkingTime = 'Start work!';
-                              isLabelSmall = false;
-                            });
-                          },
-                          onChanged: (value) {
-                            print(value);
-                            if (value > 0.99) {
-                              setState(() {
-                                isThumbStartTouchingText = true;
-                              });
-                            }
-                            if (value >= 4.0) {
-                              setState(() {
-                                isThumbStartTouchingText = false;
-                                sliderForWorkingTime = 'Work will start now!';
-                                isLabelSmall = true;
-                              });
-                            }
-                            setState(() {
-                              _sliderValue = value;
-                            });
-                            if (value == 5.0) {
-                              // If slider reaches max, toggle between start and end work
-                              if (!_isWorking) {
-                                setState(() {
-                                  _isWorking = true;
-                                  print(_isWorking);
-                                });
-                              } else {
-                                setState(() {
-                                  _isWorking = false;
-                                });
-                              }
-                              setState(() {
-                                _sliderValue = 0;
-                              });
-                            }
-                          },
-                        ),
-                      ),
-                    ),
-                    !isThumbStartTouchingText
-                        ? IgnorePointer(
-                            child: Text(
-                              sliderForWorkingTime,
-                              style: TextStyle(
-                                  color: Theme.of(context)
-                                      .colorScheme
-                                      .inverseSurface,
-                                  fontWeight: FontWeight.w500,
-                                  fontSize: isLabelSmall ? 12 : 20),
-                            ),
-                          )
-                        : Container(),
-                  ],
-                ),
-               */
-              ],
-            ),*/
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -502,7 +471,7 @@ class _StartTimePageState extends State<StartTimePage> {
                 Gap(MediaQuery.of(context).size.height * 0.02),
                 TrackSlider(
                     sliderValue: _sliderWorkValue,
-                    inactiveColorl: _isWorking
+                    inactiveColorl: _isStartWork
                         ? Theme.of(context).colorScheme.errorContainer
                         : Theme.of(context).colorScheme.inversePrimary,
                     onChangeStart: (value) => print(value),
@@ -510,14 +479,13 @@ class _StartTimePageState extends State<StartTimePage> {
                       setState(() {
                         _sliderWorkValue = 0;
                         isThumbStartTouchingText = false;
-                        sliderForWorkingTime = _isWorking
+                        sliderForWorkingTime = _isStartWork
                             ? getLabels.stopWork
                             : getLabels.startWork;
                         isSmallLabel = false;
                       });
                     },
-                    onChanged: (value) {
-                      print(value);
+                    onChanged: (value) async {
                       if (value > 0.99) {
                         setState(() {
                           isThumbStartTouchingText = true;
@@ -526,7 +494,7 @@ class _StartTimePageState extends State<StartTimePage> {
                       if (value >= 3.5) {
                         setState(() {
                           isThumbStartTouchingText = false;
-                          sliderForWorkingTime = _isWorking
+                          sliderForWorkingTime = _isStartWork
                               ? getLabels.theWorkWillFinishNow
                               : getLabels.workWillStartNow;
                           isSmallLabel = true;
@@ -535,21 +503,10 @@ class _StartTimePageState extends State<StartTimePage> {
                       setState(() {
                         _sliderWorkValue = value;
                       });
-                      if (value == 5.0) {
-                        // If slider reaches max, toggle between start and end work
-                        if (!_isWorking) {
-                          setState(() {
-                            _isWorking = true;
-                            print(_isWorking);
-                          });
-                        } else {
-                          setState(() {
-                            _isWorking = false;
-                          });
-                        }
-                        setState(() {
-                          _sliderWorkValue = 0;
-                        });
+                      if (value >= 5.0) {
+                        await startWork();
+                        if (!mounted) return;
+                        await readWork();
                       }
                     },
                     isThumbStartTouchingText: isThumbStartTouchingText,
@@ -557,7 +514,6 @@ class _StartTimePageState extends State<StartTimePage> {
                     isSmallLabel: isSmallLabel)
               ],
             ),
-
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -585,8 +541,7 @@ class _StartTimePageState extends State<StartTimePage> {
                         isSmallBreakSliderLabel = false;
                       });
                     },
-                    onChanged: (value) {
-                      print(value);
+                    onChanged: (value) async {
                       if (value > 0.99) {
                         setState(() {
                           isThumbBreakStartTouchingText = true;
@@ -605,21 +560,11 @@ class _StartTimePageState extends State<StartTimePage> {
                       setState(() {
                         _sliderBreakValue = value;
                       });
-                      if (value == 5.0) {
-                        // If slider reaches max, toggle between start and end work
-                        if (!_isBreak) {
-                          setState(() {
-                            _isBreak = true;
-                            print(_isBreak);
-                          });
-                        } else {
-                          setState(() {
-                            _isBreak = false;
-                          });
-                        }
-                        setState(() {
-                          _sliderBreakValue = 0;
-                        });
+                      if (value >= 5.0) {
+                        await takeOrFinishBreak();
+
+                        if (!mounted) return;
+                        await readBreaks();
                       }
                     },
                     isThumbStartTouchingText: isThumbBreakStartTouchingText,
@@ -627,17 +572,24 @@ class _StartTimePageState extends State<StartTimePage> {
                     isSmallLabel: isSmallBreakSliderLabel)
               ],
             ),
-
-            TrackSliderOld(
-                action: () async {
-                  await readBreaks();
-                  await takeOrFinishBreak();
-                  await readWork();
-                  return false;
-                },
-                titleTracker: 'Break',
-                sliderLabel: 'Start break'),
             Gap(MediaQuery.of(context).size.height * 0.04),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                getLabels.youWork(
+                    workedTime,
+                    workedTime <= 1
+                        ? isInhours
+                            ? getLabels.hour
+                            : getLabels.minute
+                        : isInhours
+                            ? getLabels.hours
+                            : getLabels.minutes),
+                style: const TextStyle(
+                    fontSize: 16.0, fontWeight: FontWeight.bold),
+              ),
+            ),
+            Gap(MediaQuery.of(context).size.height * 0.015),
             ListTile(
               leading: Text(
                 getLabels.numOfBreaks,
