@@ -593,7 +593,8 @@ class _StartTimePageState extends State<StartTimePage> {
             ListTile(
               leading: Text(
                 getLabels.numOfBreaks,
-                style: const TextStyle(fontSize: 16.0),
+                style: const TextStyle(
+                    fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
               trailing: Text(
                 isInitFinished
@@ -602,8 +603,7 @@ class _StartTimePageState extends State<StartTimePage> {
                         : '$numberOfBreaks ${getLabels.breaks}'
                     : point,
                 style: const TextStyle(
-                  fontSize: 14.0,
-                ),
+                    fontSize: 16.0, fontWeight: FontWeight.bold),
               ),
             ),
           ],

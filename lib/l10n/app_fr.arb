@@ -46,7 +46,7 @@
   "archives": "Archives",
   "chooseDate": "Choisissez une date",
   "startYourWorkBeforeBreak": "Commencez votre travail avant de prendre une pause",
-  "youWork": "Vous travaillez: {times} {timesLabel}.",
+  "youWork": "Aujourd'huit, vous travaillez: {times} {timesLabel}.",
   "@youWork": {
     "placeholders": {
        "times": {
