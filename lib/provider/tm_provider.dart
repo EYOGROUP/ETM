@@ -1,6 +1,10 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:time_management/constants.dart';
+import 'package:time_management/db/mydb.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
@@ -30,5 +34,96 @@ class TimeManagementPovider with ChangeNotifier {
     await prefs.setBool('isDark', valueTheme);
 
     notifyListeners();
+  }
+
+  bool areDatesSame(DateTime date1, DateTime date2) {
+    if (date1.day == date2.day &&
+        date1.month == date2.month &&
+        date1.year == date2.year) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future<Map<String, dynamic>> getDataSameDateLikeToday(
+      {required DateTime date}) async {
+    Map<String, dynamic> workDay = {};
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> works = await db.readData(
+        sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+
+    for (Map<String, dynamic> work in works) {
+      DateTime? startTimeToday =
+          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(work['startTime'])!;
+
+// check if data date same like today
+      bool isSameDate = areDatesSame(startTimeToday, date);
+      if (isSameDate) {
+        workDay = work;
+      }
+    }
+    return workDay;
+  }
+
+  Future<int> getNumberOfBreaks(
+      {required DateTime date,
+      required bool mounted,
+      required BuildContext context}) async {
+    int numberOfBreaks = 0;
+    TrackingDB db = TrackingDB();
+
+    Map<String, dynamic> getWorkDay =
+        await getDataSameDateLikeToday(date: date);
+    try {
+      if (getWorkDay['id'] != null) {
+        List<Map<String, dynamic>> breakSessions = await db.readData(
+                sql:
+                    "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
+            as List<Map<String, dynamic>>;
+        if (mounted) {
+          numberOfBreaks = breakSessions.length;
+        }
+      }
+    } catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(value: error.toString(), context: context);
+      }
+    }
+    return numberOfBreaks;
+  }
+
+  Future<Map<String, dynamic>> getHoursOrMinutesWorkedForToday(
+      {required DateTime choosedDate}) async {
+    Map<String, dynamic> data = {};
+
+    Map<String, dynamic> workDay =
+        await getDataSameDateLikeToday(date: choosedDate);
+    if (workDay.isNotEmpty) {
+      if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
+        return data;
+      }
+
+      DateTime? start =
+          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['startTime']);
+      DateTime? endTime =
+          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['endTime']);
+      int hours = endTime!.difference(start!).inHours;
+      if (hours > 0) {
+        data = {
+          "hours": hours,
+          "isInHours": true,
+        };
+      } else {
+        int inMinutes = endTime.difference(start).inMinutes;
+
+        data = {
+          "hours": inMinutes,
+          "isInHours": false,
+        };
+      }
+    }
+
+    return data;
   }
 }

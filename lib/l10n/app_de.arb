@@ -64,7 +64,12 @@
   "noMoreBreaksAvailable": "Sie haben Ihre Arbeit beendet, keine weiteren Pausen mehr für Ihre Arbeit heute verfügbar!",
   "workFinishedForToday": "Ihre Arbeit ist für heute bereits abgeschlossen",
    "minute": "Minute",
-  "minutes": "Minuten"
-
+  "minutes": "Minuten",
+  "workStartedAt": "Arbeit begonnen um:",
+  "workEndedAt": "Arbeit beendet um:",
+  "date": "Datum:",
+  "youWorkedHours": "Sie haben gearbeitet:",
+  "youHadBreaks": "Sie hatten:",
+  "moreDetails": "Mehr Details"
 
 }

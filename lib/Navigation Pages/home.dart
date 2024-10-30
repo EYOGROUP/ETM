@@ -45,12 +45,32 @@ class _StartTimePageState extends State<StartTimePage> {
   bool isThumbBreakStartTouchingText = false;
   bool isInhours = false;
   int workedTime = 0;
+  String? workStartedTime;
+  String? workEndedTime;
+
+  @override
+  void initState() {
+    super.initState();
+
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        sliderForWorkingTime = AppLocalizations.of(context)!.startWork;
+        sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
+        await getNumberOfBreaks();
+        await getHoursOrMinutesWorkedForToday();
+        await checkIfWorkAndBreakForTodayNotFinished();
+        await getWorkTime();
+        stopLoadingAnimation();
+      },
+    );
+  }
 
   Future<void> startWork() async {
     bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
     if (!mounted) return;
 
     if (isAlreadStartedWork) {
+      print('he');
       await completedWork();
       return;
     }
@@ -77,6 +97,7 @@ class _StartTimePageState extends State<StartTimePage> {
             sql:
                 'select * from work_sessions where (isCompleted=0 and substr(startTime,1,10) ="$dateToday") OR (isCompleted =1 and substr(startTime,1,10) ="$dateToday")')
         as List<Map<String, dynamic>>;
+
     if (workSession.isNotEmpty) {
       return true;
     } else {
@@ -143,6 +164,7 @@ class _StartTimePageState extends State<StartTimePage> {
     if (workDay.isEmpty) {
       return;
     }
+
     if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
       Map<String, dynamic> updateData = {
         'endTime': workFinishTime.toString(),
@@ -350,22 +372,6 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   @override
-  void initState() {
-    super.initState();
-
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) async {
-        sliderForWorkingTime = AppLocalizations.of(context)!.startWork;
-        sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
-        await getNumberOfBreaks();
-        await getHoursOrMinutesWorkedForToday();
-        await checkIfWorkAndBreakForTodayNotFinished();
-        stopLoadingAnimation();
-      },
-    );
-  }
-
-  @override
   void dispose() {
     _isDisposed = true;
     _timer?.cancel(); // Cancel the timer if it's running
@@ -425,6 +431,31 @@ class _StartTimePageState extends State<StartTimePage> {
     _timer?.cancel();
   }
 
+  Future<void> getWorkTime() async {
+    bool isAlreadyStarted = await isAlreadyStartedWorkDay();
+    if (mounted) {
+      if (isAlreadyStarted) {
+        Map<String, dynamic> getWorkDay = await getDataSameDateLikeToday();
+        if (mounted) {
+          DateTime? startWork =
+              DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['startTime']);
+          String? formatStartTime = DateFormat('HH:MM a').format(startWork!);
+          setState(() {
+            workStartedTime = formatStartTime;
+          });
+          if (getWorkDay['isCompleted'] == 1) {
+            DateTime? endWork =
+                DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['endTime']);
+            String? formatEndTime = DateFormat('HH:MM a').format(endWork!);
+            setState(() {
+              workEndedTime = formatEndTime;
+            });
+          }
+        }
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
@@ -441,172 +472,198 @@ class _StartTimePageState extends State<StartTimePage> {
         title: Text(getLabels.home),
         centerTitle: true,
       ),
-      body: Container(
-        padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.04,
-            vertical: MediaQuery.of(context).size.height * 0.015),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Align(
-                alignment: Alignment.topRight,
-                child: Text(
-                    "${getLabels.todayThe}, ${DateFormat(getLabels.dateFormat).format(DateTime.now())}")),
-            Text(
-              getLabels.welcome,
-              style: TextStyle(
-                  fontSize: MediaQuery.of(context).size.height * 0.03,
-                  fontWeight: FontWeight.bold),
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Gap(MediaQuery.of(context).size.height * 0.06),
-                Text(
-                  getLabels.workTime,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: MediaQuery.of(context).size.height * 0.02),
-                ),
-                Gap(MediaQuery.of(context).size.height * 0.02),
-                TrackSlider(
-                    sliderValue: _sliderWorkValue,
-                    inactiveColorl: _isStartWork
-                        ? Theme.of(context).colorScheme.errorContainer
-                        : Theme.of(context).colorScheme.inversePrimary,
-                    onChangeStart: (value) => print(value),
-                    onChangeEnd: (value) {
-                      setState(() {
-                        _sliderWorkValue = 0;
-                        isThumbStartTouchingText = false;
-                        sliderForWorkingTime = _isStartWork
-                            ? getLabels.stopWork
-                            : getLabels.startWork;
-                        isSmallLabel = false;
-                      });
-                    },
-                    onChanged: (value) async {
-                      if (value > 0.99) {
+      body: SingleChildScrollView(
+        child: Container(
+          padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width * 0.04,
+              vertical: MediaQuery.of(context).size.height * 0.015),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Align(
+                  alignment: Alignment.topRight,
+                  child: Text(
+                      "${getLabels.todayThe}, ${DateFormat(getLabels.dateFormat).format(DateTime.now())}")),
+              Text(
+                getLabels.welcome,
+                style: TextStyle(
+                    fontSize: MediaQuery.of(context).size.height * 0.03,
+                    fontWeight: FontWeight.bold),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Gap(MediaQuery.of(context).size.height * 0.06),
+                  Text(
+                    getLabels.workTime,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: MediaQuery.of(context).size.height * 0.02),
+                  ),
+                  Gap(MediaQuery.of(context).size.height * 0.02),
+                  TrackSlider(
+                      sliderValue: _sliderWorkValue,
+                      inactiveColorl: _isStartWork
+                          ? Theme.of(context).colorScheme.errorContainer
+                          : Theme.of(context).colorScheme.inversePrimary,
+                      onChangeStart: (value) => print(value),
+                      onChangeEnd: (value) {
                         setState(() {
-                          isThumbStartTouchingText = true;
-                        });
-                      }
-                      if (value >= 3.5) {
-                        setState(() {
+                          _sliderWorkValue = 0;
                           isThumbStartTouchingText = false;
                           sliderForWorkingTime = _isStartWork
-                              ? getLabels.theWorkWillFinishNow
-                              : getLabels.workWillStartNow;
-                          isSmallLabel = true;
+                              ? getLabels.stopWork
+                              : getLabels.startWork;
+                          isSmallLabel = false;
                         });
-                      }
-                      setState(() {
-                        _sliderWorkValue = value;
-                      });
-                      if (value >= 5.0) {
-                        await startWork();
-                        if (!mounted) return;
-                        await readWork();
-                      }
-                    },
-                    isThumbStartTouchingText: isThumbStartTouchingText,
-                    sliderForWorkingTimeLabel: sliderForWorkingTime,
-                    isSmallLabel: isSmallLabel)
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Gap(MediaQuery.of(context).size.height * 0.06),
-                Text(
-                  getLabels.breakTime,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: MediaQuery.of(context).size.height * 0.02),
-                ),
-                Gap(MediaQuery.of(context).size.height * 0.02),
-                TrackSlider(
-                    sliderValue: _sliderBreakValue,
-                    inactiveColorl: _isBreak
-                        ? Theme.of(context).colorScheme.errorContainer
-                        : Theme.of(context).colorScheme.inversePrimary,
-                    onChangeStart: (value) => print(value),
-                    onChangeEnd: (value) {
-                      setState(() {
-                        _sliderBreakValue = 0;
-                        isThumbBreakStartTouchingText = false;
-                        sliderForBreakTime = _isBreak
-                            ? getLabels.stopBreak
-                            : getLabels.startBreak;
-                        isSmallBreakSliderLabel = false;
-                      });
-                    },
-                    onChanged: (value) async {
-                      if (value > 0.99) {
+                      },
+                      onChanged: (value) async {
+                        if (value > 0.99) {
+                          setState(() {
+                            isThumbStartTouchingText = true;
+                          });
+                        }
+                        if (value >= 3.5) {
+                          setState(() {
+                            isThumbStartTouchingText = false;
+                            sliderForWorkingTime = _isStartWork
+                                ? getLabels.theWorkWillFinishNow
+                                : getLabels.workWillStartNow;
+                            isSmallLabel = true;
+                          });
+                        }
                         setState(() {
-                          isThumbBreakStartTouchingText = true;
+                          _sliderWorkValue = value;
                         });
-                      }
-                      if (value >= 3.5) {
+                        if (value >= 5.0) {
+                          await startWork();
+                          await getWorkTime();
+                          if (!mounted) return;
+                          await readWork();
+                        }
+                      },
+                      isThumbStartTouchingText: isThumbStartTouchingText,
+                      sliderForWorkingTimeLabel: sliderForWorkingTime,
+                      isSmallLabel: isSmallLabel),
+                  Gap(MediaQuery.of(context).size.height * 0.02),
+                  ListTile(
+                    leading: Text(
+                      getLabels.workStartedAt,
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                    title: Text(
+                      workStartedTime ?? '-',
+                      style: const TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ListTile(
+                    leading: Text(
+                      getLabels.workEndedAt,
+                      style: const TextStyle(fontSize: 16.0),
+                    ),
+                    title: Text(
+                      workEndedTime ?? '-',
+                      style: const TextStyle(
+                          fontSize: 20.0, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Gap(MediaQuery.of(context).size.height * 0.06),
+                  Text(
+                    getLabels.breakTime,
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: MediaQuery.of(context).size.height * 0.02),
+                  ),
+                  Gap(MediaQuery.of(context).size.height * 0.02),
+                  TrackSlider(
+                      sliderValue: _sliderBreakValue,
+                      inactiveColorl: _isBreak
+                          ? Theme.of(context).colorScheme.errorContainer
+                          : Theme.of(context).colorScheme.inversePrimary,
+                      onChangeStart: (value) => print(value),
+                      onChangeEnd: (value) {
                         setState(() {
+                          _sliderBreakValue = 0;
                           isThumbBreakStartTouchingText = false;
-
                           sliderForBreakTime = _isBreak
-                              ? getLabels.theBreakWillEndNow
-                              : getLabels.theBreakWillStartNow;
-                          isSmallBreakSliderLabel = true;
+                              ? getLabels.stopBreak
+                              : getLabels.startBreak;
+                          isSmallBreakSliderLabel = false;
                         });
-                      }
-                      setState(() {
-                        _sliderBreakValue = value;
-                      });
-                      if (value >= 5.0) {
-                        await takeOrFinishBreak();
+                      },
+                      onChanged: (value) async {
+                        if (value > 0.99) {
+                          setState(() {
+                            isThumbBreakStartTouchingText = true;
+                          });
+                        }
+                        if (value >= 3.5) {
+                          setState(() {
+                            isThumbBreakStartTouchingText = false;
 
-                        if (!mounted) return;
-                        await readBreaks();
-                      }
-                    },
-                    isThumbStartTouchingText: isThumbBreakStartTouchingText,
-                    sliderForWorkingTimeLabel: sliderForBreakTime,
-                    isSmallLabel: isSmallBreakSliderLabel)
-              ],
-            ),
-            Gap(MediaQuery.of(context).size.height * 0.04),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                getLabels.youWork(
-                    workedTime,
-                    workedTime <= 1
-                        ? isInhours
-                            ? getLabels.hour
-                            : getLabels.minute
-                        : isInhours
-                            ? getLabels.hours
-                            : getLabels.minutes),
-                style: const TextStyle(
-                    fontSize: 16.0, fontWeight: FontWeight.bold),
+                            sliderForBreakTime = _isBreak
+                                ? getLabels.theBreakWillEndNow
+                                : getLabels.theBreakWillStartNow;
+                            isSmallBreakSliderLabel = true;
+                          });
+                        }
+                        setState(() {
+                          _sliderBreakValue = value;
+                        });
+                        if (value >= 5.0) {
+                          await takeOrFinishBreak();
+
+                          if (!mounted) return;
+                          await readBreaks();
+                        }
+                      },
+                      isThumbStartTouchingText: isThumbBreakStartTouchingText,
+                      sliderForWorkingTimeLabel: sliderForBreakTime,
+                      isSmallLabel: isSmallBreakSliderLabel)
+                ],
               ),
-            ),
-            Gap(MediaQuery.of(context).size.height * 0.015),
-            ListTile(
-              leading: Text(
-                getLabels.numOfBreaks,
-                style: const TextStyle(
-                    fontSize: 16.0, fontWeight: FontWeight.bold),
+              Gap(MediaQuery.of(context).size.height * 0.04),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Text(
+                  getLabels.youWork(
+                      workedTime,
+                      workedTime <= 1
+                          ? isInhours
+                              ? getLabels.hour
+                              : getLabels.minute
+                          : isInhours
+                              ? getLabels.hours
+                              : getLabels.minutes),
+                  style: const TextStyle(
+                      fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
               ),
-              trailing: Text(
-                isInitFinished
-                    ? numberOfBreaks <= 1
-                        ? '$numberOfBreaks ${getLabels.breakLabel}'
-                        : '$numberOfBreaks ${getLabels.breaks}'
-                    : point,
-                style: const TextStyle(
-                    fontSize: 16.0, fontWeight: FontWeight.bold),
+              Gap(MediaQuery.of(context).size.height * 0.015),
+              ListTile(
+                leading: Text(
+                  getLabels.numOfBreaks,
+                  style: const TextStyle(
+                      fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
+                trailing: Text(
+                  isInitFinished
+                      ? numberOfBreaks <= 1
+                          ? '$numberOfBreaks ${getLabels.breakLabel}'
+                          : '$numberOfBreaks ${getLabels.breaks}'
+                      : point,
+                  style: const TextStyle(
+                      fontSize: 16.0, fontWeight: FontWeight.bold),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
