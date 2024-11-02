@@ -72,7 +72,6 @@ class _StartTimePageState extends State<StartTimePage> {
     if (!mounted) return;
 
     if (isAlreadStartedWork) {
-      print('he');
       await completedWork();
       return;
     }
@@ -186,7 +185,7 @@ class _StartTimePageState extends State<StartTimePage> {
           id: workDay['id']);
       if (!mounted) return;
       setState(() {
-        _finishWork = true;
+        _isStartWork = false;
       });
     } else {
       if (!mounted) return;
