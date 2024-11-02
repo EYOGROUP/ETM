@@ -86,6 +86,8 @@
   "ofBreak": "an Pause",
   "totalBreakDurationMin": "Gesamte Pausendauer in Min:",
   "youWorkedNetHours": "Sie haben in Stunden gearbeitet (Netto):",
-  "workDetails": "Arbeitsdetails"
+  "workDetails": "Arbeitsdetails",
+  "closeBreakFirst": "Sie müssen zuerst Ihre Pause beenden"
+
 
 }

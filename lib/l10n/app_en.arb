@@ -84,7 +84,8 @@
   },
   "totalBreakDurationMin": "Total break duration in Min:",
   "youWorkedNetHours": "You worked in Hours (Net):",
-  "workDetails": "Work Details"
+  "workDetails": "Work Details",
+  "closeBreakFirst": "You must close your break first"
    
 
 }

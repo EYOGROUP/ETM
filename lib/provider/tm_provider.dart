@@ -198,4 +198,23 @@ class TimeManagementPovider with ChangeNotifier {
     }
     return breaks;
   }
+
+  Future<bool> isAllBreaksClosed(
+      {required Map<String, dynamic> workDay}) async {
+    bool isAllBreaksClosed = true;
+    TrackingDB db = TrackingDB();
+    final getBreaks = await db.readData(
+        sql:
+            "select * from break_sessions where workSessionId = ${workDay['id']}");
+    List<Map<String, dynamic>> formatBreaksToList = getBreaks
+        .map((breakData) => Map<String, dynamic>.from(breakData))
+        .toList();
+
+    for (Map<String, dynamic> breakData in formatBreaksToList) {
+      if (breakData['breakEndTime'] == '') {
+        isAllBreaksClosed = false;
+      }
+    }
+    return isAllBreaksClosed;
+  }
 }

@@ -4,11 +4,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:slider_button/slider_button.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:time_management/provider/tm_provider.dart';
 
 class StartTimePage extends StatefulWidget {
   const StartTimePage({super.key});
@@ -156,6 +158,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
   completedWork() async {
     final getLabels = AppLocalizations.of(context)!;
+    final tM = Provider.of<TimeManagementPovider>(context, listen: false);
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
     Map<String, dynamic> workDay = await getDataSameDateLikeToday();
@@ -170,6 +173,12 @@ class _StartTimePageState extends State<StartTimePage> {
         'endTime': workFinishTime.toString(),
         'isCompleted': 1
       };
+      bool isAllBreaksClosed = await tM.isAllBreaksClosed(workDay: workDay);
+      if (!mounted) return;
+      if (!isAllBreaksClosed) {
+        return Constants.showInSnackBar(
+            value: getLabels.closeBreakFirst, context: context);
+      }
       await db.updateData(
           tableName: 'work_sessions',
           data: updateData,
@@ -439,14 +448,14 @@ class _StartTimePageState extends State<StartTimePage> {
         if (mounted) {
           DateTime? startWork =
               DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['startTime']);
-          String? formatStartTime = DateFormat('HH:MM a').format(startWork!);
+          String? formatStartTime = DateFormat('HH:mm').format(startWork!);
           setState(() {
             workStartedTime = formatStartTime;
           });
           if (getWorkDay['isCompleted'] == 1) {
             DateTime? endWork =
-                DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['endTime']);
-            String? formatEndTime = DateFormat('HH:MM a').format(endWork!);
+                DateFormat('yyyy-MM-dd HH:mm').tryParse(getWorkDay['endTime']);
+            String? formatEndTime = DateFormat('HH:mm').format(endWork!);
             setState(() {
               workEndedTime = formatEndTime;
             });

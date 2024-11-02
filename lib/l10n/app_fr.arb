@@ -84,7 +84,8 @@
   },
   "totalBreakDurationMin": "Durée totale des pauses en minutes :",
   "youWorkedNetHours": "Vous avez travaillé en heures (Net) :",
-  "workDetails": "Détails du travail"
+  "workDetails": "Détails du travail",
+  "closeBreakFirst": "Vous devez d'abord terminer votre pause"
 
 
 
