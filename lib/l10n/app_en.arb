@@ -68,8 +68,23 @@
   "workStartedAt": "Work started at:",
   "workEndedAt": "Work ended at:",
   "date": "Date:",
-  "youWorkedHours": "You worked:",
+  "youWorkedHours": "You worked (Gross):",
   "youHadBreaks": "You had:",
-   "moreDetails": "More details"
+   "moreDetails": "More details",
+   "breakNo": "Break No:",
+  "breakStartedAt": "Break started at:",
+  "breakFinishedAt": "Break finished at:",
+  "youTook": "You took: {time} of break ",
+  "@youTook": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "totalBreakDurationMin": "Total break duration in Min:",
+  "youWorkedNetHours": "You worked in Hours (Net):",
+  "workDetails": "Work Details"
+   
 
 }

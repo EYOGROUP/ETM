@@ -1,3 +1,4 @@
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -125,5 +126,76 @@ class TimeManagementPovider with ChangeNotifier {
     }
 
     return data;
+  }
+
+  Future<bool> isWorkFiniheshed({required DateTime date}) async {
+    bool isWorkFiniheshed = false;
+    TrackingDB db = TrackingDB();
+    String dateToday = DateFormat('yyyy-MM-dd').format(date);
+    List<Map<String, dynamic>> workSession = await db.readData(
+            sql:
+                'select * from work_sessions where isCompleted=1 and substr(startTime,1,10) ="$dateToday" ')
+        as List<Map<String, dynamic>>;
+    if (workSession.isNotEmpty) {
+      isWorkFiniheshed = true;
+    }
+    return isWorkFiniheshed;
+  }
+
+  Future<Map<String, dynamic>> getWorkDataFromSpecificDate(
+      {required DateTime date, required bool mounted}) async {
+    Map<String, dynamic> workData = {};
+    TrackingDB db = TrackingDB();
+    String formatDate = DateFormat("yyyy-MM-dd").format(date);
+    final getWorkData = await db.readData(
+        sql:
+            'select * from work_sessions where substr(startTime,1,10)="$formatDate"');
+    if (mounted) {
+      workData = Map<String, dynamic>.from(getWorkData.first);
+      DateTime? startWorkTime =
+          DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(workData['startTime']);
+      workData.update(
+          'startTime', (value) => DateFormat('HH:mm').format(startWorkTime!));
+
+      DateTime? endWorkTime =
+          DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(workData['endTime']);
+      workData.update(
+          'endTime', (value) => DateFormat('HH:mm').format(endWorkTime!));
+      workData['workedTime'] =
+          endWorkTime?.difference(startWorkTime!).inMinutes;
+    }
+    return workData;
+  }
+
+  Future<List<Map<String, dynamic>>> getBreaksFromSpecificDate(
+      {required int workSessionsId, required bool mounted}) async {
+    List<Map<String, dynamic>> breaks = [];
+    TrackingDB db = TrackingDB();
+    final getBreaksData = await db.readData(
+        sql:
+            "select * from break_sessions where workSessionId=$workSessionsId ");
+
+    if (mounted) {
+      if (getBreaksData.isNotEmpty) {
+        breaks = getBreaksData
+            .map((breakData) => Map<String, dynamic>.from(breakData))
+            .toList();
+        for (Map<String, dynamic> getBreakData in breaks) {
+          DateTime? breakStartTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
+              .tryParse(getBreakData["breakStartTime"]);
+          getBreakData["breakStartTime"] =
+              DateFormat("HH:mm").format(breakStartTimeAsDate!);
+          DateTime? breakEndTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
+              .tryParse(getBreakData["breakEndTime"]);
+
+          getBreakData["breakEndTime"] =
+              DateFormat("HH:mm").format(breakEndTimeAsDate!);
+
+          getBreakData['duration'] =
+              breakEndTimeAsDate.difference(breakStartTimeAsDate).inMinutes;
+        }
+      }
+    }
+    return breaks;
   }
 }

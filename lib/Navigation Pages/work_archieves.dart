@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:time_management/Navigation%20Pages/work_details.dart';
 import 'package:time_management/provider/tm_provider.dart';
 
 class WorkArchieves extends StatefulWidget {
@@ -20,20 +21,33 @@ class _WorkArchievesState extends State<WorkArchieves> {
   bool isLoadingData = false;
   int workedTime = 0;
   bool isInhours = false;
+  bool isWorkFinished = false;
   @override
   void initState() {
     super.initState();
-    _dates.add(DateTime.now());
-    getNumberOfWorkedHours();
-    getNumberOfBreaks();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        setState(() {
+          isLoadingData = true;
+        });
+        _dates.add(DateTime.now());
+        await getNumberOfWorkedHours();
+        await getNumberOfBreaks();
+      },
+    );
   }
 
-  getNumberOfBreaks() async {
+  Future<void> isWorkFinishedCheck() async {
     final tmProvider =
         Provider.of<TimeManagementPovider>(context, listen: false);
-    setState(() {
-      isLoadingData = true;
-    });
+    isWorkFinished = await tmProvider.isWorkFiniheshed(date: _dates.first);
+    setState(() {});
+  }
+
+  Future<void> getNumberOfBreaks() async {
+    final tmProvider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
+
     int getData = await tmProvider.getNumberOfBreaks(
         date: _dates.last, mounted: mounted, context: context);
     setState(() {
@@ -42,7 +56,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
     });
   }
 
-  getNumberOfWorkedHours() async {
+  Future<void> getNumberOfWorkedHours() async {
     final tmProvider =
         Provider.of<TimeManagementPovider>(context, listen: false);
 
@@ -94,77 +108,79 @@ class _WorkArchievesState extends State<WorkArchieves> {
                   _dates = value;
                 });
                 await getNumberOfBreaks();
-                getNumberOfWorkedHours();
+                await getNumberOfWorkedHours();
+                await isWorkFinishedCheck();
               },
             ),
             Gap(MediaQuery.of(context).size.height * 0.02),
             isLoadingData
                 ? const Center(child: CircularProgressIndicator())
-                : Container(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Container(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                _dates.isNotEmpty
-                                    ? '${getLabels.date} ${DateFormat(getLabels.dateFormat).format(_dates.first)}'
-                                    : getLabels.date,
-                                style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              Gap(MediaQuery.of(context).size.height * 0.02),
-                              Text.rich(TextSpan(children: [
-                                TextSpan(
-                                  text:
-                                      '${getLabels.youWorkedHours}  $workedTime ',
-                                  style: const TextStyle(
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                TextSpan(
-                                    text: isInhours
-                                        ? workedTime <= 1
-                                            ? getLabels.hour
-                                            : getLabels.hours
-                                        : workedTime > 1
-                                            ? getLabels.minutes
-                                            : getLabels.minute,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.bold))
-                              ])),
-                              ListTile(
-                                contentPadding: const EdgeInsets.all(0),
-                                leading: Text(
-                                  numberOfBreaks <= 1
-                                      ? "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breakLabel}"
-                                      : "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breaks}",
-                                  style: const TextStyle(
-                                      fontSize: 16.0,
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                trailing: Text(
-                                  getLabels.moreDetails,
-                                  style: TextStyle(
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primary),
-                                ),
-                              )
-                            ],
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    textBaseline: TextBaseline.alphabetic,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            _dates.isNotEmpty
+                                ? '${getLabels.date} ${DateFormat(getLabels.dateFormat).format(_dates.first)}'
+                                : getLabels.date,
+                            style: const TextStyle(
+                                fontSize: 16.0, fontWeight: FontWeight.bold),
                           ),
-                        ),
-                      ],
-                    ),
+                          Gap(MediaQuery.of(context).size.height * 0.02),
+                          Text.rich(TextSpan(children: [
+                            TextSpan(
+                              text: '${getLabels.youWorkedHours}  $workedTime ',
+                              style: const TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            ),
+                            TextSpan(
+                                text: isInhours
+                                    ? workedTime <= 1
+                                        ? getLabels.hour
+                                        : getLabels.hours
+                                    : workedTime > 1
+                                        ? getLabels.minutes
+                                        : getLabels.minute,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold))
+                          ])),
+                          ListTile(
+                            contentPadding: const EdgeInsets.all(0),
+                            leading: Text(
+                              numberOfBreaks <= 1
+                                  ? "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breakLabel}"
+                                  : "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breaks}",
+                              style: const TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            ),
+                            trailing: isWorkFinished
+                                ? GestureDetector(
+                                    onTap: () => Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                      builder: (context) =>
+                                          WorkDetails(workDate: _dates.first),
+                                    )),
+                                    child: Text(
+                                      getLabels.moreDetails,
+                                      style: TextStyle(
+                                          fontSize: 14.0,
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary),
+                                    ),
+                                  )
+                                : null,
+                          )
+                        ],
+                      ),
+                    ],
                   ),
           ],
         ),
