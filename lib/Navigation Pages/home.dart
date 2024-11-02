@@ -23,8 +23,6 @@ class _StartTimePageState extends State<StartTimePage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   bool _isStartWork = false;
-  bool _finishWork = false;
-  double _workHours = 0;
 
   DateTime? workStartTime;
   DateTime? workFinishTime;
@@ -34,7 +32,6 @@ class _StartTimePageState extends State<StartTimePage> {
   bool _isDisposed = false;
   String point = '';
   double _sliderWorkValue = 0.0;
-  bool _isWorking = false;
   bool isThumbStartTouchingText = false;
   String sliderForWorkingTime = '';
   bool isSmallLabel = false;
@@ -166,12 +163,13 @@ class _StartTimePageState extends State<StartTimePage> {
     if (workDay.isEmpty) {
       return;
     }
-
+    // if Work day not finished
     if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
       Map<String, dynamic> updateData = {
         'endTime': workFinishTime.toString(),
         'isCompleted': 1
       };
+      //check if all breaks closed
       bool isAllBreaksClosed = await tM.isAllBreaksClosed(workDay: workDay);
       if (!mounted) return;
       if (!isAllBreaksClosed) {
@@ -194,24 +192,24 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  readWork() async {
-    TrackingDB db = TrackingDB();
-    List<Map<String, dynamic>> works = await db.readData(
-        sql: "select * from work_sessions ") as List<Map<String, dynamic>>;
-    DateTime? start =
-        DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['startTime']);
-    DateTime? endTime =
-        DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['endTime']);
-    print(endTime!.difference(start!).inMinutes);
-    print(works);
-  }
+  // readWork() async {
+  //   TrackingDB db = TrackingDB();
+  //   List<Map<String, dynamic>> works = await db.readData(
+  //       sql: "select * from work_sessions ") as List<Map<String, dynamic>>;
+  //   DateTime? start =
+  //       DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['startTime']);
+  //   DateTime? endTime =
+  //       DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['endTime']);
+  //   print(endTime!.difference(start!).inMinutes);
+  //   print(works);
+  // }
 
   getHoursOrMinutesWorkedForToday() async {
     Map<String, dynamic> workDay = await getDataSameDateLikeToday();
     if (workDay.isEmpty || workDay['isCompleted'] == 0) {
       return;
     }
-    print(workDay);
+
     startLoadingAnimation();
 
     DateTime? start =
@@ -230,7 +228,6 @@ class _StartTimePageState extends State<StartTimePage> {
         workedTime = inMinutes;
       });
     }
-    print(workedTime);
   }
 
   bool areDatesSame(DateTime date1, DateTime date2) {
@@ -308,7 +305,6 @@ class _StartTimePageState extends State<StartTimePage> {
       bool isWorkAlreadyStarted = await isAlreadyStartedWorkDay();
       if (!mounted) return;
       if (isWorkAlreadyStarted) {
-        print('is Started work');
         bool isFinishedWork =
             await isFinishedWorkForToday(getWorkDayData: getWorkDayData);
         if (!mounted) return;
@@ -325,7 +321,6 @@ class _StartTimePageState extends State<StartTimePage> {
 
           if (!mounted) return;
           if (!isBreakTookenCheck || isAlreadyClosedBreakCheck) {
-            print(isAlreadyClosedBreakCheck);
             await insertNewBreak(
                 getWorkDayData: getWorkDayData, breakTime: breakTime);
             if (!mounted) return;
@@ -360,12 +355,12 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  readBreaks() async {
-    TrackingDB db = TrackingDB();
-    List<Map<String, dynamic>> works = await db.readData(
-        sql: "select * from break_sessions ") as List<Map<String, dynamic>>;
-    print(works);
-  }
+  // readBreaks() async {
+  //   TrackingDB db = TrackingDB();
+  //   List<Map<String, dynamic>> works = await db.readData(
+  //       sql: "select * from break_sessions ") as List<Map<String, dynamic>>;
+  //   print(works);
+  // }
 
   Future<void> insertNewBreak(
       {required Map<String, dynamic> getWorkDayData,
@@ -546,8 +541,8 @@ class _StartTimePageState extends State<StartTimePage> {
                         if (value >= 5.0) {
                           await startWork();
                           await getWorkTime();
-                          if (!mounted) return;
-                          await readWork();
+                          // if (!mounted) return;
+                          // await readWork();
                         }
                       },
                       isThumbStartTouchingText: isThumbStartTouchingText,
@@ -627,8 +622,8 @@ class _StartTimePageState extends State<StartTimePage> {
                         if (value >= 5.0) {
                           await takeOrFinishBreak();
 
-                          if (!mounted) return;
-                          await readBreaks();
+                          // if (!mounted) return;
+                          // await readBreaks();
                         }
                       },
                       isThumbStartTouchingText: isThumbBreakStartTouchingText,
