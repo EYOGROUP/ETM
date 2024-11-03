@@ -29,6 +29,10 @@ class Constants {
       {required BuildContext context,
       required String title,
       required String text}) {
+    // Extract MediaQuery data at the beginning of the build method
+    final mediaQuery = MediaQuery.of(context);
+
+    final isPortrait = mediaQuery.orientation == Orientation.portrait;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
       child: Column(
@@ -38,7 +42,9 @@ class Constants {
             title,
             style: TextStyle(
                 fontWeight: FontWeight.bold,
-                fontSize: MediaQuery.of(context).size.width * 0.045),
+                fontSize: isPortrait
+                    ? MediaQuery.of(context).size.width * 0.045
+                    : MediaQuery.of(context).size.width * 0.015),
           ),
           Gap(MediaQuery.of(context).size.height * 0.01),
           Text(text),

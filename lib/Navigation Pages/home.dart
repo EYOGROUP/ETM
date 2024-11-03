@@ -180,6 +180,8 @@ class _StartTimePageState extends State<StartTimePage> {
           columnId: 'id',
           id: workDay['id']);
       if (!mounted) return;
+      await getHoursOrMinutesWorkedForToday();
+      if (!mounted) return;
       setState(() {
         _isStartWork = false;
       });

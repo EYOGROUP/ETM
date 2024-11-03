@@ -55,7 +55,9 @@ class _WelcomePageState extends State<WelcomePage> {
                       '${AppLocalizations.of(context)?.welcomeTo} ETM!',
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.secondary,
-                          fontSize: MediaQuery.of(context).size.width * 0.09,
+                          fontSize: isPortrait
+                              ? MediaQuery.of(context).size.width * 0.09
+                              : MediaQuery.of(context).size.width * 0.05,
                           fontWeight: FontWeight.bold),
                     ),
                     Gap(MediaQuery.of(context).size.height * 0.0009),
@@ -67,7 +69,9 @@ class _WelcomePageState extends State<WelcomePage> {
                         ),
                       ),
                     ),
-                    Gap(MediaQuery.of(context).size.height * 0.08),
+                    Gap(isPortrait
+                        ? MediaQuery.of(context).size.height * 0.28
+                        : MediaQuery.of(context).size.height * 0.18),
                     ElevatedButton(
                         style: ButtonStyle(
                             backgroundColor: WidgetStatePropertyAll(

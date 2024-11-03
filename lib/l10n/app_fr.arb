@@ -68,7 +68,7 @@
    "workStartedAt": "Travail commencé à :",
   "workEndedAt": "Travail terminé à :",
    "date": "Date :",
-  "youWorkedHours": "Vous avez travaillé (Brut) :",
+  "youWorkedHours": "Vous avez travaillé en heures(Brut) :",
   "youHadBreaks": "Vous avez pris :",
   "moreDetails": "Plus de détails",
   "breakNo": "Pause No :",
