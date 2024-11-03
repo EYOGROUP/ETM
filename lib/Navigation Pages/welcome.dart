@@ -44,7 +44,7 @@ class WelcomePage extends StatelessWidget {
                       child: Text(
                         AppLocalizations.of(context)!.subtitleWelcomePage,
                         style: TextStyle(
-                          fontSize: MediaQuery.of(context).size.width * 0.03,
+                          fontSize: MediaQuery.of(context).size.width * 0.028,
                         ),
                       ),
                     ),
@@ -64,7 +64,8 @@ class WelcomePage extends StatelessWidget {
                         child: Text(
                           AppLocalizations.of(context)!.startNow,
                           style: TextStyle(
-                              fontSize: 22.0,
+                              fontSize:
+                                  MediaQuery.of(context).size.width * 0.04,
                               color: Theme.of(context).colorScheme.secondary),
                         ))
                   ],

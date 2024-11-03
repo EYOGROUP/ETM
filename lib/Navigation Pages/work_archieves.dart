@@ -32,6 +32,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
         });
         _dates.add(DateTime.now());
         await getNumberOfWorkedHours();
+        await isWorkFinishedCheck();
         await getNumberOfBreaks();
       },
     );

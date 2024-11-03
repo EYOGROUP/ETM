@@ -85,7 +85,32 @@
   "totalBreakDurationMin": "Total break duration in Min:",
   "youWorkedNetHours": "You worked in Hours (Net):",
   "workDetails": "Work Details",
-  "closeBreakFirst": "You must close your break first"
+  "closeBreakFirst": "You must close your break first",
+   "informationCollection": "1. Information Collection:",
+  "useOfInformation": "2. Use of Information:",
+  "emailContactFeature": "3. Email Contact Feature:",
+  "darkLightModeSettings": "4. Dark/Light Mode Settings:",
+  "dataSecurity": "5. Data Security:",
+  "policyChanges": "6. Changes to This Policy:",
+  "dataStorageInfo": "The EyoTime Management (ETM) App does not store personal data on external servers. All data, such as work hours and breaks, is stored locally on your device and accessible only to you.",
+  "dataPurpose": "The app collects and stores data solely for time tracking and analyzing your work hours. There are no third-party analytics, no ads, and no data is sent to external services.",
+  "contactUsExplanation": "If you want to send a message to the Younes Dahbi (EyoGroup) team via the “Contact Us” feature, the app directs the information you enter directly to your email client. Neither Younes Dahbi nor EyoGroup receive information directly from this process, and no additional storage or synchronization occurs outside of your email application.",
+  "darkModePreference": "The app stores your preference for dark or light mode locally on your device and does not access personal data.",
+  "localDataSecurity": "All data remains on your device and is not shared with third parties. The app uses locally stored information solely for app functionality.",
+  "policyUpdateNotice": "This privacy policy may be updated occasionally. For significant changes, you will be notified within the app.",
+   "acceptanceOfTerms": "1. Acceptance of Terms:",
+  "usageRestrictions": "2. Usage Restrictions:",
+  "limitationOfLiability": "3. Limitation of Liability:",
+  "userResponsibility": "4. User Responsibility:",
+  "modificationsToTerms": "5. Modifications to Terms:",
+  "contactInformation": "6. Contact Information:",
+  "termsAcceptance": "By using the Eyo Time Management app, you agree to these terms of use. If you do not agree with these terms, you should not use the app.",
+  "usagePurpose": "This app is intended solely for private time tracking. Any unauthorized use of the app, such as reverse engineering or distribution of modified versions, is prohibited.",
+  "limitationOfLiabilityExplanation": "Eyo Time Management assumes no liability for any damages or losses that may arise from using the app. The app is provided \"as is,\" without a guarantee of error-free performance.",
+  "userResponsibilityExplanation": "You are responsible for correctly entering and using the app, as well as for securing your locally stored data.",
+  "termsModificationNotice": "The terms of use may be modified at any time. Significant changes will be announced within the app.",
+  "contactUsExplanation": "For questions or comments about the app or these terms of use, contact Younes Dahbi (EyoGroup) through the “Contact Us” feature within the app."
+
    
 
 }

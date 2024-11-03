@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:gap/gap.dart';
+
+enum InfosApp {
+  privacyPolicy,
+  termOfUse,
+}
+
 class Constants {
   static String imagePath = 'assets/images/';
 
@@ -16,5 +23,27 @@ class Constants {
               MediaQuery.of(context).size.height * 0.003)),
     );
     ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
+
+  static Widget cardForTitleAndText(
+      {required BuildContext context,
+      required String title,
+      required String text}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: MediaQuery.of(context).size.width * 0.045),
+          ),
+          Gap(MediaQuery.of(context).size.height * 0.01),
+          Text(text),
+        ],
+      ),
+    );
   }
 }

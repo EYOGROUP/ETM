@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/contact_us.dart';
+import 'package:time_management/Navigation%20Pages/privacy_policy_Terms_of_Use.dart';
+import 'package:time_management/constants.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -47,15 +49,27 @@ class _InfosPageState extends State<InfosPage> {
             ),
             ListTile(
               title: Text(getLabels.privacyPolicy),
-              trailing: Icon(Platform.isIOS
-                  ? Icons.arrow_forward_ios_rounded
-                  : Icons.arrow_forward_outlined),
+              trailing: GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyOrTermsOfUseETM(
+                      infoApp: InfosApp.privacyPolicy),
+                )),
+                child: Icon(Platform.isIOS
+                    ? Icons.arrow_forward_ios_rounded
+                    : Icons.arrow_forward_outlined),
+              ),
             ),
             ListTile(
               title: Text(getLabels.termOfUse),
-              trailing: Icon(Platform.isIOS
-                  ? Icons.arrow_forward_ios_rounded
-                  : Icons.arrow_forward_outlined),
+              trailing: GestureDetector(
+                onTap: () => Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => const PrivacyPolicyOrTermsOfUseETM(
+                      infoApp: InfosApp.termOfUse),
+                )),
+                child: Icon(Platform.isIOS
+                    ? Icons.arrow_forward_ios_rounded
+                    : Icons.arrow_forward_outlined),
+              ),
             ),
             Gap(MediaQuery.of(context).size.height * 0.02),
             ListTile(
