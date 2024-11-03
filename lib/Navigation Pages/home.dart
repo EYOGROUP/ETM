@@ -1,11 +1,9 @@
 import 'dart:async';
 import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:slider_button/slider_button.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/db/mydb.dart';
@@ -192,18 +190,6 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  // readWork() async {
-  //   TrackingDB db = TrackingDB();
-  //   List<Map<String, dynamic>> works = await db.readData(
-  //       sql: "select * from work_sessions ") as List<Map<String, dynamic>>;
-  //   DateTime? start =
-  //       DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['startTime']);
-  //   DateTime? endTime =
-  //       DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(works[0]['endTime']);
-  //   print(endTime!.difference(start!).inMinutes);
-  //   print(works);
-  // }
-
   getHoursOrMinutesWorkedForToday() async {
     Map<String, dynamic> workDay = await getDataSameDateLikeToday();
     if (workDay.isEmpty || workDay['isCompleted'] == 0) {
@@ -355,13 +341,6 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  // readBreaks() async {
-  //   TrackingDB db = TrackingDB();
-  //   List<Map<String, dynamic>> works = await db.readData(
-  //       sql: "select * from break_sessions ") as List<Map<String, dynamic>>;
-  //   print(works);
-  // }
-
   Future<void> insertNewBreak(
       {required Map<String, dynamic> getWorkDayData,
       required DateTime breakTime}) async {
@@ -509,7 +488,6 @@ class _StartTimePageState extends State<StartTimePage> {
                       inactiveColorl: _isStartWork
                           ? Theme.of(context).colorScheme.errorContainer
                           : Theme.of(context).colorScheme.inversePrimary,
-                      onChangeStart: (value) => print(value),
                       onChangeEnd: (value) {
                         setState(() {
                           _sliderWorkValue = 0;
@@ -589,7 +567,6 @@ class _StartTimePageState extends State<StartTimePage> {
                       inactiveColorl: _isBreak
                           ? Theme.of(context).colorScheme.errorContainer
                           : Theme.of(context).colorScheme.inversePrimary,
-                      onChangeStart: (value) => print(value),
                       onChangeEnd: (value) {
                         setState(() {
                           _sliderBreakValue = 0;
@@ -673,62 +650,10 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 }
 
-class TrackSliderOld extends StatelessWidget {
-  final Future<bool?> Function() action;
-  final String titleTracker;
-  final String sliderLabel;
-  final bool isStart;
-  const TrackSliderOld(
-      {super.key,
-      required this.action,
-      required this.titleTracker,
-      required this.sliderLabel,
-      this.isStart = false});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Gap(MediaQuery.of(context).size.height * 0.06),
-        Text(
-          titleTracker,
-          style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: MediaQuery.of(context).size.height * 0.02),
-        ),
-        Gap(MediaQuery.of(context).size.height * 0.02),
-        SliderButton(
-          backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-          action: action,
-          vibrationFlag: true,
-          width: MediaQuery.of(context).size.width * 0.9,
-          alignLabel: Alignment.center,
-          buttonColor: Theme.of(context).colorScheme.primary,
-          highlightedColor: Theme.of(context).colorScheme.primary,
-          baseColor: Theme.of(context).colorScheme.onSurface,
-          label: Text(
-            sliderLabel,
-            style: TextStyle(
-                color: Theme.of(context).colorScheme.secondary,
-                fontWeight: FontWeight.w500,
-                fontSize: isStart ? 12 : 17),
-          ),
-          icon: Icon(
-            Icons.arrow_circle_right_outlined,
-            size: MediaQuery.of(context).size.height * 0.07,
-            color: Theme.of(context).colorScheme.inversePrimary,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class TrackSlider extends StatelessWidget {
   final double sliderValue;
   final Color inactiveColorl;
-  final Function(double)? onChangeStart;
+
   final Function(double)? onChangeEnd;
   final Function(double)? onChanged;
   final bool isThumbStartTouchingText;
@@ -738,7 +663,6 @@ class TrackSlider extends StatelessWidget {
       {super.key,
       required this.sliderValue,
       required this.inactiveColorl,
-      required this.onChangeStart,
       required this.onChangeEnd,
       required this.onChanged,
       required this.isThumbStartTouchingText,
@@ -747,6 +671,10 @@ class TrackSlider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Extract MediaQuery data at the beginning of the build method
+    final mediaQuery = MediaQuery.of(context);
+
+    final isPortrait = mediaQuery.orientation == Orientation.portrait;
     return Stack(
       alignment: Alignment.center,
       children: [
@@ -755,8 +683,9 @@ class TrackSlider extends StatelessWidget {
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
               thumbShape: RoundSliderThumbShape(
-                  enabledThumbRadius:
-                      MediaQuery.of(context).size.aspectRatio * 73),
+                  enabledThumbRadius: isPortrait
+                      ? MediaQuery.of(context).size.aspectRatio * 73
+                      : MediaQuery.of(context).size.aspectRatio * 20),
               trackHeight: MediaQuery.of(context).size.height * 0.08,
             ),
             child: Slider(
@@ -766,7 +695,6 @@ class TrackSlider extends StatelessWidget {
               max: 5.0,
               inactiveColor: inactiveColorl,
               thumbColor: Theme.of(context).colorScheme.onSurface,
-              onChangeStart: onChangeStart,
               onChangeEnd: onChangeEnd,
               onChanged: onChanged,
             ),

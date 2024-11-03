@@ -1,14 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:gap/gap.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
-class WelcomePage extends StatelessWidget {
+class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
 
   @override
+  State<WelcomePage> createState() => _WelcomePageState();
+}
+
+class _WelcomePageState extends State<WelcomePage> {
+  @override
+  void initState() {
+    super.initState();
+    // Perform any initialization tasks here
+    Future.delayed(const Duration(seconds: 1), () {
+      FlutterNativeSplash.remove();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Extract MediaQuery data at the beginning of the build method
+    final mediaQuery = MediaQuery.of(context);
+
+    final isPortrait = mediaQuery.orientation == Orientation.portrait;
     return Scaffold(
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
@@ -48,8 +67,7 @@ class WelcomePage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Gap(MediaQuery.of(context).size.height * 0.05),
-                    Gap(MediaQuery.of(context).size.height * 0.2),
+                    Gap(MediaQuery.of(context).size.height * 0.08),
                     ElevatedButton(
                         style: ButtonStyle(
                             backgroundColor: WidgetStatePropertyAll(
@@ -64,8 +82,9 @@ class WelcomePage extends StatelessWidget {
                         child: Text(
                           AppLocalizations.of(context)!.startNow,
                           style: TextStyle(
-                              fontSize:
-                                  MediaQuery.of(context).size.width * 0.04,
+                              fontSize: isPortrait
+                                  ? MediaQuery.of(context).size.width * 0.04
+                                  : MediaQuery.of(context).size.width * 0.027,
                               color: Theme.of(context).colorScheme.secondary),
                         ))
                   ],
