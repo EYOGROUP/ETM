@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:provider/provider.dart';
 import 'package:time_management/constants.dart';
+import 'package:time_management/provider/tm_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -39,6 +41,7 @@ class _ContactUsState extends State<ContactUs> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {
         final getLablels = AppLocalizations.of(context)!;
@@ -52,6 +55,9 @@ class _ContactUsState extends State<ContactUs> {
           getLablels.other
         ];
         setState(() {});
+
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
       },
     );
   }

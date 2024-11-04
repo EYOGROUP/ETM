@@ -82,7 +82,7 @@
       }
     }
   },
-
+  "noBreakTaken": "Es wurde keine Pause genommen.",
   "ofBreak": "an Pause",
   "totalBreakDurationMin": "Gesamte Pausendauer in Min:",
   "youWorkedNetHours": "Sie haben in Stunden gearbeitet (Netto):",

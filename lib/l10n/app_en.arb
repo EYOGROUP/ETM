@@ -82,6 +82,7 @@
       }
     }
   },
+  "noBreakTaken": "There is no break taken.",
   "totalBreakDurationMin": "Total break duration in Min:",
   "youWorkedNetHours": "You worked in Hours (Net):",
   "workDetails": "Work Details",

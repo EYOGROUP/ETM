@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -215,5 +216,33 @@ class TimeManagementPovider with ChangeNotifier {
       }
     }
     return isAllBreaksClosed;
+  }
+
+  bool isPortrait(BuildContext context) {
+    bool isPortraitGet = false;
+    final mediaQuery = MediaQuery.of(context);
+
+    bool isPortraitCheck = mediaQuery.orientation == Orientation.portrait;
+    if (isPortraitCheck) {
+      isPortraitGet = true;
+    }
+    return isPortraitGet;
+  }
+
+  void setOrientation(BuildContext context) {
+    // Check if the device is a tablet
+    bool isTablet = !isPortrait(context);
+
+    if (isTablet) {
+      // Allow rotation on tablets
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight
+      ]);
+    } else {
+      // Lock orientation to portrait for phones
+      SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    }
   }
 }

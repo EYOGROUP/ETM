@@ -57,6 +57,9 @@ class _StartTimePageState extends State<StartTimePage> {
         await getHoursOrMinutesWorkedForToday();
         await checkIfWorkAndBreakForTodayNotFinished();
         await getWorkTime();
+        if (!mounted) return;
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
         stopLoadingAnimation();
       },
     );

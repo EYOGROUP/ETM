@@ -25,6 +25,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
   @override
   void initState() {
     super.initState();
+
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         setState(() {
@@ -34,6 +35,9 @@ class _WorkArchievesState extends State<WorkArchieves> {
         await getNumberOfWorkedHours();
         await isWorkFinishedCheck();
         await getNumberOfBreaks();
+        if (!mounted) return;
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
       },
     );
   }

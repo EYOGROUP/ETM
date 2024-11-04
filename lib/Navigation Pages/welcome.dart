@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:gap/gap.dart';
+import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:time_management/provider/tm_provider.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});
@@ -16,9 +18,12 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   void initState() {
     super.initState();
+
     // Perform any initialization tasks here
     Future.delayed(const Duration(seconds: 1), () {
       FlutterNativeSplash.remove();
+      final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+      tm.setOrientation(context);
     });
   }
 

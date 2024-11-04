@@ -20,6 +20,17 @@ class InfosPage extends StatefulWidget {
 
 class _InfosPageState extends State<InfosPage> {
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
+      },
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
     final tmProvider =

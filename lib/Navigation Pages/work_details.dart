@@ -85,7 +85,14 @@ class _WorkDetailsState extends State<WorkDetails> {
   @override
   void initState() {
     super.initState();
-    getWorkData();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        await getWorkData();
+        if (!mounted) return;
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
+      },
+    );
   }
 
   @override
@@ -154,57 +161,67 @@ class _WorkDetailsState extends State<WorkDetails> {
                       fontWeight: FontWeight.bold, fontSize: 22.0),
                 ),
                 Gap(MediaQuery.of(context).size.height * 0.01),
-                SizedBox(
-                  height: MediaQuery.of(context).size.height * 0.35,
-                  width: MediaQuery.of(context).size.width * 0.90,
-                  child: ListView.builder(
-                    itemCount: breaks?.length,
-                    itemBuilder: (context, index) {
-                      int breakNo = index + 1;
-                      return Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: Card(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8.0, vertical: 5.0),
-                            decoration: BoxDecoration(
-                                color: Theme.of(context)
-                                    .colorScheme
-                                    .primaryContainer,
-                                borderRadius: BorderRadius.circular(12.0)),
-                            child: Padding(
+                breaks != null && breaks!.isNotEmpty
+                    ? SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.35,
+                        width: MediaQuery.of(context).size.width * 0.90,
+                        child: ListView.builder(
+                          itemCount: breaks?.length,
+                          itemBuilder: (context, index) {
+                            int breakNo = index + 1;
+                            return Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Gap(MediaQuery.of(context).size.height *
-                                      0.01),
-                                  RowLeadingAndTitle(
-                                      leading: getLabels.breakNo,
-                                      title: breakNo.toString()),
-                                  Gap(MediaQuery.of(context).size.height *
-                                      0.01),
-                                  RowLeadingAndTitle(
-                                      leading: getLabels.breakStartedAt,
-                                      title: breaks?[index]["breakStartTime"]),
-                                  Gap(MediaQuery.of(context).size.height *
-                                      0.01),
-                                  RowLeadingAndTitle(
-                                      leading: getLabels.breakFinishedAt,
-                                      title: breaks?[index]["breakEndTime"]),
-                                  Gap(MediaQuery.of(context).size.height *
-                                      0.01),
-                                  Text(getLabels.youTook(
-                                      "${breaks?[index]["duration"].toString()} Min"))
-                                ],
+                              child: Card(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 8.0, vertical: 5.0),
+                                  decoration: BoxDecoration(
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .primaryContainer,
+                                      borderRadius:
+                                          BorderRadius.circular(12.0)),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Gap(MediaQuery.of(context).size.height *
+                                            0.01),
+                                        RowLeadingAndTitle(
+                                            leading: getLabels.breakNo,
+                                            title: breakNo.toString()),
+                                        Gap(MediaQuery.of(context).size.height *
+                                            0.01),
+                                        RowLeadingAndTitle(
+                                            leading: getLabels.breakStartedAt,
+                                            title: breaks?[index]
+                                                ["breakStartTime"]),
+                                        Gap(MediaQuery.of(context).size.height *
+                                            0.01),
+                                        RowLeadingAndTitle(
+                                            leading: getLabels.breakFinishedAt,
+                                            title: breaks?[index]
+                                                ["breakEndTime"]),
+                                        Gap(MediaQuery.of(context).size.height *
+                                            0.01),
+                                        Text(getLabels.youTook(
+                                            "${breaks?[index]["duration"].toString()} Min"))
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         ),
-                      );
-                    },
-                  ),
-                ),
+                      )
+                    : Center(
+                        child: SizedBox(
+                            height: MediaQuery.of(context).size.height * 0.35,
+                            child: Text(getLabels.noBreakTaken)),
+                      ),
                 Gap(MediaQuery.of(context).size.height * 0.02),
                 Padding(
                   padding:
@@ -240,7 +257,7 @@ class LeadingAndTitle extends StatelessWidget {
     return ListTile(
       leading: Text(
         leading,
-        style: const TextStyle(fontSize: 18.0),
+        style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04),
       ),
       trailing: Text(
         title,
@@ -262,7 +279,7 @@ class RowLeadingAndTitle extends StatelessWidget {
       children: [
         Text(
           leading,
-          style: const TextStyle(fontSize: 16.0),
+          style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.04),
         ),
         const Spacer(),
         Text(
@@ -271,5 +288,16 @@ class RowLeadingAndTitle extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  bool isPortrait(BuildContext context) {
+    bool isPortraitGet = false;
+    final mediaQuery = MediaQuery.of(context);
+
+    bool isPortraitCheck = mediaQuery.orientation == Orientation.portrait;
+    if (isPortraitCheck) {
+      isPortraitGet = true;
+    }
+    return isPortraitGet;
   }
 }

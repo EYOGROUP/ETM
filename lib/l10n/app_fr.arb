@@ -82,11 +82,12 @@
       }
   }
   },
+  "noBreakTaken": "Aucune pause n'a été prise.",
   "totalBreakDurationMin": "Durée totale des pauses en minutes :",
   "youWorkedNetHours": "Vous avez travaillé en heures (Net) :",
   "workDetails": "Détails du travail",
   "closeBreakFirst": "Vous devez d'abord terminer votre pause",
-   "informationCollection": "1. Collecte d'informations :",
+  "informationCollection": "1. Collecte d'informations :",
   "useOfInformation": "2. Utilisation des informations :",
   "emailContactFeature": "3. Fonction de contact par e-mail :",
   "darkLightModeSettings": "4. Paramètres du mode sombre/clair :",
