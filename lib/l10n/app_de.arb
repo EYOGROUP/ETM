@@ -111,7 +111,9 @@
   "limitationOfLiabilityExplanation": "Eyo Time Management übernimmt keine Haftung für etwaige Schäden oder Verluste, die durch die Nutzung der App entstehen könnten. Die App wird „wie gesehen“ zur Verfügung gestellt, ohne Garantie auf Fehlerfreiheit.",
   "userResponsibilityExplanation": "Du bist selbst verantwortlich für die korrekte Eingabe und Nutzung der App, sowie für die Sicherung deiner lokal gespeicherten Daten.",
   "termsModificationNotice": "Die Nutzungsbedingungen können jederzeit geändert werden. Wesentliche Änderungen werden innerhalb der App angekündigt.",
-  "contactUsExplanation": "Für Fragen oder Anmerkungen zur App oder zu diesen Nutzungsbedingungen, kontaktiere Younes Dahbi (EyoGroup) über die „Contact Us“-Funktion innerhalb der App."
+  "contactUsExplanation": "Für Fragen oder Anmerkungen zur App oder zu diesen Nutzungsbedingungen, kontaktiere Younes Dahbi (EyoGroup) über die „Contact Us“-Funktion innerhalb der App.",
+  "email": "Email",
+  "contactDetails": "Contact Details"
 
 
 }
