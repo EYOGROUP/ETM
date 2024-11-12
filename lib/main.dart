@@ -35,7 +35,7 @@ class MyApp extends StatelessWidget {
             Locale('en'),
             Locale('fr'),
           ],
-          title: 'Flutter Demo',
+          title: 'Eyo Time Management',
           debugShowCheckedModeBanner: false,
           themeMode: tMProvider.isDarkGet ? ThemeMode.dark : ThemeMode.light,
           darkTheme: ThemeApp.darkMode,
