@@ -467,16 +467,21 @@ class _StartTimePageState extends State<StartTimePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Align(
-                  alignment: Alignment.topRight,
-                  child: Text(
-                      "${getLabels.todayThe}, ${DateFormat(getLabels.dateFormat).format(DateTime.now())}")),
               Text(
                 getLabels.welcome,
                 style: TextStyle(
                     fontSize: MediaQuery.of(context).size.height * 0.03,
                     fontWeight: FontWeight.bold),
               ),
+              Gap(MediaQuery.of(context).size.height * 0.01),
+              Align(
+                  alignment: Alignment.topRight,
+                  child: Text(
+                    "${getLabels.todayThe}, ${DateFormat(getLabels.dateFormat).format(DateTime.now())}",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w500,
+                    ),
+                  )),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
