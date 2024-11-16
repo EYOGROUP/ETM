@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
+import 'package:time_management/controller/notification.dart';
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/tm_provider.dart';
@@ -467,6 +468,12 @@ class _StartTimePageState extends State<StartTimePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              TextButton(
+                  onPressed: () {
+                    NotificationManager.sendScheduleNotification(
+                        context: context);
+                  },
+                  child: Text("here")),
               Text(
                 getLabels.welcome,
                 style: TextStyle(

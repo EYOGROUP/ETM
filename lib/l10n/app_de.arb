@@ -113,7 +113,9 @@
   "termsModificationNotice": "Die Nutzungsbedingungen können jederzeit geändert werden. Wesentliche Änderungen werden innerhalb der App angekündigt.",
   "contactUsExplanation": "Für Fragen oder Anmerkungen zur App oder zu diesen Nutzungsbedingungen, kontaktiere Younes Dahbi (EyoGroup) über die „Contact Us“-Funktion innerhalb der App.",
   "email": "Email",
-  "contactDetails": "Contact Details"
+  "contactDetails": "Contact Details",
+  "yourScheduleAwaits": "Dein Zeitplan wartet ⏳",
+  "dontForgetTasks": "Vergiss nicht deine geplanten Aufgaben für heute. Jede Minute zählt!"
 
 
 }
