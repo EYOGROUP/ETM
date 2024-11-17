@@ -48,17 +48,18 @@ class TimeManagementPovider with ChangeNotifier {
     if (isCategoryTableExist) {
       initData = await db.readData(sql: 'select COUNT(*) from categories');
       checkData = Sqflite.firstIntValue(initData) ?? 0;
-    }
-    if (checkData != null && checkData == 0) {
-      for (String category in categories) {
-        bool isAdsDisplayed = false;
-        if (category == getLabels.productivity) {
-          isAdsDisplayed = true;
-        }
-        ETMCategory etmCategory =
-            ETMCategory(name: category, isAdsDisplayed: isAdsDisplayed);
+      if (checkData == 0) {
+        for (String category in categories) {
+          bool isAdsDisplayed = false;
+          if (category == getLabels.productivity) {
+            isAdsDisplayed = true;
+          }
+          ETMCategory etmCategory =
+              ETMCategory(name: category, isAdsDisplayed: isAdsDisplayed);
 
-        await db.insertData(tableName: "categories", data: etmCategory.toMap());
+          await db.insertData(
+              tableName: "categories", data: etmCategory.toMap());
+        }
       }
     }
   }
