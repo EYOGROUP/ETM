@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/controller/notification.dart';
+import 'package:time_management/controller/work_manager.dart';
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/tm_provider.dart';
+import 'package:workmanager/workmanager.dart';
 
 class StartTimePage extends StatefulWidget {
   const StartTimePage({super.key});
@@ -471,8 +473,7 @@ class _StartTimePageState extends State<StartTimePage> {
             children: [
               TextButton(
                   onPressed: () {
-                    NotificationManager.sendScheduleNotification(
-                        context: context);
+                    WorkManager.init();
                   },
                   child: Text("here")),
               Text(
