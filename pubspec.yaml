@@ -53,6 +53,7 @@ dependencies:
   flutter_native_splash: ^2.4.1
   permission_handler: ^11.3.1
   pull_to_refresh: ^2.0.0
+  google_mobile_ads: ^5.2.0
 
   
  

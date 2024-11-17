@@ -18,6 +18,39 @@ class TrackingDB {
       onCreate: _onCreate,
       onConfigure: _onConfigure,
       version: 1,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < newVersion) {
+          await db.execute(
+              '''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,isAdsDisplayed INTEGER NOT NULL)''');
+          // 2. Create a new work_sessions table with the foreign key
+          await db.execute('''
+      CREATE TABLE work_sessions_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        startTime TEXT NOT NULL,
+        endTime TEXT NOT NULL,
+        isCompleted INTEGER NOT NULL,
+        categoryId INTEGER,
+        FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
+      );
+    ''');
+
+          // 3. Copy data from the old work_sessions table to the new one (only the necessary columns)
+          await db.execute('''
+      INSERT INTO work_sessions_new (id, startTime, endTime, isCompleted, categoryId)
+      SELECT id, startTime, endTime, isCompleted, categoryId FROM work_sessions;
+    ''');
+
+          // 4. Drop the old work_sessions table
+          await db.execute('DROP TABLE IF EXISTS work_sessions');
+
+          // 5. Rename the new work_sessions table to the original name
+          await db
+              .execute('ALTER TABLE work_sessions_new RENAME TO work_sessions');
+          const breakSessionTable =
+              ''' CREATE TABLE IF NOT EXISTS break_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT ,workSessionId, breakStartTime TEXT NOT NULL, breakEndTime TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
+          await db.execute(breakSessionTable);
+        }
+      },
     );
     return database;
   }
@@ -28,12 +61,26 @@ class TrackingDB {
 
   _onCreate(Database db, int version) async {
     // When creating the db, create the table
+    const categoriesTable =
+        ''' CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,isAdsDisplayed INTEGER NOT NULL) ''';
+
     const workSessionTable =
-        '''CREATE TABLE work_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT , startTime TEXT NOT NULL, endTime TEXT NOT NULL, isCompleted INTEGER NOT NULL)''';
+        ''' CREATE TABLE work_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT , startTime TEXT NOT NULL, endTime TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId INTEGER, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
     const breakSessionTable =
-        '''CREATE TABLE break_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT ,workSessionId, breakStartTime TEXT NOT NULL, breakEndTime TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
-    await db.execute(workSessionTable);
-    await db.execute(breakSessionTable);
+        ''' CREATE TABLE break_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT ,workSessionId, breakStartTime TEXT NOT NULL, breakEndTime TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
+    if (version == 1) {
+      await db.execute(workSessionTable);
+      await db.execute(breakSessionTable);
+      await db.execute(categoriesTable);
+    }
+  }
+
+  Future<bool> doesTableExist(String tableName) async {
+    Database? myDB = await db;
+    final result = await myDB?.rawQuery(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name=?",
+        [tableName]);
+    return result!.isNotEmpty;
   }
 
   Future<int> insertData(
@@ -45,9 +92,9 @@ class TrackingDB {
     return response;
   }
 
-  Future<List<Map>> readData({required String sql}) async {
+  Future<List<Map<String, Object?>>> readData({required String sql}) async {
     Database? myDB = await db;
-    List<Map> myData = await myDB!.rawQuery(sql);
+    List<Map<String, Object?>> myData = await myDB!.rawQuery(sql);
     return myData;
   }
 
@@ -74,6 +121,7 @@ class TrackingDB {
 
   deleteDB() async {
     Database? myDB = await db;
+
     deleteDatabase(myDB!.path);
   }
 }

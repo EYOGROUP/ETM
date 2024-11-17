@@ -4,12 +4,110 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:sqflite/sqflite.dart';
 import 'package:time_management/constants.dart';
+import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/db/mydb.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
   bool get isDarkGet => _isDark;
+
+  Future<bool> isCategoryAlreadyInit({required TrackingDB db}) async {
+    bool isAlreadyIn = true;
+    try {
+      List<Map<String, dynamic>> insertNewBreak = await db.readData(
+          sql:
+              "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'");
+
+      if (insertNewBreak.isEmpty) {
+        isAlreadyIn = false;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return isAlreadyIn;
+  }
+
+  initCategoryInDB({required BuildContext context}) async {
+    final getLabels = AppLocalizations.of(context)!;
+    final List<String> categories = [
+      getLabels.productivity,
+      getLabels.healthFitness,
+      getLabels.education,
+      getLabels.business,
+      getLabels.finance,
+      getLabels.social,
+      getLabels.entertainment,
+    ];
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> initData;
+    int? checkData;
+    bool isCategoryTableExist = await isCategoryAlreadyInit(db: db);
+    if (isCategoryTableExist) {
+      initData = await db.readData(sql: 'select COUNT(*) from categories');
+      checkData = Sqflite.firstIntValue(initData) ?? 0;
+    }
+    if (checkData != null && checkData == 0) {
+      for (String category in categories) {
+        bool isAdsDisplayed = false;
+        if (category == getLabels.productivity) {
+          isAdsDisplayed = true;
+        }
+        ETMCategory etmCategory =
+            ETMCategory(name: category, isAdsDisplayed: isAdsDisplayed);
+
+        await db.insertData(tableName: "categories", data: etmCategory.toMap());
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCategories(
+      {required BuildContext context, required bool mounted}) async {
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> getDataModifiedData = [];
+    bool isCategoryAlreadyInitCheck = await isCategoryAlreadyInit(db: db);
+    if (isCategoryAlreadyInitCheck) {
+      final getData = await db.readData(sql: "select * from categories")
+          as List<Map<String, dynamic>>;
+      if (context.mounted) {
+        final getLabels = AppLocalizations.of(context)!;
+        getDataModifiedData = getData
+            .map((category) => Map<String, dynamic>.from(category))
+            .toList();
+        for (Map<String, dynamic> category in getDataModifiedData) {
+          switch (category["id"]) {
+            case 1:
+              category["name"] = getLabels.productivity;
+              break;
+            case 2:
+              category["name"] = getLabels.healthFitness;
+              break;
+            case 3:
+              category["name"] = getLabels.education;
+              break;
+            case 4:
+              category["name"] = getLabels.business;
+              break;
+            case 5:
+              category["name"] = getLabels.finance;
+              break;
+            case 6:
+              category["name"] = getLabels.social;
+              break;
+            case 7:
+              category["name"] = getLabels.entertainment;
+              break;
+
+            default:
+              break;
+          }
+        }
+      }
+    }
+    return getDataModifiedData;
+  }
 
   getThemeApp({required BuildContext context}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -47,9 +145,9 @@ class TimeManagementPovider with ChangeNotifier {
     }
   }
 
-  Future<Map<String, dynamic>> getDataSameDateLikeToday(
+  Future<List<Map<String, dynamic>>> getDataSameDateLikeToday(
       {required DateTime date}) async {
-    Map<String, dynamic> workDay = {};
+    List<Map<String, dynamic>> worksDay = [];
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> works = await db.readData(
         sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
@@ -61,10 +159,10 @@ class TimeManagementPovider with ChangeNotifier {
 // check if data date same like today
       bool isSameDate = areDatesSame(startTimeToday, date);
       if (isSameDate) {
-        workDay = work;
+        worksDay.add(work);
       }
     }
-    return workDay;
+    return worksDay;
   }
 
   Future<int> getNumberOfBreaks(
@@ -74,16 +172,18 @@ class TimeManagementPovider with ChangeNotifier {
     int numberOfBreaks = 0;
     TrackingDB db = TrackingDB();
 
-    Map<String, dynamic> getWorkDay =
+    List<Map<String, dynamic>> getWorksDay =
         await getDataSameDateLikeToday(date: date);
     try {
-      if (getWorkDay['id'] != null) {
-        List<Map<String, dynamic>> breakSessions = await db.readData(
-                sql:
-                    "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
-            as List<Map<String, dynamic>>;
-        if (mounted) {
-          numberOfBreaks = breakSessions.length;
+      for (Map<String, dynamic> getWorkDay in getWorksDay) {
+        if (getWorkDay['id'] != null) {
+          List<Map<String, dynamic>> breakSessions = await db.readData(
+                  sql:
+                      "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
+              as List<Map<String, dynamic>>;
+          if (mounted) {
+            numberOfBreaks += breakSessions.length;
+          }
         }
       }
     } catch (error) {
@@ -98,33 +198,28 @@ class TimeManagementPovider with ChangeNotifier {
       {required DateTime choosedDate}) async {
     Map<String, dynamic> data = {};
 
-    Map<String, dynamic> workDay =
+    List<Map<String, dynamic>> worksDay =
         await getDataSameDateLikeToday(date: choosedDate);
-    if (workDay.isNotEmpty) {
-      if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
-        return data;
-      }
+    double inMinutes = 0;
 
-      DateTime? start =
-          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['startTime']);
-      DateTime? endTime =
-          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['endTime']);
-      int hours = endTime!.difference(start!).inHours;
-      if (hours > 0) {
-        data = {
-          "hours": hours,
-          "isInHours": true,
-        };
-      } else {
-        int inMinutes = endTime.difference(start).inMinutes;
+    for (Map<String, dynamic> workDay in worksDay) {
+      if (workDay.isNotEmpty) {
+        if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
+          return data;
+        }
 
+        DateTime? start =
+            DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['startTime']);
+        DateTime? endTime =
+            DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['endTime']);
+
+        inMinutes += endTime!.difference(start!).inMinutes;
         data = {
           "hours": inMinutes,
           "isInHours": false,
         };
       }
     }
-
     return data;
   }
 

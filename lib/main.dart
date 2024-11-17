@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/welcome.dart';
 import 'package:time_management/provider/tm_provider.dart';
@@ -10,7 +11,8 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 void main() async {
   FlutterNativeSplash.preserve(
       widgetsBinding: WidgetsFlutterBinding.ensureInitialized());
-
+  WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   FlutterNativeSplash.remove();
   runApp(const MyApp());
 }
