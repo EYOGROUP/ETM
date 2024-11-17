@@ -85,9 +85,9 @@ class NotificationManager {
       tz.setLocalLocation(tz.getLocation(currenTimeZone));
 
       var currentTime = tz.TZDateTime.now(tz.local);
-      var targetHour = 21; // Zum Beispiel 10:00 Uhr
-      var targetMinute = 0; // Ganze Stunde
-      var timeToSendNotification = tz.TZDateTime.now(tz.local);
+      var targetHour = 3; // Zum Beispiel 10:00 Uhr
+      var targetMinute = 30; // Ganze Stunde
+
       // Erstellen des geplanten Zeitpunkts (z.B. 10:00 Uhr)
       var nextScheduledTime = tz.TZDateTime(
         tz.local,
@@ -97,20 +97,17 @@ class NotificationManager {
         targetHour,
         targetMinute,
       );
-      timeToSendNotification = nextScheduledTime;
+
       // Falls der geplante Zeitpunkt bereits vergangen ist, verschiebe auf den nächsten Tag
-      if (timeToSendNotification.isBefore(currentTime)) {
-        timeToSendNotification =
-            timeToSendNotification.add(const Duration(hours: 1));
-      } else {
-        timeToSendNotification = currentTime;
+      if (nextScheduledTime.isBefore(currentTime)) {
+        nextScheduledTime = nextScheduledTime.add(const Duration(hours: 1));
       }
 
       await flutterLocalNotificationsPlugin.zonedSchedule(
         1,
         getLabels.yourScheduleAwaits,
         getLabels.dontForgetTasks,
-        timeToSendNotification,
+        nextScheduledTime,
         notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exact,
         uiLocalNotificationDateInterpretation:
