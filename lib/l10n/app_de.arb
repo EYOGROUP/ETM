@@ -113,7 +113,23 @@
   "termsModificationNotice": "Die Nutzungsbedingungen können jederzeit geändert werden. Wesentliche Änderungen werden innerhalb der App angekündigt.",
   "contactUsExplanation": "Für Fragen oder Anmerkungen zur App oder zu diesen Nutzungsbedingungen, kontaktiere Younes Dahbi (EyoGroup) über die „Contact Us“-Funktion innerhalb der App.",
   "email": "Email",
-  "contactDetails": "Contact Details"
+  "contactDetails": "Contact Details",
+  "deleteWorkDay": "Lösche deinen Arbeitstag",
+  "areYouSure": "Bist du sicher?",
+  "deleteWorkConfirmation": "Möchtest du deine Arbeit wirklich löschen?",
+   "cancel": "Abbrechen",
+  "confirm": "Bestätigen",
+   "welcomePrivacyPolicy": "Willkommen bei der Datenschutzerklärung von ETM.\n\nWir nehmen den Schutz deiner Daten sehr ernst und möchten, dass du weißt, welche Daten wir sammeln und wie wir sie verwenden.",
+  "dataAccess": "Nur du, als Nutzer der App, hast Zugriff auf die auf deinem Gerät gespeicherten Daten.",
+  "dataDeletion": "Du kannst deine Arbeitszeitdaten jederzeit über die App löschen. Diese Daten werden nicht auf unseren Servern gespeichert und werden nach der Löschung nicht wiederhergestellt.",
+  "policyChanges": "Wir behalten uns das Recht vor, diese Datenschutzerklärung jederzeit zu ändern. Alle Änderungen werden in der App angezeigt.",
+  "contact": "Wenn du Fragen zur Datenschutzerklärung hast oder mehr über unsere Praktiken erfahren möchtest, kontaktiere uns bitte unter younesoffi.dahbi@gmail.com.",
+  "dataAccessQuestion": "Wer hat Zugriff auf diese Daten?",
+  "dataDeletionTitle": "Datenlöschung",
+  "policyChangesTitle": "Änderungen der Datenschutzerklärung",
+  "yourWorkdayHasBeenDeleted": "Dein Arbeitstag wurde gelöscht. Du kannst jetzt einen neuen Arbeitstag starten.",
+  "yourScheduleAwaits": "Dein Zeitplan wartet ⏳",
+  "dontForgetTasks": "Vergiss nicht deine geplanten Aufgaben für heute. Jede Minute zählt!"
 
 
 }

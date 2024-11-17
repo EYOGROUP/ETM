@@ -16,7 +16,7 @@ class Constants {
       content: Text(value),
       backgroundColor: Theme.of(context).colorScheme.onPrimaryContainer,
       closeIconColor: Theme.of(context).colorScheme.outlineVariant,
-      duration: const Duration(seconds: 5),
+      duration: const Duration(seconds: 10),
       showCloseIcon: true,
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(

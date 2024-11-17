@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -425,7 +426,7 @@ class _StartTimePageState extends State<StartTimePage> {
         Map<String, dynamic> getWorkDay = await getDataSameDateLikeToday();
         if (mounted) {
           DateTime? startWork =
-              DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['startTime']);
+              DateFormat('yyyy-MM-dd HH:mm').tryParse(getWorkDay['startTime']);
           String? formatStartTime = DateFormat('HH:mm').format(startWork!);
           setState(() {
             workStartedTime = formatStartTime;

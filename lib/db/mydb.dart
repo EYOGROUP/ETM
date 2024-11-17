@@ -51,6 +51,11 @@ class TrackingDB {
     return myData;
   }
 
+  Future<void> deleteData({required String sql}) async {
+    Database? myDB = await db;
+    await myDB?.execute(sql);
+  }
+
   Future<int> updateData(
       {required String tableName,
       required Map<String, dynamic> data,
