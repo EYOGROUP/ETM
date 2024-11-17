@@ -7,12 +7,9 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
-import 'package:time_management/controller/notification.dart';
-import 'package:time_management/controller/work_manager.dart';
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/tm_provider.dart';
-import 'package:workmanager/workmanager.dart';
 
 class StartTimePage extends StatefulWidget {
   const StartTimePage({super.key});
@@ -429,7 +426,7 @@ class _StartTimePageState extends State<StartTimePage> {
         Map<String, dynamic> getWorkDay = await getDataSameDateLikeToday();
         if (mounted) {
           DateTime? startWork =
-              DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['startTime']);
+              DateFormat('yyyy-MM-dd HH:mm').tryParse(getWorkDay['startTime']);
           String? formatStartTime = DateFormat('HH:mm').format(startWork!);
           setState(() {
             workStartedTime = formatStartTime;
@@ -471,11 +468,6 @@ class _StartTimePageState extends State<StartTimePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TextButton(
-                  onPressed: () {
-                    // WorkManager.init();
-                  },
-                  child: Text("here")),
               Text(
                 getLabels.welcome,
                 style: TextStyle(

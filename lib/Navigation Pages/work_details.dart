@@ -23,6 +23,7 @@ class _WorkDetailsState extends State<WorkDetails> {
   int totalBreakDuration = 0;
   double nettWorkedDay = 0;
   double grossWorkDay = 0;
+  bool isWorkDeleting = false;
 
   Future<void> getBreaks({required int workSessionsId}) async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
@@ -82,6 +83,52 @@ class _WorkDetailsState extends State<WorkDetails> {
     });
   }
 
+  Future<void> deleteWork(
+      {required int id,
+      required String title,
+      required String description,
+      required String cancelText,
+      required String confirmText}) async {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(description),
+        icon: Icon(
+          Icons.warning_amber,
+          size: 33,
+          color: Theme.of(context).colorScheme.error,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(cancelText),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              setState(() {
+                isWorkDeleting = true;
+              });
+              final tm =
+                  Provider.of<TimeManagementPovider>(context, listen: false);
+              await tm.deleteWork(id: id);
+              if (!context.mounted) return;
+              Navigator.of(context).pop(true);
+              setState(() {
+                isWorkDeleting = false;
+              });
+            },
+            child: Text(
+              confirmText,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -111,133 +158,161 @@ class _WorkDetailsState extends State<WorkDetails> {
               ? Icons.arrow_back_ios_new_outlined
               : Icons.arrow_back_outlined),
         ),
+        bottom: isWorkDeleting
+            ? const PreferredSize(
+                preferredSize: Size(200, 3), child: LinearProgressIndicator())
+            : null,
       ),
       body: workData != null && !isLoadingData
           ? SingleChildScrollView(
-              child: Column(children: [
-                LeadingAndTitle(
-                  leading: getLabels.date,
-                  title:
-                      DateFormat(getLabels.dateFormat).format(widget.workDate),
-                ),
-                Text(
-                  getLabels.workTime,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 22.0),
-                ),
-                LeadingAndTitle(
-                  leading: getLabels.startWork,
-                  title: workData?['startTime'],
-                ),
-                LeadingAndTitle(
-                  leading: getLabels.workEndedAt,
-                  title: workData?['endTime'],
-                ),
-                LeadingAndTitle(
-                  leading: getLabels.youWorkedHours,
-                  title: grossWorkDay.toStringAsFixed(2),
-                ),
-                Gap(MediaQuery.of(context).size.height * 0.01),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    for (double i = 0; i <= dividerCount; i++) ...{
-                      if (i % 2 == 0) ...{
-                        const Flexible(
-                          child: SizedBox(
-                            width: 20,
-                            child: Divider(),
+              child: Column(
+                children: [
+                  LeadingAndTitle(
+                    leading: getLabels.date,
+                    title: DateFormat(getLabels.dateFormat)
+                        .format(widget.workDate),
+                  ),
+                  Text(
+                    getLabels.workTime,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 22.0),
+                  ),
+                  LeadingAndTitle(
+                    leading: getLabels.startWork,
+                    title: workData?['startTime'],
+                  ),
+                  LeadingAndTitle(
+                    leading: getLabels.workEndedAt,
+                    title: workData?['endTime'],
+                  ),
+                  LeadingAndTitle(
+                    leading: getLabels.youWorkedHours,
+                    title: grossWorkDay.toStringAsFixed(2),
+                  ),
+                  Gap(MediaQuery.of(context).size.height * 0.01),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (double i = 0; i <= dividerCount; i++) ...{
+                        if (i % 2 == 0) ...{
+                          const Flexible(
+                            child: SizedBox(
+                              width: 20,
+                              child: Divider(),
+                            ),
                           ),
-                        ),
-                      } else ...{
-                        const Gap(10),
+                        } else ...{
+                          const Gap(10),
+                        }
                       }
-                    }
-                  ],
-                ),
-                Text(
-                  getLabels.breaks,
-                  style: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 22.0),
-                ),
-                Gap(MediaQuery.of(context).size.height * 0.01),
-                breaks != null && breaks!.isNotEmpty
-                    ? SizedBox(
-                        height: MediaQuery.of(context).size.height * 0.35,
-                        width: MediaQuery.of(context).size.width * 0.90,
-                        child: ListView.builder(
-                          itemCount: breaks?.length,
-                          itemBuilder: (context, index) {
-                            int breakNo = index + 1;
-                            return Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: Card(
-                                child: Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0, vertical: 5.0),
-                                  decoration: BoxDecoration(
-                                      color: Theme.of(context)
-                                          .colorScheme
-                                          .primaryContainer,
-                                      borderRadius:
-                                          BorderRadius.circular(12.0)),
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Gap(MediaQuery.of(context).size.height *
-                                            0.01),
-                                        RowLeadingAndTitle(
-                                            leading: getLabels.breakNo,
-                                            title: breakNo.toString()),
-                                        Gap(MediaQuery.of(context).size.height *
-                                            0.01),
-                                        RowLeadingAndTitle(
-                                            leading: getLabels.breakStartedAt,
-                                            title: breaks?[index]
-                                                ["breakStartTime"]),
-                                        Gap(MediaQuery.of(context).size.height *
-                                            0.01),
-                                        RowLeadingAndTitle(
-                                            leading: getLabels.breakFinishedAt,
-                                            title: breaks?[index]
-                                                ["breakEndTime"]),
-                                        Gap(MediaQuery.of(context).size.height *
-                                            0.01),
-                                        Text(getLabels.youTook(
-                                            "${breaks?[index]["duration"].toString()} Min"))
-                                      ],
+                    ],
+                  ),
+                  Text(
+                    getLabels.breaks,
+                    style: const TextStyle(
+                        fontWeight: FontWeight.bold, fontSize: 22.0),
+                  ),
+                  Gap(MediaQuery.of(context).size.height * 0.01),
+                  breaks != null && breaks!.isNotEmpty
+                      ? SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.35,
+                          width: MediaQuery.of(context).size.width * 0.90,
+                          child: ListView.builder(
+                            itemCount: breaks?.length,
+                            itemBuilder: (context, index) {
+                              int breakNo = index + 1;
+                              return Padding(
+                                padding: const EdgeInsets.all(8.0),
+                                child: Card(
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0, vertical: 5.0),
+                                    decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primaryContainer,
+                                        borderRadius:
+                                            BorderRadius.circular(12.0)),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Gap(MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.01),
+                                          RowLeadingAndTitle(
+                                              leading: getLabels.breakNo,
+                                              title: breakNo.toString()),
+                                          Gap(MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.01),
+                                          RowLeadingAndTitle(
+                                              leading: getLabels.breakStartedAt,
+                                              title: breaks?[index]
+                                                  ["breakStartTime"]),
+                                          Gap(MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.01),
+                                          RowLeadingAndTitle(
+                                              leading:
+                                                  getLabels.breakFinishedAt,
+                                              title: breaks?[index]
+                                                  ["breakEndTime"]),
+                                          Gap(MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.01),
+                                          Text(getLabels.youTook(
+                                              "${breaks?[index]["duration"].toString()} Min"))
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                            );
-                          },
+                              );
+                            },
+                          ),
+                        )
+                      : Center(
+                          child: SizedBox(
+                              height: MediaQuery.of(context).size.height * 0.35,
+                              child: Text(getLabels.noBreakTaken)),
                         ),
-                      )
-                    : Center(
-                        child: SizedBox(
-                            height: MediaQuery.of(context).size.height * 0.35,
-                            child: Text(getLabels.noBreakTaken)),
-                      ),
-                Gap(MediaQuery.of(context).size.height * 0.02),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5),
-                  child: RowLeadingAndTitle(
-                      leading: getLabels.totalBreakDurationMin,
-                      title: totalBreakDuration.toString()),
-                ),
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 15.0, vertical: 5),
-                  child: RowLeadingAndTitle(
-                      leading: getLabels.youWorkedNetHours,
-                      title: nettWorkedDay.toStringAsFixed(2)),
-                ),
-              ]),
+                  Gap(MediaQuery.of(context).size.height * 0.02),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15.0, vertical: 5),
+                    child: RowLeadingAndTitle(
+                        leading: getLabels.totalBreakDurationMin,
+                        title: totalBreakDuration.toString()),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 15.0, vertical: 5),
+                    child: RowLeadingAndTitle(
+                        leading: getLabels.youWorkedNetHours,
+                        title: nettWorkedDay.toStringAsFixed(2)),
+                  ),
+                  TextButton(
+                      style: const ButtonStyle(
+                          padding: WidgetStatePropertyAll(
+                              EdgeInsets.only(bottom: 8.0))),
+                      onPressed: () {
+                        deleteWork(
+                            id: workData?["id"],
+                            title: getLabels.areYouSure,
+                            description: getLabels.deleteWorkConfirmation,
+                            cancelText: getLabels.cancel,
+                            confirmText: getLabels.confirm);
+                      },
+                      child: Text(getLabels.deleteWorkDay)),
+                ],
+              ),
             )
           : const Center(
               child: CircularProgressIndicator(),

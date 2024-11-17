@@ -218,6 +218,11 @@ class TimeManagementPovider with ChangeNotifier {
     return isAllBreaksClosed;
   }
 
+  Future<void> deleteWork({required int id}) async {
+    TrackingDB db = TrackingDB();
+    await db.deleteData(sql: "delete from work_sessions where id =$id");
+  }
+
   bool isPortrait(BuildContext context) {
     bool isPortraitGet = false;
     final mediaQuery = MediaQuery.of(context);

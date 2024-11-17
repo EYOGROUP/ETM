@@ -47,15 +47,12 @@ dependencies:
   path: ^1.9.0
   calendar_date_picker2: ^1.1.7
   
-
+  
   flutter_localizations:
     sdk: flutter
   flutter_native_splash: ^2.4.1
-  flutter_local_notifications: ^18.0.1
   permission_handler: ^11.3.1
-  flutter_timezone: ^3.0.1
-  workmanager: ^0.5.2
-  flutter_foreground_task: ^8.13.0
+  pull_to_refresh: ^2.0.0
 
   
  

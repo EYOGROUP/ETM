@@ -34,6 +34,10 @@ class _PrivacyPolicyOrTermsOfUseETMState
     final getLabels = AppLocalizations.of(context)!;
     List<Map<String, dynamic>> getPrivacyPolicyData = [
       {
+        "title": getLabels.privacyPolicy,
+        "value": getLabels.welcomePrivacyPolicy,
+      },
+      {
         "title": getLabels.informationCollection,
         "value": getLabels.dataStorageInfo
       },
@@ -47,7 +51,22 @@ class _PrivacyPolicyOrTermsOfUseETMState
         "value": getLabels.darkModePreference
       },
       {"title": getLabels.dataSecurity, "value": getLabels.localDataSecurity},
-      {"title": getLabels.policyChanges, "value": getLabels.policyUpdateNotice},
+      {
+        "title": getLabels.dataAccessQuestion,
+        "value": getLabels.dataAccess,
+      },
+      {
+        "title": getLabels.dataDeletionTitle,
+        "value": getLabels.dataDeletion,
+      },
+      {
+        "title": getLabels.policyChangesTitle,
+        "value": getLabels.policyChanges,
+      },
+      {
+        "title": getLabels.contactUs,
+        "value": getLabels.contact,
+      },
     ];
     List<Map<String, dynamic>> getTermsOfUseData = [
       {

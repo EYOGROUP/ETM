@@ -5,7 +5,9 @@ import 'package:gap/gap.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:time_management/Navigation%20Pages/work_details.dart';
+import 'package:time_management/constants.dart';
 import 'package:time_management/provider/tm_provider.dart';
 
 class WorkArchieves extends StatefulWidget {
@@ -22,6 +24,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
   int workedTime = 0;
   bool isInhours = false;
   bool isWorkFinished = false;
+  final RefreshController _refreshController = RefreshController();
   @override
   void initState() {
     super.initState();
@@ -31,15 +34,23 @@ class _WorkArchievesState extends State<WorkArchieves> {
         setState(() {
           isLoadingData = true;
         });
-        _dates.add(DateTime.now());
-        await getNumberOfWorkedHours();
-        await isWorkFinishedCheck();
-        await getNumberOfBreaks();
-        if (!mounted) return;
-        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
-        tm.setOrientation(context);
+        await getAllData();
+        setState(() {
+          isLoadingData = false;
+        });
       },
     );
+  }
+
+  getAllData() async {
+    _dates.clear();
+    _dates.add(DateTime.now());
+    await getNumberOfWorkedHours();
+    await isWorkFinishedCheck();
+    await getNumberOfBreaks();
+    if (!mounted) return;
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+    tm.setOrientation(context);
   }
 
   Future<void> isWorkFinishedCheck() async {
@@ -57,7 +68,6 @@ class _WorkArchievesState extends State<WorkArchieves> {
         date: _dates.last, mounted: mounted, context: context);
     setState(() {
       numberOfBreaks = getData;
-      isLoadingData = false;
     });
   }
 
@@ -82,6 +92,14 @@ class _WorkArchievesState extends State<WorkArchieves> {
     }
   }
 
+  void _onRefresh() async {
+    // monitor network fetch
+    await getAllData();
+    if (!mounted) return;
+    // if failed,use refreshFailed()
+    _refreshController.refreshCompleted();
+  }
+
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
@@ -91,103 +109,125 @@ class _WorkArchievesState extends State<WorkArchieves> {
         centerTitle: true,
         title: Text(getLabels.archives),
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(
-            horizontal: MediaQuery.of(context).size.width * 0.04,
-            vertical: MediaQuery.of(context).size.height * 0.015),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              "${getLabels.chooseDate}: ",
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            Gap(MediaQuery.of(context).size.height * 0.02),
-            CalendarDatePicker2(
-              config: CalendarDatePicker2Config(
-                  lastDate: DateTime.now(),
-                  calendarType: CalendarDatePicker2Type.single),
-              value: _dates,
-              onValueChanged: (value) async {
-                setState(() {
-                  _dates = value;
-                });
-                await getNumberOfBreaks();
-                await getNumberOfWorkedHours();
-                await isWorkFinishedCheck();
-              },
-            ),
-            Gap(MediaQuery.of(context).size.height * 0.02),
-            isLoadingData
-                ? const Center(child: CircularProgressIndicator())
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    textBaseline: TextBaseline.alphabetic,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            _dates.isNotEmpty
-                                ? '${getLabels.date} ${DateFormat(getLabels.dateFormat).format(_dates.first)}'
-                                : getLabels.date,
-                            style: const TextStyle(
-                                fontSize: 16.0, fontWeight: FontWeight.bold),
-                          ),
-                          Gap(MediaQuery.of(context).size.height * 0.02),
-                          Text.rich(TextSpan(children: [
-                            TextSpan(
-                              text: '${getLabels.youWorkedHours}  $workedTime ',
+      body: SmartRefresher(
+        controller: _refreshController,
+        onRefresh: _onRefresh,
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+              horizontal: MediaQuery.of(context).size.width * 0.04,
+              vertical: MediaQuery.of(context).size.height * 0.015),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "${getLabels.chooseDate}: ",
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              Gap(MediaQuery.of(context).size.height * 0.02),
+              CalendarDatePicker2(
+                config: CalendarDatePicker2Config(
+                    calendarViewMode: CalendarDatePicker2Mode.day,
+                    lastDate: DateTime.now(),
+                    calendarType: CalendarDatePicker2Type.single),
+                value: _dates,
+                onValueChanged: (value) async {
+                  setState(() {
+                    _dates = value;
+                  });
+                  await getNumberOfBreaks();
+                  await getNumberOfWorkedHours();
+                  await isWorkFinishedCheck();
+                },
+              ),
+              Gap(MediaQuery.of(context).size.height * 0.02),
+              isLoadingData
+                  ? const Center(child: CircularProgressIndicator())
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                            Text(
+                              _dates.isNotEmpty
+                                  ? '${getLabels.date} ${DateFormat(getLabels.dateFormat).format(_dates.first)}'
+                                  : getLabels.date,
                               style: const TextStyle(
                                   fontSize: 16.0, fontWeight: FontWeight.bold),
                             ),
-                            TextSpan(
-                                text: isInhours
-                                    ? workedTime <= 1
-                                        ? getLabels.hour
-                                        : getLabels.hours
-                                    : workedTime > 1
-                                        ? getLabels.minutes
-                                        : getLabels.minute,
+                            Gap(MediaQuery.of(context).size.height * 0.02),
+                            Text.rich(TextSpan(children: [
+                              TextSpan(
+                                text:
+                                    '${getLabels.youWorkedHours}  $workedTime ',
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.bold))
-                          ])),
-                          ListTile(
-                            contentPadding: const EdgeInsets.all(0),
-                            leading: Text(
-                              numberOfBreaks <= 1
-                                  ? "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breakLabel}"
-                                  : "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breaks}",
-                              style: const TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
-                            ),
-                            trailing: isWorkFinished
-                                ? GestureDetector(
-                                    onTap: () => Navigator.of(context)
-                                        .push(MaterialPageRoute(
-                                      builder: (context) =>
-                                          WorkDetails(workDate: _dates.first),
-                                    )),
-                                    child: Text(
-                                      getLabels.moreDetails,
-                                      style: TextStyle(
-                                          fontSize: 14.0,
-                                          fontWeight: FontWeight.bold,
-                                          color: Theme.of(context)
-                                              .colorScheme
-                                              .primary),
-                                    ),
-                                  )
-                                : null,
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
-          ],
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              TextSpan(
+                                  text: isInhours
+                                      ? workedTime <= 1
+                                          ? getLabels.hour
+                                          : getLabels.hours
+                                      : workedTime > 1
+                                          ? getLabels.minutes
+                                          : getLabels.minute,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold))
+                            ])),
+                            ListTile(
+                              contentPadding: const EdgeInsets.all(0),
+                              leading: Text(
+                                numberOfBreaks <= 1
+                                    ? "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breakLabel}"
+                                    : "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breaks}",
+                                style: const TextStyle(
+                                    fontSize: 16.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              trailing: isWorkFinished
+                                  ? GestureDetector(
+                                      onTap: () async {
+                                        bool? isFinished =
+                                            await Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                          builder: (context) => WorkDetails(
+                                              workDate: _dates.first),
+                                        ));
+                                        if (!mounted) return;
+                                        if (isFinished != null && isFinished) {
+                                          await _refreshController
+                                              .requestRefresh();
+                                          if (!context.mounted) return;
+                                          Constants.showInSnackBar(
+                                              value: getLabels
+                                                  .yourWorkdayHasBeenDeleted,
+                                              context: context);
+                                        }
+                                      },
+                                      child: Text(
+                                        getLabels.moreDetails,
+                                        style: TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.bold,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .primary),
+                                      ),
+                                    )
+                                  : null,
+                            )
+                          ],
+                        ),
+                      ],
+                    ),
+            ],
+          ),
         ),
       ),
     );
