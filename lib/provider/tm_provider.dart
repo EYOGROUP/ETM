@@ -124,6 +124,101 @@ class TimeManagementPovider with ChangeNotifier {
     return getDataModifiedData;
   }
 
+  Future<bool> isCategoryAlreadyInit({required TrackingDB db}) async {
+    bool isAlreadyIn = true;
+    try {
+      List<Map<String, dynamic>> insertNewBreak = await db.readData(
+          sql:
+              "SELECT name FROM sqlite_master WHERE type='table' AND name='categories'");
+
+      if (insertNewBreak.isEmpty) {
+        isAlreadyIn = false;
+      }
+    } catch (e) {
+      print(e.toString());
+    }
+    return isAlreadyIn;
+  }
+
+  initCategoryInDB({required BuildContext context}) async {
+    final getLabels = AppLocalizations.of(context)!;
+    final List<String> categories = [
+      getLabels.productivity,
+      getLabels.healthFitness,
+      getLabels.education,
+      getLabels.business,
+      getLabels.finance,
+      getLabels.social,
+      getLabels.entertainment,
+    ];
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> initData;
+    int? checkData;
+    bool isCategoryTableExist = await isCategoryAlreadyInit(db: db);
+    if (isCategoryTableExist) {
+      initData = await db.readData(sql: 'select COUNT(*) from categories');
+      checkData = Sqflite.firstIntValue(initData) ?? 0;
+    }
+    if (checkData != null && checkData == 0) {
+      for (String category in categories) {
+        bool isAdsDisplayed = false;
+        if (category == getLabels.productivity) {
+          isAdsDisplayed = true;
+        }
+        ETMCategory etmCategory =
+            ETMCategory(name: category, isAdsDisplayed: isAdsDisplayed);
+
+        await db.insertData(tableName: "categories", data: etmCategory.toMap());
+      }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getCategories(
+      {required BuildContext context, required bool mounted}) async {
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> getDataModifiedData = [];
+    bool isCategoryAlreadyInitCheck = await isCategoryAlreadyInit(db: db);
+    if (isCategoryAlreadyInitCheck) {
+      final getData = await db.readData(sql: "select * from categories")
+          as List<Map<String, dynamic>>;
+      if (context.mounted) {
+        final getLabels = AppLocalizations.of(context)!;
+        getDataModifiedData = getData
+            .map((category) => Map<String, dynamic>.from(category))
+            .toList();
+        for (Map<String, dynamic> category in getDataModifiedData) {
+          switch (category["id"]) {
+            case 1:
+              category["name"] = getLabels.productivity;
+              break;
+            case 2:
+              category["name"] = getLabels.healthFitness;
+              break;
+            case 3:
+              category["name"] = getLabels.education;
+              break;
+            case 4:
+              category["name"] = getLabels.business;
+              break;
+            case 5:
+              category["name"] = getLabels.finance;
+              break;
+            case 6:
+              category["name"] = getLabels.social;
+              break;
+            case 7:
+              category["name"] = getLabels.entertainment;
+              break;
+
+            default:
+              break;
+          }
+        }
+      }
+    }
+    return getDataModifiedData;
+  }
+
   getThemeApp({required BuildContext context}) async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     if (!context.mounted) return;

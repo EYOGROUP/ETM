@@ -49,8 +49,8 @@ class _StartTimePageState extends State<StartTimePage> {
   int workedTime = 0;
   String? workStartedTime;
   String? workEndedTime;
+  Map<String, dynamic>? _selectedCategory;
 
-  List<Map<String, dynamic>>? getCategories;
   bool isGettingData = false;
 
 // Category
@@ -59,6 +59,8 @@ class _StartTimePageState extends State<StartTimePage> {
 
   RewardedAd? _rewardedAd;
   List<Map<String, dynamic>> activatedCategories = [];
+
+  List<Map<String, dynamic>>? getCategories;
 
   @override
   void initState() {
@@ -294,6 +296,7 @@ class _StartTimePageState extends State<StartTimePage> {
   Future<List<Map<String, dynamic>>> getNotClosedWorkData() async {
     List<Map<String, dynamic>> getWorkNotClosed = [];
     TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> workSession = [];
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final tm = Provider.of<TimeManagementPovider>(context, listen: false);
     bool isAlreadyStartWork = await isAlreadyStartedWorkDay();
