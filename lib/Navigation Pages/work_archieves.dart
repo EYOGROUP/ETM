@@ -82,7 +82,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
     if (getData.isNotEmpty) {
       setState(() {
         isInhours = getData['isInHours'];
-        workedTime = getData['hours'];
+        workedTime = getData['hours'].toInt();
       });
     } else {
       setState(() {

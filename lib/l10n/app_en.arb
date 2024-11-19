@@ -82,6 +82,14 @@
       }
     }
   },
+    "activateCategoryToStart": "Please activate {categoryName} first to start",
+  "@activateCategoryToStart": {
+    "placeholders": {
+      "categoryName": {
+        "type": "String"
+      }
+    }
+  },
   "noBreakTaken": "There is no break taken.",
   "totalBreakDurationMin": "Total break duration in Min:",
   "youWorkedNetHours": "You worked in Hours (Net):",
@@ -113,6 +121,16 @@
   "contactUsExplanation": "For questions or comments about the app or these terms of use, contact Younes Dahbi (EyoGroup) through the “Contact Us” feature within the app.",
   "email": "Email",
   "contactDetails": "Contact Details",
+  "chooseCategory": "Choose a category",
+  "selectCategory": "Select a category",
+  "productivity": "Productivity",
+  "healthFitness": "Health & Fitness",
+  "education": "Education",
+  "business": "Business",
+  "finance": "Finance",
+  "social": "Social",
+  "entertainment": "Entertainment",
+  "selectCategoryToStart": "Please select a category to start your work",
    "deleteWorkDay": "Delete your workday",
    "areYouSure": "Are you sure?",
   "deleteWorkConfirmation": "Do you really want to delete your work?",
