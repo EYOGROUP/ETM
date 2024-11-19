@@ -51,6 +51,7 @@ class _StartTimePageState extends State<StartTimePage> {
   String? workEndedTime;
   Map<String, dynamic>? _selectedCategory;
 
+  List<Map<String, dynamic>>? getCategories;
   bool isGettingData = false;
 
 // Category
@@ -59,8 +60,6 @@ class _StartTimePageState extends State<StartTimePage> {
 
   RewardedAd? _rewardedAd;
   List<Map<String, dynamic>> activatedCategories = [];
-
-  List<Map<String, dynamic>>? getCategories;
 
   @override
   void initState() {
