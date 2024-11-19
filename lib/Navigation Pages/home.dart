@@ -49,7 +49,7 @@ class _StartTimePageState extends State<StartTimePage> {
   int workedTime = 0;
   String? workStartedTime;
   String? workEndedTime;
-  Map<String, dynamic>? _selectedCategory;
+
   List<Map<String, dynamic>>? getCategories;
   bool isGettingData = false;
 
@@ -109,6 +109,8 @@ class _StartTimePageState extends State<StartTimePage> {
       return;
     }
     if (isCategoryAlreadyActivated) {
+      setCategory(category: category);
+      resetAllData();
       print('Category Alreadey Activated');
       return;
     }
@@ -118,6 +120,8 @@ class _StartTimePageState extends State<StartTimePage> {
         onUserEarnedReward: (AdWithoutView ad, RewardItem reward) async {
           await _unlockCategory(category: category);
           if (!mounted) return;
+          resetAllData();
+          setCategory(category: category);
           getCategoriesFromProvider(tm: tM, isInit: false);
         },
       );
@@ -125,6 +129,11 @@ class _StartTimePageState extends State<StartTimePage> {
       _rewardedAd = null; // Reset the ad so it can be reloaded
       await loadRewardedAd(); // Load a new ad for next time
     }
+  }
+
+  setCategory({required Map<String, dynamic> category}) {
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+    tm.setCategory = category;
   }
 
   Future<void> _unlockCategory({required Map<String, dynamic> category}) async {
@@ -156,7 +165,10 @@ class _StartTimePageState extends State<StartTimePage> {
           await getCategoryIfWorkAlreadyStarted(isClosedWork: false);
         }
         await getWorkTime(
-            isSelectedCategory: isSwitchCategory, category: category);
+            isSelectedCategory: isSwitchCategory,
+            category: tm.selectedCategory.isNotEmpty
+                ? tm.selectedCategory
+                : category);
         await getNumberOfBreaks(isSwitchCategory: isSwitchCategory);
         await getHoursOrMinutesWorkedForToday();
         await checkIfWorkAndBreakForTodayNotFinished();
@@ -169,14 +181,12 @@ class _StartTimePageState extends State<StartTimePage> {
     );
   }
 
-  void resetAllData({required bool switchCategory}) {
+  void resetAllData() {
     setState(() {
-      if (switchCategory) {
-        workStartTime = null;
-        workStartedTime = null;
-        categoryHint = {};
-      }
-      _selectedCategory = null;
+      workStartTime = null;
+      workStartedTime = null;
+      categoryHint = {};
+
       workFinishTime = null;
       numberOfBreaks = 0;
       workedTime = 0;
@@ -192,6 +202,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
     AppLocalizations getLabels = AppLocalizations.of(context)!;
     getLabels = AppLocalizations.of(context)!;
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
 
     if (!mounted) return;
     bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
@@ -200,7 +211,7 @@ class _StartTimePageState extends State<StartTimePage> {
     bool isNotClosedAfterTime = await isNotClosedWork();
     if (!mounted) return;
 
-    if (_selectedCategory == null &&
+    if (tm.selectedCategory.isEmpty &&
         !isAlreadStartedWork &&
         isAlreadClosedWork.isEmpty &&
         !isNotClosedAfterTime &&
@@ -209,11 +220,11 @@ class _StartTimePageState extends State<StartTimePage> {
           value: getLabels.selectCategory, context: context);
     }
     bool isCategoryAlreadyActivated =
-        isAlreadyCategoryActivated(category: _selectedCategory!);
+        isAlreadyCategoryActivated(category: tm.selectedCategory);
 
     if (!isCategoryAlreadyActivated) {
       return Constants.showInSnackBar(
-          value: getLabels.activateCategoryToStart(_selectedCategory?["name"]),
+          value: getLabels.activateCategoryToStart(tm.selectedCategory["name"]),
           context: context);
     }
     if (isAlreadStartedWork || isNotClosedAfterTime) {
@@ -222,9 +233,9 @@ class _StartTimePageState extends State<StartTimePage> {
 
     List<Map<String, dynamic>> worksDay =
         await getDataSameDateLikeToday(categoryIdGet: categoryHint["id"]);
-    if (_selectedCategory != null || categoryHint.isNotEmpty) {
-      int categoryId = _selectedCategory != null
-          ? _selectedCategory!["id"]
+    if (tm.selectedCategory.isNotEmpty || categoryHint.isNotEmpty) {
+      int categoryId = tm.selectedCategory.isNotEmpty
+          ? tm.selectedCategory["id"]
           : categoryHint["id"];
       if (!mounted) return;
       if (worksDay.isEmpty) {
@@ -245,7 +256,7 @@ class _StartTimePageState extends State<StartTimePage> {
       if (!isInsert || isAnotherCategory) {
         workStartTime = DateTime.now();
         TrackingDB db = TrackingDB();
-        int categoryId = _selectedCategory?["id"];
+        int categoryId = tm.selectedCategory["id"];
         WorkSession workSession = WorkSession(
           categoryId: categoryId,
           startTime: workStartTime.toString(),
@@ -257,9 +268,7 @@ class _StartTimePageState extends State<StartTimePage> {
         if (!mounted) return;
 
         if (workFinishTime != null) {
-          resetAllData(
-            switchCategory: false,
-          );
+          resetAllData();
         }
         setState(() {
           _isStartWork = true;
@@ -286,13 +295,14 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> getWorkNotClosed = [];
     TrackingDB db = TrackingDB();
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
     bool isAlreadyStartWork = await isAlreadyStartedWorkDay();
     if (mounted) {
       if (isAlreadyStartWork) {
-        if (categoryHint.isNotEmpty || _selectedCategory != null) {
+        if (categoryHint.isNotEmpty || tm.selectedCategory.isNotEmpty) {
           int categoryId = categoryHint.isNotEmpty
               ? categoryHint["id"]
-              : _selectedCategory!["id"];
+              : tm.selectedCategory["id"];
 
           getWorkNotClosed = await db.readData(
               sql:
@@ -325,6 +335,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
     if (!isClosedWork) {
       List<Map<String, dynamic>> getNoClosedWork = await getNotClosedWorkData();
+
       if (getNoClosedWork.isNotEmpty) {
         categoryId = getNoClosedWork[0]["categoryId"];
       }
@@ -337,21 +348,25 @@ class _StartTimePageState extends State<StartTimePage> {
       final getCategory = await db.readData(
           sql: "select * from categories where id=$categoryId");
       if (!mounted) return;
-
+      setCategory(
+          category: getCategory
+              .map((category) => Map<String, dynamic>.from(category))
+              .first);
       setState(() {
-        categoryHint = getCategory.last;
+        categoryHint = getCategory.first;
       });
     }
   }
 
   Future<bool> isAlreadyStartedWorkDay() async {
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> workSession = [];
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    if (categoryHint.isNotEmpty || _selectedCategory != null) {
+    if (categoryHint.isNotEmpty || tm.selectedCategory.isNotEmpty) {
       int categoryId = categoryHint.isNotEmpty
           ? categoryHint["id"]
-          : _selectedCategory!["id"];
+          : tm.selectedCategory["id"];
       workSession = await db.readData(
               sql:
                   'select * from work_sessions where (isCompleted=0 and substr(startTime,1,10) ="$dateToday") OR (isCompleted =1 and substr(startTime,1,10) ="$dateToday" and categoryId=$categoryId)')
@@ -369,10 +384,11 @@ class _StartTimePageState extends State<StartTimePage> {
     bool isNotClosedWork = false;
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> workSession = [];
-    if (categoryHint.isNotEmpty || _selectedCategory != null) {
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+    if (categoryHint.isNotEmpty || tm.selectedCategory.isNotEmpty) {
       int categoryId = categoryHint.isNotEmpty
           ? categoryHint["id"]
-          : _selectedCategory!["id"];
+          : tm.selectedCategory["id"];
       workSession = await db.readData(
               sql:
                   'select * from work_sessions where isCompleted=0  and categoryId=$categoryId')
@@ -419,7 +435,7 @@ class _StartTimePageState extends State<StartTimePage> {
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
     List<Map<String, dynamic>> works = [];
-
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
     List<Map<String, dynamic>> notClosedWorkData = await getNotClosedWorkData();
     if (notClosedWorkData.isNotEmpty) {
       if (categoryIdGet != null) {
@@ -427,12 +443,12 @@ class _StartTimePageState extends State<StartTimePage> {
                 sql:
                     'select * from work_sessions where categoryId=$categoryIdGet')
             as List<Map<String, dynamic>>;
-      } else if (_selectedCategory != null) {
+      } else if (tm.selectedCategory.isNotEmpty) {
         works = await db.readData(
                 sql:
-                    'select * from work_sessions where categoryId=${_selectedCategory?["id"]}')
+                    'select * from work_sessions where categoryId=${tm.selectedCategory["id"]}')
             as List<Map<String, dynamic>>;
-      } else if (_selectedCategory == null) {
+      } else if (tm.selectedCategory.isEmpty) {
         int categoryId = categoryIdGet ?? notClosedWorkData[0]['categoryId'];
         works = await db.readData(
                 sql: 'select * from work_sessions where categoryId=$categoryId')
@@ -464,7 +480,7 @@ class _StartTimePageState extends State<StartTimePage> {
     return workDay;
   }
 
-  completedWork({required AppLocalizations getLabels}) async {
+  Future<void> completedWork({required AppLocalizations getLabels}) async {
     final tM = Provider.of<TimeManagementPovider>(context, listen: false);
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
@@ -497,6 +513,7 @@ class _StartTimePageState extends State<StartTimePage> {
             columnId: 'id',
             id: workDay['id']);
         if (!mounted) return;
+        tM.resetSelectedCategory();
         await getHoursOrMinutesWorkedForToday();
         if (!mounted) return;
         setState(() {
@@ -797,11 +814,13 @@ class _StartTimePageState extends State<StartTimePage> {
   Future<void> getWorkTime(
       {required bool isSelectedCategory,
       Map<String, dynamic>? category}) async {
+    final tM = Provider.of<TimeManagementPovider>(context, listen: false);
     bool isAlreadyStarted = await isAlreadyStartedWorkDay();
+
     if (mounted) {
       if (isAlreadyStarted) {
-        List<Map<String, dynamic>> getWorksDay =
-            await getDataSameDateLikeToday(categoryIdGet: category?["id"]);
+        List<Map<String, dynamic>> getWorksDay = await getDataSameDateLikeToday(
+            categoryIdGet: tM.selectedCategory["id"]);
 
         for (Map<String, dynamic> getWorkDay in getWorksDay) {
           if (mounted) {
@@ -836,7 +855,7 @@ class _StartTimePageState extends State<StartTimePage> {
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
-
+    final tM = Provider.of<TimeManagementPovider>(context, listen: false);
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -895,12 +914,12 @@ class _StartTimePageState extends State<StartTimePage> {
                         ),
                         Gap(MediaQuery.of(context).size.height * 0.02),
                         DropdownMenu(
-                          hintText:
-                              categoryHint.isEmpty && _selectedCategory == null
-                                  ? getLabels.selectCategory
-                                  : _selectedCategory == null
-                                      ? categoryHint["name"]
-                                      : _selectedCategory?['name'],
+                          hintText: categoryHint.isEmpty &&
+                                  tM.selectedCategory.isEmpty
+                              ? getLabels.selectCategory
+                              : tM.selectedCategory.isEmpty
+                                  ? categoryHint["name"]
+                                  : tM.selectedCategory['name'],
                           expandedInsets: const EdgeInsets.all(5.0),
                           dropdownMenuEntries: getCategories!
                               .map(
@@ -917,15 +936,10 @@ class _StartTimePageState extends State<StartTimePage> {
                               )
                               .toList(),
                           onSelected: (category) async {
+                            await _showRewardedAd(category: category!);
                             await getAllData(
                                 isSwitchCategory: true, category: category);
                             if (!mounted) return;
-                            await _showRewardedAd(category: category!);
-                            resetAllData(switchCategory: true);
-                            setState(() {
-                              _selectedCategory = category;
-                              categoryHint = category;
-                            });
                           },
                         ),
                         Gap(MediaQuery.of(context).size.height * 0.06),

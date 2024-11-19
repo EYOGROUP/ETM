@@ -13,6 +13,20 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
   bool get isDarkGet => _isDark;
+  Map<String, dynamic> _selectedCategory = {};
+  Map<String, dynamic> get selectedCategory => _selectedCategory;
+
+  set setCategory(Map<String, dynamic> categories) {
+    resetSelectedCategory();
+    _selectedCategory = categories;
+    notifyListeners();
+  }
+
+  void resetSelectedCategory() {
+    if (_selectedCategory.isNotEmpty) {
+      _selectedCategory.clear();
+    }
+  }
 
   Future<bool> isCategoryAlreadyInit({required TrackingDB db}) async {
     bool isAlreadyIn = true;

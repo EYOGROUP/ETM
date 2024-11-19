@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        // Configuration for Android
+        {
+            "name": "Run Android",
+            "request": "launch",
+            "deviceId": "emulator-5554", // Android Emulator ID
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "debug"
+        },
+        // Configuration for iPhone
+        {
+            "name": "Run iOS",
+            "request": "launch",
+            "deviceId": "A3D00A44-686C-4D28-BFF4-3753D0BE9D17", // iOS Simulator ID
+            "type": "dart",
+            "program": "lib/main.dart",
+            "flutterMode": "debug"
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Run Android and iOS",
+            "configurations": [
+                "Run Android",
+                "Run iOS"
+            ]
+        }
+    ]
+}
