@@ -19,12 +19,12 @@ class _WelcomePageState extends State<WelcomePage> {
   void initState() {
     super.initState();
 
-    // Perform any initialization tasks here
-    Future.delayed(const Duration(seconds: 1), () {
-      FlutterNativeSplash.remove();
-      final tm = Provider.of<TimeManagementPovider>(context, listen: false);
-      tm.setOrientation(context);
-    });
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) {
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
+      },
+    );
   }
 
   @override
