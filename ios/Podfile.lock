@@ -4,17 +4,25 @@ PODS:
     - Flutter
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> 12bfa82 (save)
 =======
+=======
+>>>>>>> ee4aebb (save)
 <<<<<<< HEAD
 =======
 =======
 >>>>>>> c8f94eb (save)
+<<<<<<< HEAD
 >>>>>>> ccb6212 (save)
+=======
+=======
+>>>>>>> 63b200f (save)
+>>>>>>> ee4aebb (save)
   - Google-Mobile-Ads-SDK (11.10.0):
     - GoogleUserMessagingPlatform (>= 1.1)
   - google_mobile_ads (5.2.0):
@@ -33,8 +41,16 @@ PODS:
 =======
 =======
 >>>>>>> 005eaa9 (save)
+<<<<<<< HEAD
 >>>>>>> c8f94eb (save)
+<<<<<<< HEAD
 >>>>>>> ccb6212 (save)
+=======
+=======
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
+>>>>>>> ee4aebb (save)
   - permission_handler_apple (9.3.0):
     - Flutter
   - shared_preferences_foundation (0.0.1):
@@ -46,38 +62,65 @@ PODS:
   - url_launcher_ios (0.0.1):
     - Flutter
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
     - FlutterMacOS
 >>>>>>> ed72538 (save)
+=======
+  - webview_flutter_wkwebview (0.0.1):
+    - Flutter
+    - FlutterMacOS
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
 
 DEPENDENCIES:
   - Flutter (from `Flutter`)
   - flutter_native_splash (from `.symlinks/plugins/flutter_native_splash/ios`)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
 
 =======
+=======
+>>>>>>> ee4aebb (save)
 <<<<<<< HEAD
 =======
   - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
 >>>>>>> ed72538 (save)
+<<<<<<< HEAD
 >>>>>>> 12bfa82 (save)
+=======
+=======
+  - google_mobile_ads (from `.symlinks/plugins/google_mobile_ads/ios`)
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
+>>>>>>> ee4aebb (save)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
   - url_launcher_ios (from `.symlinks/plugins/url_launcher_ios/ios`)
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
+=======
+>>>>>>> 63b200f (save)
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 SPEC REPOS:
   trunk:
     - Google-Mobile-Ads-SDK
     - GoogleUserMessagingPlatform
+<<<<<<< HEAD
 >>>>>>> ed72538 (save)
+=======
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
 
   - webview_flutter_wkwebview (from `.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
@@ -92,10 +135,17 @@ EXTERNAL SOURCES:
   flutter_native_splash:
     :path: ".symlinks/plugins/flutter_native_splash/ios"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
 >>>>>>> ed72538 (save)
+=======
+  google_mobile_ads:
+    :path: ".symlinks/plugins/google_mobile_ads/ios"
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
   shared_preferences_foundation:
@@ -105,28 +155,49 @@ EXTERNAL SOURCES:
   url_launcher_ios:
     :path: ".symlinks/plugins/url_launcher_ios/ios"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   webview_flutter_wkwebview:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
 >>>>>>> ed72538 (save)
+=======
+  webview_flutter_wkwebview:
+    :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
   flutter_native_splash: edf599c81f74d093a4daf8e17bd7a018854bc778
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
   Google-Mobile-Ads-SDK: 13e6e98edfd78ad8d8a791edb927658cc260a56f
   google_mobile_ads: 2a538d8e42b1813809782792e48f8cf4374c2180
   GoogleUserMessagingPlatform: a8b56893477f67212fbc8411c139e61d463349f5
 >>>>>>> ed72538 (save)
+=======
+  Google-Mobile-Ads-SDK: 13e6e98edfd78ad8d8a791edb927658cc260a56f
+  google_mobile_ads: 2a538d8e42b1813809782792e48f8cf4374c2180
+  GoogleUserMessagingPlatform: a8b56893477f67212fbc8411c139e61d463349f5
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
   shared_preferences_foundation: fcdcbc04712aee1108ac7fda236f363274528f78
   sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d
   url_launcher_ios: 5334b05cef931de560670eeae103fd3e431ac3fe
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
   webview_flutter_wkwebview: 0982481e3d9c78fd5c6f62a002fcd24fc791f1e4
 >>>>>>> ed72538 (save)
+=======
+  webview_flutter_wkwebview: 0982481e3d9c78fd5c6f62a002fcd24fc791f1e4
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> 63b200f (save)
 
   webview_flutter_wkwebview: 0982481e3d9c78fd5c6f62a002fcd24fc791f1e4
 

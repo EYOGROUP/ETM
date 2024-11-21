@@ -66,6 +66,7 @@
 
 # pull_to_refresh - keep related classes intact
 -keep class com.github.** { *; }
+<<<<<<< HEAD
 -dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallException
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallManager
