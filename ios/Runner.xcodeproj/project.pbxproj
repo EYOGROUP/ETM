@@ -200,7 +200,11 @@
 				BF4391B2DA0B8F374A09DC9C /* [CP] Embed Pods Frameworks */,
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 				258A705A5F764479EA6D4FA7 /* [CP] Copy Pods Resources */,
+=======
+				F8B0826A7C4058E237D50229 /* [CP] Copy Pods Resources */,
+>>>>>>> 005eaa9 (save)
 =======
 				F8B0826A7C4058E237D50229 /* [CP] Copy Pods Resources */,
 >>>>>>> 005eaa9 (save)
