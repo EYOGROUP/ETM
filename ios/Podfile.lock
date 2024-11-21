@@ -140,7 +140,6 @@ EXTERNAL SOURCES:
 
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
-
   google_mobile_ads:
     :path: ".symlinks/plugins/google_mobile_ads/ios"
 
@@ -158,6 +157,8 @@ EXTERNAL SOURCES:
 
   webview_flutter_wkwebview:
     :path: ".symlinks/plugins/webview_flutter_wkwebview/darwin"
+  vibration:
+    :path: ".symlinks/plugins/vibration/ios"
 
 SPEC CHECKSUMS:
   Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
