@@ -76,5 +76,9 @@
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallStateUpdatedListener
 -dontwarn com.google.android.play.core.tasks.OnFailureListener
 -dontwarn com.google.android.play.core.tasks.OnSuccessListener
+<<<<<<< HEAD
 -dontwarn com.google.android.play.core.tasks.Task
 
+=======
+-dontwarn com.google.android.play.core.tasks.Task
+>>>>>>> 9e060e3 (save 1.0.3)

@@ -87,5 +87,9 @@ dependencies {
   implementation 'androidx.window:window-java:1.0.0'
   implementation 'com.google.code.gson:gson:2.8.6'
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+<<<<<<< HEAD
+=======
+
+>>>>>>> 9e060e3 (save 1.0.3)
 
 }
