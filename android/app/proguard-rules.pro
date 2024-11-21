@@ -66,6 +66,7 @@
 
 # pull_to_refresh - keep related classes intact
 -keep class com.github.** { *; }
+<<<<<<< HEAD
 -dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallException
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallManager
@@ -77,3 +78,9 @@
 -dontwarn com.google.android.play.core.tasks.OnFailureListener
 -dontwarn com.google.android.play.core.tasks.OnSuccessListener
 -dontwarn com.google.android.play.core.tasks.Task
+=======
+
+# General guidance for debugging (optional during development only)
+-dontobfuscate
+-dontoptimize
+>>>>>>> 005eaa9 (save)
