@@ -3,11 +3,18 @@ PODS:
   - flutter_native_splash (0.0.1):
     - Flutter
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 <<<<<<< HEAD
 =======
 >>>>>>> 12bfa82 (save)
+=======
+<<<<<<< HEAD
+=======
+=======
+>>>>>>> c8f94eb (save)
+>>>>>>> ccb6212 (save)
   - Google-Mobile-Ads-SDK (11.10.0):
     - GoogleUserMessagingPlatform (>= 1.1)
   - google_mobile_ads (5.2.0):
@@ -16,10 +23,18 @@ PODS:
     - webview_flutter_wkwebview
   - GoogleUserMessagingPlatform (2.7.0)
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
 >>>>>>> ed72538 (save)
 >>>>>>> 12bfa82 (save)
+=======
+>>>>>>> ed72538 (save)
+=======
+=======
+>>>>>>> 005eaa9 (save)
+>>>>>>> c8f94eb (save)
+>>>>>>> ccb6212 (save)
   - permission_handler_apple (9.3.0):
     - Flutter
   - shared_preferences_foundation (0.0.1):
