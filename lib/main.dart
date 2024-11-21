@@ -12,8 +12,11 @@ void main() async {
   FlutterNativeSplash.preserve(
       widgetsBinding: WidgetsFlutterBinding.ensureInitialized());
 <<<<<<< HEAD
+<<<<<<< HEAD
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
+=======
+>>>>>>> 9e060e3 (save 1.0.3)
 =======
 >>>>>>> 9e060e3 (save 1.0.3)
   FlutterNativeSplash.remove();
