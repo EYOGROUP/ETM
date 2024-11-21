@@ -201,6 +201,7 @@
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 				258A705A5F764479EA6D4FA7 /* [CP] Copy Pods Resources */,
 
@@ -217,6 +218,8 @@
 >>>>>>> ccb6212 (save)
 =======
 >>>>>>> ee4aebb (save)
+=======
+>>>>>>> 40782e5 (save)
 <<<<<<< HEAD
 				F8B0826A7C4058E237D50229 /* [CP] Copy Pods Resources */,
 =======
@@ -228,6 +231,8 @@
 =======
 =======
 >>>>>>> 63b200f (save)
+=======
+>>>>>>> 18de84a (save)
 				258A705A5F764479EA6D4FA7 /* [CP] Copy Pods Resources */,
 =======
 				F8B0826A7C4058E237D50229 /* [CP] Copy Pods Resources */,
@@ -241,8 +246,17 @@
 =======
 				F8B0826A7C4058E237D50229 /* [CP] Copy Pods Resources */,
 >>>>>>> 005eaa9 (save)
+<<<<<<< HEAD
 >>>>>>> 63b200f (save)
+<<<<<<< HEAD
 >>>>>>> ee4aebb (save)
+=======
+=======
+=======
+				F8B0826A7C4058E237D50229 /* [CP] Copy Pods Resources */,
+>>>>>>> 005eaa9 (save)
+>>>>>>> 18de84a (save)
+>>>>>>> 40782e5 (save)
 			);
 			buildRules = (
 			);
