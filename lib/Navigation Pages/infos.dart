@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/contact_us.dart';
-import 'package:time_management/Navigation%20Pages/privacy_policy_Terms_of_Use.dart';
+import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';

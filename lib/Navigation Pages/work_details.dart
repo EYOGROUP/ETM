@@ -134,10 +134,9 @@ class _WorkDetailsState extends State<WorkDetails> {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
-        await getWorkData();
-        if (!mounted) return;
         final tm = Provider.of<TimeManagementPovider>(context, listen: false);
         tm.setOrientation(context);
+        await getWorkData();
       },
     );
   }
