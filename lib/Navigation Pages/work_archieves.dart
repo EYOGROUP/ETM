@@ -112,121 +112,125 @@ class _WorkArchievesState extends State<WorkArchieves> {
       body: SmartRefresher(
         controller: _refreshController,
         onRefresh: _onRefresh,
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-              horizontal: MediaQuery.of(context).size.width * 0.04,
-              vertical: MediaQuery.of(context).size.height * 0.015),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                "${getLabels.chooseDate}: ",
-                style:
-                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              Gap(MediaQuery.of(context).size.height * 0.02),
-              CalendarDatePicker2(
-                config: CalendarDatePicker2Config(
-                    calendarViewMode: CalendarDatePicker2Mode.day,
-                    lastDate: DateTime.now(),
-                    calendarType: CalendarDatePicker2Type.single),
-                value: _dates,
-                onValueChanged: (value) async {
-                  setState(() {
-                    _dates = value;
-                  });
-                  await getNumberOfBreaks();
-                  await getNumberOfWorkedHours();
-                  await isWorkFinishedCheck();
-                },
-              ),
-              Gap(MediaQuery.of(context).size.height * 0.02),
-              isLoadingData
-                  ? const Center(child: CircularProgressIndicator())
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          textBaseline: TextBaseline.alphabetic,
-                          children: [
-                            Text(
-                              _dates.isNotEmpty
-                                  ? '${getLabels.date} ${DateFormat(getLabels.dateFormat).format(_dates.first)}'
-                                  : getLabels.date,
-                              style: const TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
-                            ),
-                            Gap(MediaQuery.of(context).size.height * 0.02),
-                            Text.rich(TextSpan(children: [
-                              TextSpan(
-                                text:
-                                    '${getLabels.youWorkedHours}  $workedTime ',
+        child: SingleChildScrollView(
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+                horizontal: MediaQuery.of(context).size.width * 0.04,
+                vertical: MediaQuery.of(context).size.height * 0.015),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "${getLabels.chooseDate}: ",
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Gap(MediaQuery.of(context).size.height * 0.02),
+                CalendarDatePicker2(
+                  config: CalendarDatePicker2Config(
+                      calendarViewMode: CalendarDatePicker2Mode.day,
+                      lastDate: DateTime.now(),
+                      calendarType: CalendarDatePicker2Type.single),
+                  value: _dates,
+                  onValueChanged: (value) async {
+                    setState(() {
+                      _dates = value;
+                    });
+                    await getNumberOfBreaks();
+                    await getNumberOfWorkedHours();
+                    await isWorkFinishedCheck();
+                  },
+                ),
+                Gap(MediaQuery.of(context).size.height * 0.02),
+                isLoadingData
+                    ? const Center(child: CircularProgressIndicator())
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisAlignment: MainAxisAlignment.start,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                _dates.isNotEmpty
+                                    ? '${getLabels.date} ${DateFormat(getLabels.dateFormat).format(_dates.first)}'
+                                    : getLabels.date,
                                 style: const TextStyle(
                                     fontSize: 16.0,
                                     fontWeight: FontWeight.bold),
                               ),
-                              TextSpan(
-                                  text: isInhours
-                                      ? workedTime <= 1
-                                          ? getLabels.hour
-                                          : getLabels.hours
-                                      : workedTime > 1
-                                          ? getLabels.minutes
-                                          : getLabels.minute,
+                              Gap(MediaQuery.of(context).size.height * 0.02),
+                              Text.rich(TextSpan(children: [
+                                TextSpan(
+                                  text:
+                                      '${getLabels.youWorkedHours}  $workedTime ',
                                   style: const TextStyle(
-                                      fontWeight: FontWeight.bold))
-                            ])),
-                            ListTile(
-                              contentPadding: const EdgeInsets.all(0),
-                              leading: Text(
-                                numberOfBreaks <= 1
-                                    ? "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breakLabel}"
-                                    : "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breaks}",
-                                style: const TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              trailing: isWorkFinished
-                                  ? GestureDetector(
-                                      onTap: () async {
-                                        bool? isFinished =
-                                            await Navigator.of(context)
-                                                .push(MaterialPageRoute(
-                                          builder: (context) => WorkDetails(
-                                              workDate: _dates.first),
-                                        ));
-                                        if (!mounted) return;
-                                        if (isFinished != null && isFinished) {
-                                          await _refreshController
-                                              .requestRefresh();
-                                          if (!context.mounted) return;
-                                          Constants.showInSnackBar(
-                                              value: getLabels
-                                                  .yourWorkdayHasBeenDeleted,
-                                              context: context);
-                                        }
-                                      },
-                                      child: Text(
-                                        getLabels.moreDetails,
-                                        style: TextStyle(
-                                            fontSize: 14.0,
-                                            fontWeight: FontWeight.bold,
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .primary),
-                                      ),
-                                    )
-                                  : null,
-                            )
-                          ],
-                        ),
-                      ],
-                    ),
-            ],
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                TextSpan(
+                                    text: isInhours
+                                        ? workedTime <= 1
+                                            ? getLabels.hour
+                                            : getLabels.hours
+                                        : workedTime > 1
+                                            ? getLabels.minutes
+                                            : getLabels.minute,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold))
+                              ])),
+                              ListTile(
+                                contentPadding: const EdgeInsets.all(0),
+                                leading: Text(
+                                  numberOfBreaks <= 1
+                                      ? "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breakLabel}"
+                                      : "${getLabels.youHadBreaks} $numberOfBreaks ${getLabels.breaks}",
+                                  style: const TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                trailing: isWorkFinished
+                                    ? GestureDetector(
+                                        onTap: () async {
+                                          bool? isFinished =
+                                              await Navigator.of(context)
+                                                  .push(MaterialPageRoute(
+                                            builder: (context) => WorkDetails(
+                                                workDate: _dates.first),
+                                          ));
+                                          if (!mounted) return;
+                                          if (isFinished != null &&
+                                              isFinished) {
+                                            await _refreshController
+                                                .requestRefresh();
+                                            if (!context.mounted) return;
+                                            Constants.showInSnackBar(
+                                                value: getLabels
+                                                    .yourWorkdayHasBeenDeleted,
+                                                context: context);
+                                          }
+                                        },
+                                        child: Text(
+                                          getLabels.moreDetails,
+                                          style: TextStyle(
+                                              fontSize: 14.0,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary),
+                                        ),
+                                      )
+                                    : null,
+                              )
+                            ],
+                          ),
+                        ],
+                      ),
+              ],
+            ),
           ),
         ),
       ),

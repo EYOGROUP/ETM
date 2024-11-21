@@ -49,8 +49,8 @@ android {
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = flutter.minSdkVersion
         targetSdk = 34
-        versionCode = 9
-        versionName = "1.0.1"
+        versionCode = 11
+        versionName = "1.0.3"
         multiDexEnabled true
        
     }
@@ -70,6 +70,7 @@ android {
             // Signing with the debug keys for now, so `flutter run --release` works.
             minifyEnabled true
             shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig = signingConfigs.release
             
         }
@@ -79,13 +80,14 @@ android {
 flutter {
     source = "../.."
 }
+
 dependencies {
 
-  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.2.2'
+  coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
   implementation 'androidx.window:window:1.0.0'
   implementation 'androidx.window:window-java:1.0.0'
   implementation 'com.google.code.gson:gson:2.8.6'
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-  
+  implementation 'com.google.android.play:core:1.9.0'
 
 }
