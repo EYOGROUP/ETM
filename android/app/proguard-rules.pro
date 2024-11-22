@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> 005eaa9 (save)
 # Flutter-specific rules
 -keep class io.flutter.** { *; }
 -keep class io.flutter.embedding.** { *; }
@@ -70,7 +66,6 @@
 
 # pull_to_refresh - keep related classes intact
 -keep class com.github.** { *; }
-
 -dontwarn com.google.android.play.core.splitcompat.SplitCompatApplication
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallException
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallManager
@@ -81,5 +76,4 @@
 -dontwarn com.google.android.play.core.splitinstall.SplitInstallStateUpdatedListener
 -dontwarn com.google.android.play.core.tasks.OnFailureListener
 -dontwarn com.google.android.play.core.tasks.OnSuccessListener
-
 -dontwarn com.google.android.play.core.tasks.Task
