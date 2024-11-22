@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-
-=======
->>>>>>> 005eaa9 (save)
 # Flutter-specific rules
 -keep class io.flutter.** { *; }
 -keep class io.flutter.embedding.** { *; }
