@@ -49,7 +49,6 @@ class _StartTimePageState extends State<StartTimePage> {
   int workedTime = 0;
   String? workStartedTime;
   String? workEndedTime;
-  Map<String, dynamic>? _selectedCategory;
 
   List<Map<String, dynamic>>? getCategories;
   bool isGettingData = false;
