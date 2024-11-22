@@ -1,6 +1,4 @@
 {
-<<<<<<< HEAD
-<<<<<<< HEAD
     "version": "0.2.0",
     "configurations": [
         // Configuration for Android
@@ -29,34 +27,6 @@
                 "Run Android",
                 "Run iOS"
             ]
-=======
-=======
->>>>>>> 005eaa9 (save)
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "time_management",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "time_management (profile mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "time_management (release mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
-<<<<<<< HEAD
->>>>>>> 005eaa9 (save)
-=======
->>>>>>> 005eaa9 (save)
         }
     ]
 }
