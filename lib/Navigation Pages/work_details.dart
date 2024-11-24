@@ -32,6 +32,7 @@ class _WorkDetailsState extends State<WorkDetails> {
   bool isInHoursNet = true;
   Map<String, dynamic>? _selectedCategoryForFilter;
   final RefreshController _refreshController = RefreshController();
+  String timeInHourWithLabel = '';
 
   Future<void> getAllCategoriesBreaks() async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
@@ -103,7 +104,7 @@ class _WorkDetailsState extends State<WorkDetails> {
   }
 
   getNettWork({required List<Map<String, dynamic>> worksData}) {
-    int workedDayInHourFormatInInt = 0;
+    int workedDayInHourFormatInInt = 60;
     for (Map<String, dynamic> workData in worksData) {
       int workTime = workData["workedTime"];
       workedDayInHourFormatInInt += workTime;
@@ -112,6 +113,8 @@ class _WorkDetailsState extends State<WorkDetails> {
       int difference = workedDayInHourFormatInInt - totalBreakDuration;
       if (difference >= 60) {
         netWorkDayInHour = difference / 60;
+        List networkDay = netWorkDayInHour.toStringAsFixed(2).split(".");
+        timeInHourWithLabel = "${networkDay[0]}H ${networkDay[1]}min ";
       } else {
         netWorkDayInMin = difference;
         isInHoursNet = false;
@@ -523,7 +526,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                                 ? getLabels.youWorkedNetHours
                                 : getLabels.youWorkedInMinuteNet,
                             title: isInHoursNet
-                                ? netWorkDayInHour.toStringAsFixed(2)
+                                ? timeInHourWithLabel
                                 : netWorkDayInMin.toString()),
                       ),
                       if (_selectedCategoryForFilter != null &&
