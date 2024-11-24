@@ -936,6 +936,9 @@ class _StartTimePageState extends State<StartTimePage> {
                                   ? categoryHint["name"]
                                   : tM.selectedCategory['name'],
                           expandedInsets: const EdgeInsets.all(5.0),
+                          inputDecorationTheme: InputDecorationTheme(
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0))),
                           dropdownMenuEntries: getCategories!
                               .map(
                                 (category) => DropdownMenuEntry(
