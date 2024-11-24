@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';

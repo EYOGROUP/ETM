@@ -24,6 +24,10 @@ class _WorkDetailsState extends State<WorkDetails> {
   double nettWorkedDay = 0;
   double grossWorkDay = 0;
   bool isWorkDeleting = false;
+  String grossWorkDayWithLabel = '';
+  String nettWorkedDayWithLabel = '';
+  bool isInHourGross = false;
+  bool isInHourNett = false;
 
   Future<void> getBreaks({required int workSessionsId}) async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
@@ -63,24 +67,34 @@ class _WorkDetailsState extends State<WorkDetails> {
   }
 
   getGrossWork() {
-    int workedDayInHourFormatInInt = workData?["workedTime"].toInt();
-    setState(() {
-      grossWorkDay = workedDayInHourFormatInInt / 60;
-    });
+    int workedDayInMinFormatInInt = workData?["workedTime"].toInt();
+    if (workedDayInMinFormatInInt >= 60) {
+      grossWorkDay = workedDayInMinFormatInInt / 60;
+      List splitWorkDay = grossWorkDay.toStringAsFixed(2).split(".");
+      grossWorkDayWithLabel = "${splitWorkDay[0]}H ${splitWorkDay[1]}min";
+      isInHourGross = true;
+    } else {
+      grossWorkDayWithLabel = "$workedDayInMinFormatInInt min";
+    }
+    setState(() {});
   }
 
   getNettWork() {
     double nettWork = 0;
-    int workedDayInHourFormatInInt = workData?["workedTime"].toInt();
-    if (workedDayInHourFormatInInt > 0) {
-      int difference = workedDayInHourFormatInInt - totalBreakDuration;
-
-      nettWork = difference / 60;
+    int workedDayInMinFormatInInt = workData?["workedTime"].toInt();
+    if (workedDayInMinFormatInInt > 0) {
+      int difference = workedDayInMinFormatInInt - totalBreakDuration;
+      if (difference >= 60) {
+        nettWork = difference / 60;
+        List splitNetWork = nettWork.toStringAsFixed(2).split(".");
+        nettWorkedDayWithLabel = "${splitNetWork[0]}H ${splitNetWork[1]}min";
+        isInHourNett = true;
+      } else {
+        nettWorkedDayWithLabel = "$difference min";
+      }
     }
 
-    setState(() {
-      nettWorkedDay = nettWork;
-    });
+    setState(() {});
   }
 
   Future<void> deleteWork(
@@ -185,8 +199,10 @@ class _WorkDetailsState extends State<WorkDetails> {
                     title: workData?['endTime'],
                   ),
                   LeadingAndTitle(
-                    leading: getLabels.youWorkedHours,
-                    title: grossWorkDay.toStringAsFixed(2),
+                    leading: isInHourGross
+                        ? getLabels.youWorkedHours
+                        : getLabels.youWorkedInMinuteGross,
+                    title: grossWorkDayWithLabel,
                   ),
                   Gap(MediaQuery.of(context).size.height * 0.01),
                   Row(
@@ -294,8 +310,10 @@ class _WorkDetailsState extends State<WorkDetails> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 15.0, vertical: 5),
                     child: RowLeadingAndTitle(
-                        leading: getLabels.youWorkedNetHours,
-                        title: nettWorkedDay.toStringAsFixed(2)),
+                        leading: isInHourNett
+                            ? getLabels.youWorkedNetHours
+                            : getLabels.youWorkedInMinuteNet,
+                        title: nettWorkedDayWithLabel),
                   ),
                   TextButton(
                       style: const ButtonStyle(

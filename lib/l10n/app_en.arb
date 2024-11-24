@@ -46,7 +46,7 @@
   "archives": "Archives",
   "chooseDate": "Choose date",
   "startYourWorkBeforeBreak": "Start your work before taking a break",
-  "youWork": "Today you work: {times} {timesLabel}.",
+  "youWork": "Today you worked: {times} {timesLabel}.",
   "@youWork": {
     "placeholders": {
       "times": {
@@ -68,7 +68,8 @@
   "workStartedAt": "Work started at:",
   "workEndedAt": "Work ended at:",
   "date": "Date:",
-  "youWorkedHours": "You worked in Hour (Gross):",
+  "youWorkedHours": "You worked in hours (Gross):",
+   "youWorkedInMinuteGross": "You worked in min (Gross):",
   "youHadBreaks": "You had:",
    "moreDetails": "More details",
    "breakNo": "Break No:",
@@ -83,8 +84,9 @@
     }
   },
   "noBreakTaken": "There is no break taken.",
-  "totalBreakDurationMin": "Total break duration in Min:",
-  "youWorkedNetHours": "You worked in Hours (Net):",
+  "totalBreakDurationMin": "Total break duration in min:",
+  "youWorkedNetHours": "You worked in hours (Net):",
+  "youWorkedInMinuteNet": "You worked in min (Net):",
   "workDetails": "Work Details",
   "closeBreakFirst": "You must close your break first",
    "informationCollection": "1. Information Collection:",

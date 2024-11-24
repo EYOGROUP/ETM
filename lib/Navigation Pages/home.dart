@@ -55,9 +55,9 @@ class _StartTimePageState extends State<StartTimePage> {
         sliderForWorkingTime = AppLocalizations.of(context)!.startWork;
         sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
         await getNumberOfBreaks();
+        await getWorkTime();
         await getHoursOrMinutesWorkedForToday();
         await checkIfWorkAndBreakForTodayNotFinished();
-        await getWorkTime();
         if (!mounted) return;
         final tm = Provider.of<TimeManagementPovider>(context, listen: false);
         tm.setOrientation(context);
