@@ -438,6 +438,7 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> works = [];
     final tm = Provider.of<TimeManagementPovider>(context, listen: false);
     List<Map<String, dynamic>> notClosedWorkData = await getNotClosedWorkData();
+
     if (notClosedWorkData.isNotEmpty) {
       if (categoryIdGet != null) {
         works = await db.readData(
@@ -641,15 +642,21 @@ class _StartTimePageState extends State<StartTimePage> {
 
   Future<void> takeOrFinishBreak() async {
     final getLabels = AppLocalizations.of(context)!;
+    final tM = Provider.of<TimeManagementPovider>(context, listen: false);
     int? categoryId;
     TrackingDB db = TrackingDB();
     DateTime breakTime = DateTime.now();
-    if (categoryHint.isNotEmpty) {
-      final getCategoryId = await db.readData(
-              sql: "select * from categories where id = ${categoryHint["id"]}")
+
+    if (tM.selectedCategory.isNotEmpty) {
+      int categoryIdSelected = tM.selectedCategory["id"];
+
+      final getCategory = await db.readData(
+              sql: "select * from categories where id = $categoryIdSelected")
           as List<Map<String, dynamic>>;
-      if (getCategoryId.isNotEmpty) {
-        categoryId = getCategoryId[0]["id"];
+      if (!mounted) return;
+
+      if (getCategory.isNotEmpty) {
+        categoryId = getCategory[0]["id"];
       }
     }
 
@@ -662,6 +669,13 @@ class _StartTimePageState extends State<StartTimePage> {
           value: getLabels.startYourWorkBeforeBreak, context: context);
     }
     for (Map<String, dynamic> getWorkDayData in getWorksDayData) {
+      bool? isWorkFinished =
+          await isFinishedWorkForToday(getWorkDayData: getWorkDayData);
+      if (!mounted) return;
+      if (isWorkFinished) {
+        return Constants.showInSnackBar(
+            value: getLabels.startYourWorkBeforeBreak, context: context);
+      }
       if (getWorkDayData.isNotEmpty) {
         bool isWorkAlreadyStarted = await isAlreadyStartedWorkDay();
         if (!mounted) return;
@@ -931,9 +945,13 @@ class _StartTimePageState extends State<StartTimePage> {
                                     label: category['name'],
                                     value: category,
                                     trailingIcon: Icon(
-                                        category["isAdsDisplayed"] == 1
-                                            ? Icons.lock_open_outlined
-                                            : Icons.lock_outline_rounded)),
+                                      category["isAdsDisplayed"] == 1
+                                          ? Icons.lock_open_outlined
+                                          : Icons.lock_outline_rounded,
+                                      color: category["isAdsDisplayed"] == 1
+                                          ? Constants.green
+                                          : Constants.red,
+                                    )),
                               )
                               .toList(),
                           onSelected: (category) async {

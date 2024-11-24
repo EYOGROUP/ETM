@@ -9,6 +9,8 @@ enum InfosApp {
 
 class Constants {
   static String imagePath = 'assets/images/';
+  static Color green = Colors.green;
+  static Color red = Colors.red;
 
   static void showInSnackBar(
       {required String value, required BuildContext context}) {

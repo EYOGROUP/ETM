@@ -68,7 +68,8 @@
    "workStartedAt": "Travail commencé à :",
   "workEndedAt": "Travail terminé à :",
    "date": "Date :",
-  "youWorkedHours": "Vous avez travaillé en heures(Brut) :",
+  "youWorkedHours": "Vous avez travaillé en heures (Brut) :",
+  "youWorkedInMinuteGross": "Vous avez travaillé en minutes (Brut) :",
   "youHadBreaks": "Vous avez pris :",
   "moreDetails": "Plus de détails",
   "breakNo": "Pause No :",
@@ -93,6 +94,7 @@
   "noBreakTaken": "Aucune pause n'a été prise.",
   "totalBreakDurationMin": "Durée totale des pauses en minutes :",
   "youWorkedNetHours": "Vous avez travaillé en heures (Net) :",
+  "youWorkedInMinuteNet": "Vous avez travaillé en minutes (net) :",
   "workDetails": "Détails du travail",
   "closeBreakFirst": "Vous devez d'abord terminer votre pause",
   "informationCollection": "1. Collecte d'informations :",
@@ -146,6 +148,9 @@
   "policyChangesTitle": "Modifications de la politique de confidentialité",
    "yourWorkdayHasBeenDeleted": "Votre journée de travail a été supprimée. Vous pouvez maintenant commencer une nouvelle journée de travail.",
   "yourScheduleAwaits": "Votre emploi du temps vous attend ⏳",
-  "dontForgetTasks": "N'oubliez pas vos tâches prévues pour aujourd'hui. Chaque instant compte !"
+  "dontForgetTasks": "N'oubliez pas vos tâches prévues pour aujourd'hui. Chaque instant compte !",
+   "viewBreakDetails": "Choisissez une catégorie pour voir les détails des pauses.",
+   "allCategories": "Toutes les catégories",
+   "noDataFound": "Oups ! Aucune donnée disponible."
 
 }

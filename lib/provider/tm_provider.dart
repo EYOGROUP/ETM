@@ -252,38 +252,98 @@ class TimeManagementPovider with ChangeNotifier {
     return isWorkFiniheshed;
   }
 
-  Future<Map<String, dynamic>> getWorkDataFromSpecificDate(
-      {required DateTime date, required bool mounted}) async {
-    Map<String, dynamic> workData = {};
+  Future<List<Map<String, dynamic>>> getWorkDataFromSpecificDate(
+      {required DateTime date, required bool mounted, int? categoryId}) async {
+    List<Map<String, dynamic>> worksDataGet = [];
     TrackingDB db = TrackingDB();
     String formatDate = DateFormat("yyyy-MM-dd").format(date);
-    final getWorkData = await db.readData(
-        sql:
-            'select * from work_sessions where substr(startTime,1,10)="$formatDate"');
-    if (mounted) {
-      workData = Map<String, dynamic>.from(getWorkData.first);
-      DateTime? startWorkTime =
-          DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(workData['startTime']);
-      workData.update(
-          'startTime', (value) => DateFormat('HH:mm').format(startWorkTime!));
-
-      DateTime? endWorkTime =
-          DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(workData['endTime']);
-      workData.update(
-          'endTime', (value) => DateFormat('HH:mm').format(endWorkTime!));
-      workData['workedTime'] =
-          endWorkTime?.difference(startWorkTime!).inMinutes;
+    List<Map<String, dynamic>> getWorkData = [];
+    if (categoryId != null && categoryId != 0) {
+      getWorkData = await db.readData(
+          sql:
+              'select * from work_sessions where substr(startTime,1,10)="$formatDate" and categoryId=$categoryId');
+    } else {
+      getWorkData = await db.readData(
+          sql:
+              'select * from work_sessions where substr(startTime,1,10)="$formatDate"');
     }
-    return workData;
+    if (mounted) {
+      worksDataGet.clear();
+
+      if (getWorkData.isNotEmpty) {
+        List<Map<String, dynamic>> getWorksData = List.from(getWorkData);
+        List<Map<String, dynamic>> worksData = getWorksData
+            .map((workData) => Map<String, dynamic>.from(workData))
+            .toList();
+
+        for (Map<String, dynamic> workData in worksData) {
+          DateTime? startWorkTime =
+              DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(workData['startTime']);
+          workData.update('startTime',
+              (value) => DateFormat('HH:mm').format(startWorkTime!));
+
+          DateTime? endWorkTime =
+              DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(workData['endTime']);
+          workData.update(
+              'endTime', (value) => DateFormat('HH:mm').format(endWorkTime!));
+          workData['workedTime'] =
+              endWorkTime?.difference(startWorkTime!).inMinutes;
+          worksDataGet.add(workData);
+        }
+      }
+    }
+    return worksDataGet;
   }
 
-  Future<List<Map<String, dynamic>>> getBreaksFromSpecificDate(
+  Future<List<Map<String, dynamic>>> getBreaksFromSpecificDateAndId(
       {required int workSessionsId, required bool mounted}) async {
     List<Map<String, dynamic>> breaks = [];
     TrackingDB db = TrackingDB();
     final getBreaksData = await db.readData(
         sql:
             "select * from break_sessions where workSessionId=$workSessionsId ");
+
+    if (mounted) {
+      if (getBreaksData.isNotEmpty) {
+        breaks = getBreaksData
+            .map((breakData) => Map<String, dynamic>.from(breakData))
+            .toList();
+        for (Map<String, dynamic> getBreakData in breaks) {
+          DateTime? breakStartTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
+              .tryParse(getBreakData["breakStartTime"]);
+          getBreakData["breakStartTime"] =
+              DateFormat("HH:mm").format(breakStartTimeAsDate!);
+          DateTime? breakEndTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
+              .tryParse(getBreakData["breakEndTime"]);
+
+          getBreakData["breakEndTime"] =
+              DateFormat("HH:mm").format(breakEndTimeAsDate!);
+
+          getBreakData['duration'] =
+              breakEndTimeAsDate.difference(breakStartTimeAsDate).inMinutes;
+        }
+      }
+    }
+    return breaks;
+  }
+
+  Future<List<Map<String, dynamic>>> getBreaksFromSpecificDate(
+      {required DateTime breakSessionTime,
+      required bool mounted,
+      int? workSessionId}) async {
+    List<Map<String, dynamic>> breaks = [];
+    TrackingDB db = TrackingDB();
+    String formatDate = DateFormat("yyyy-MM-dd").format(breakSessionTime);
+    List<Map<String, dynamic>>? getBreaksData;
+    if (workSessionId != null && workSessionId != 0) {
+      getBreaksData = await db.readData(
+          sql:
+              'select * from break_sessions where workSessionId=$workSessionId ');
+    } else {
+      getBreaksData = await db.readData(
+          sql:
+              'select * from break_sessions where substr(breakEndTime,1,10)="$formatDate" ');
+    }
 
     if (mounted) {
       if (getBreaksData.isNotEmpty) {

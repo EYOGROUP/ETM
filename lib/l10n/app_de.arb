@@ -69,6 +69,7 @@
   "workEndedAt": "Arbeit beendet um:",
   "date": "Datum:",
   "youWorkedHours": "Sie haben in Stunden gearbeitet (Brutto):",
+  "youWorkedInMinuteGross": "Sie haben in Minuten (Brutto) gearbeitet:",
   "youHadBreaks": "Sie hatten:",
   "moreDetails": "Mehr Details",
    "breakNo": "Pause Nr.:",
@@ -94,6 +95,7 @@
   "ofBreak": "an Pause",
   "totalBreakDurationMin": "Gesamte Pausendauer in Min:",
   "youWorkedNetHours": "Sie haben in Stunden gearbeitet (Netto):",
+   "youWorkedInMinuteNet": "Sie haben in Minuten (Netto) gearbeitet:",
   "workDetails": "Arbeitsdetails",
   "closeBreakFirst": "Sie müssen zuerst Ihre Pause beenden",
   "informationCollection": "1. Information Collection:",
@@ -147,5 +149,8 @@
   "policyChangesTitle": "Änderungen der Datenschutzerklärung",
   "yourWorkdayHasBeenDeleted": "Dein Arbeitstag wurde gelöscht. Du kannst jetzt einen neuen Arbeitstag starten.",
   "yourScheduleAwaits": "Dein Zeitplan wartet ⏳",
-  "dontForgetTasks": "Vergiss nicht deine geplanten Aufgaben für heute. Jede Minute zählt!"
+  "dontForgetTasks": "Vergiss nicht deine geplanten Aufgaben für heute. Jede Minute zählt!",
+  "viewBreakDetails": "Wähle eine Kategorie, um die Pausendetails anzuzeigen.",
+  "allCategories": "Alle Kategorien",
+  "noDataFound": "Hoppla! Keine Daten verfügbar."
 }

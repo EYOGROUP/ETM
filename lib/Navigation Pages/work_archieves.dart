@@ -165,7 +165,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
                               Text.rich(TextSpan(children: [
                                 TextSpan(
                                   text:
-                                      '${getLabels.youWorkedHours}  $workedTime ',
+                                      '${isInhours ? getLabels.youWorkedHours : getLabels.youWorkedInMinuteGross}  $workedTime ',
                                   style: const TextStyle(
                                       fontSize: 16.0,
                                       fontWeight: FontWeight.bold),

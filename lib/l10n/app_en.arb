@@ -69,6 +69,7 @@
   "workEndedAt": "Work ended at:",
   "date": "Date:",
   "youWorkedHours": "You worked in Hour (Gross):",
+  "youWorkedInMinuteGross": "You worked in Minutes (Gross):",
   "youHadBreaks": "You had:",
    "moreDetails": "More details",
    "breakNo": "Break No:",
@@ -93,6 +94,7 @@
   "noBreakTaken": "There is no break taken.",
   "totalBreakDurationMin": "Total break duration in Min:",
   "youWorkedNetHours": "You worked in Hours (Net):",
+  "youWorkedInMinuteNet": "You worked in Minutes (Net):",
   "workDetails": "Work Details",
   "closeBreakFirst": "You must close your break first",
    "informationCollection": "1. Information Collection:",
@@ -146,6 +148,10 @@
   "policyChangesTitle": "Changes to the Privacy Policy",
   "yourWorkdayHasBeenDeleted": "Your workday has been deleted. You can start a new workday now.",
   "yourScheduleAwaits": "Your schedule awaits ⏳",
-  "dontForgetTasks": "Don't forget your planned tasks for today. Every moment counts!"
+  "dontForgetTasks": "Don't forget your planned tasks for today. Every moment counts!",
+  "viewBreakDetails": "Choose a category to view the break details.",
+  "allCategories": "All Categories",
+  "noDataFound": "Oops! No data available."
+
 
 }
