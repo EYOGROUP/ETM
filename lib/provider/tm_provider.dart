@@ -78,6 +78,27 @@ class TimeManagementPovider with ChangeNotifier {
     }
   }
 
+// close Category
+  Future<void> closeCategoryForNotPremiumUserAfterUseIt() async {
+    Map<String, dynamic> closeCategory = {"isAdsDisplayed": 0};
+    if (_selectedCategory.isNotEmpty) {
+      int categoryId = _selectedCategory["id"];
+      switch (categoryId) {
+        case 0:
+          return;
+
+        case 1:
+          return;
+      }
+      TrackingDB db = TrackingDB();
+      await db.updateData(
+          tableName: "categories",
+          data: closeCategory,
+          id: categoryId,
+          columnId: "id");
+    }
+  }
+
   Future<List<Map<String, dynamic>>> getCategories(
       {required BuildContext context, required bool mounted}) async {
     TrackingDB db = TrackingDB();

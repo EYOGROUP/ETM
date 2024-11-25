@@ -153,7 +153,13 @@ class _ContactUsState extends State<ContactUs> {
                         ),
                       ),
                       Gap(MediaQuery.of(context).size.height * 0.02),
-                      DropdownButton(
+                      DropdownButtonFormField(
+                        decoration: InputDecoration(
+                            border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20.0))),
+                        menuMaxHeight:
+                            MediaQuery.of(context).size.height * 0.35,
+                        isExpanded: true,
                         iconEnabledColor: Theme.of(context).colorScheme.primary,
                         borderRadius: BorderRadius.circular(
                             MediaQuery.of(context).size.height * 0.02),
@@ -231,6 +237,8 @@ class TitleWithTextfield extends StatelessWidget {
             maxLines: isFlexibelField ? 5 : 1,
             maxLength: isFlexibelField ? 300 : null,
             decoration: InputDecoration(
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20.0)),
                 hintText: fieldCaption,
                 hintStyle: const TextStyle(fontSize: 14.0)),
             controller: controller,

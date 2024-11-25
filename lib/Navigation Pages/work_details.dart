@@ -32,7 +32,8 @@ class _WorkDetailsState extends State<WorkDetails> {
   bool isInHoursNet = true;
   Map<String, dynamic>? _selectedCategoryForFilter;
   final RefreshController _refreshController = RefreshController();
-  String timeInHourWithLabel = '';
+  String netWorkTimeLabel = '';
+  String grossWorkTimeLabel = '';
 
   Future<void> getAllCategoriesBreaks() async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
@@ -92,19 +93,25 @@ class _WorkDetailsState extends State<WorkDetails> {
       int workDayDuration = workData["workedTime"];
       workedDayInHourFormatInInt += workDayDuration;
     }
-
-    setState(() {
-      if (workedDayInHourFormatInInt >= 60) {
-        grossWorkDayInHour = workedDayInHourFormatInInt / 60;
+    if (workedDayInHourFormatInInt >= 60) {
+      grossWorkDayInHour = workedDayInHourFormatInInt / 60;
+      if (grossWorkDayInHour % 1 == 0) {
+        grossWorkTimeLabel = "${grossWorkDayInHour.toInt()} H";
       } else {
-        grossWorkDayInMin = workedDayInHourFormatInInt;
-        isInHoursGross = false;
+        List grossInHourSplit =
+            grossWorkDayInHour.toStringAsFixed(2).split(".");
+        grossWorkTimeLabel =
+            "${grossInHourSplit[0]}H ${grossInHourSplit[1]}min";
       }
-    });
+    } else {
+      grossWorkTimeLabel = "$workedDayInHourFormatInInt min";
+      isInHoursGross = false;
+    }
+    setState(() {});
   }
 
   getNettWork({required List<Map<String, dynamic>> worksData}) {
-    int workedDayInHourFormatInInt = 60;
+    int workedDayInHourFormatInInt = 0;
     for (Map<String, dynamic> workData in worksData) {
       int workTime = workData["workedTime"];
       workedDayInHourFormatInInt += workTime;
@@ -113,10 +120,15 @@ class _WorkDetailsState extends State<WorkDetails> {
       int difference = workedDayInHourFormatInInt - totalBreakDuration;
       if (difference >= 60) {
         netWorkDayInHour = difference / 60;
-        List networkDay = netWorkDayInHour.toStringAsFixed(2).split(".");
-        timeInHourWithLabel = "${networkDay[0]}H ${networkDay[1]}min ";
+        if (netWorkDayInHour % 1 == 0) {
+          netWorkTimeLabel = "${netWorkDayInHour.toInt()}H  ";
+        } else {
+          List networkDay = netWorkDayInHour.toStringAsFixed(2).split(".");
+          netWorkTimeLabel = "${networkDay[0]}H ${networkDay[1]}min ";
+        }
       } else {
         netWorkDayInMin = difference;
+        netWorkTimeLabel = "$difference min";
         isInHoursNet = false;
       }
     }
@@ -397,9 +409,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                         leading: isInHoursGross
                             ? getLabels.youWorkedHours
                             : getLabels.youWorkedInMinuteGross,
-                        title: isInHoursGross
-                            ? grossWorkDayInHour.toStringAsFixed(2)
-                            : grossWorkDayInMin.toString(),
+                        title: grossWorkTimeLabel,
                       ),
                       Gap(MediaQuery.of(context).size.height * 0.01),
                       Row(
@@ -525,9 +535,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                             leading: isInHoursNet
                                 ? getLabels.youWorkedNetHours
                                 : getLabels.youWorkedInMinuteNet,
-                            title: isInHoursNet
-                                ? timeInHourWithLabel
-                                : netWorkDayInMin.toString()),
+                            title: netWorkTimeLabel),
                       ),
                       if (_selectedCategoryForFilter != null &&
                           _selectedCategoryForFilter?['id'] != 0)

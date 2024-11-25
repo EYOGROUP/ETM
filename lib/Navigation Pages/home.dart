@@ -277,6 +277,7 @@ class _StartTimePageState extends State<StartTimePage> {
     }
 
     if (!mounted) return;
+
     if (!isAnotherCategory && isWorkFinished) {
       return Constants.showInSnackBar(
           value: getLabels.workFinishedForToday, context: context);
@@ -440,15 +441,10 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> notClosedWorkData = await getNotClosedWorkData();
 
     if (notClosedWorkData.isNotEmpty) {
-      if (categoryIdGet != null) {
+      if (tm.selectedCategory.isNotEmpty) {
+        int categoryId = tm.selectedCategory["id"];
         works = await db.readData(
-                sql:
-                    'select * from work_sessions where categoryId=$categoryIdGet')
-            as List<Map<String, dynamic>>;
-      } else if (tm.selectedCategory.isNotEmpty) {
-        works = await db.readData(
-                sql:
-                    'select * from work_sessions where categoryId=${tm.selectedCategory["id"]}')
+                sql: 'select * from work_sessions where categoryId=$categoryId')
             as List<Map<String, dynamic>>;
       } else if (tm.selectedCategory.isEmpty) {
         int categoryId = categoryIdGet ?? notClosedWorkData[0]['categoryId'];
@@ -456,10 +452,11 @@ class _StartTimePageState extends State<StartTimePage> {
                 sql: 'select * from work_sessions where categoryId=$categoryId')
             as List<Map<String, dynamic>>;
       }
-    } else if (categoryIdGet != null) {
+    } else if (tm.selectedCategory.isNotEmpty) {
+      int categoryId = tm.selectedCategory["id"];
+
       works = await db.readData(
-              sql:
-                  'select * from work_sessions where categoryId=$categoryIdGet')
+              sql: 'select * from work_sessions where categoryId=$categoryId')
           as List<Map<String, dynamic>>;
     } else {
       works = await db.readData(sql: 'select * from work_sessions')
@@ -474,9 +471,10 @@ class _StartTimePageState extends State<StartTimePage> {
       bool isSameDate = areDatesSame(startTimeToday, DateTime.now());
       if (isSameDate) {
         workDay.add(work);
-      } else {
-        workDay.add(work);
       }
+      //  else {
+      //   workDay.add(work);
+      // }
     }
 
     return workDay;
@@ -515,11 +513,14 @@ class _StartTimePageState extends State<StartTimePage> {
             columnId: 'id',
             id: workDay['id']);
         if (!mounted) return;
+        await tM.closeCategoryForNotPremiumUserAfterUseIt();
+
         tM.resetSelectedCategory();
         await getHoursOrMinutesWorkedForToday();
         if (!mounted) return;
         setState(() {
           _isStartWork = false;
+          isSwitchCategoryAvailable = true;
         });
       }
     }

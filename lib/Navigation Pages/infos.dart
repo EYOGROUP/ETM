@@ -36,76 +36,93 @@ class _InfosPageState extends State<InfosPage> {
     final tmProvider =
         Provider.of<TimeManagementPovider>(context, listen: false);
     return Scaffold(
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(getLabels.infos),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(
-            vertical: MediaQuery.of(context).size.height * 0.02,
-            horizontal: MediaQuery.of(context).size.width * 0.02),
-        child: Column(
-          children: [
-            ListTile(
-              title: Text(getLabels.contactUs),
-              trailing: InkWell(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const ContactUs(),
-                )),
-                child: Icon(Platform.isIOS
-                    ? Icons.arrow_forward_ios_rounded
-                    : Icons.arrow_forward_outlined),
-              ),
-            ),
-            ListTile(
-              title: Text(getLabels.privacyPolicy),
-              trailing: GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const PrivacyPolicyOrTermsOfUseETM(
-                      infoApp: InfosApp.privacyPolicy),
-                )),
-                child: Icon(Platform.isIOS
-                    ? Icons.arrow_forward_ios_rounded
-                    : Icons.arrow_forward_outlined),
-              ),
-            ),
-            ListTile(
-              title: Text(getLabels.termOfUse),
-              trailing: GestureDetector(
-                onTap: () => Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) => const PrivacyPolicyOrTermsOfUseETM(
-                      infoApp: InfosApp.termOfUse),
-                )),
-                child: Icon(Platform.isIOS
-                    ? Icons.arrow_forward_ios_rounded
-                    : Icons.arrow_forward_outlined),
-              ),
-            ),
-            Gap(MediaQuery.of(context).size.height * 0.02),
-            ListTile(
-              title: Text(getLabels.themeMode),
-              trailing: DayNightSwitcher(
-                isDarkModeEnabled: tmProvider.isDarkGet,
-                onStateChanged: (bool isDarkModeEnabled) async {
-                  await tmProvider.switchThemeApp(
-                      context: context, valueTheme: isDarkModeEnabled);
-                  if (!mounted) return;
-                },
-              ),
-            ),
-            const Spacer(),
-            Text.rich(
-              TextSpan(
-                children: [
-                  TextSpan(text: getLabels.appVersion),
-                  const TextSpan(text: ' 1.00'),
-                ],
-              ),
-            )
-          ],
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text(getLabels.infos),
+          centerTitle: true,
         ),
-      ),
-    );
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                        vertical: MediaQuery.of(context).size.height * 0.02,
+                        horizontal: MediaQuery.of(context).size.width * 0.02),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ListTile(
+                          title: Text(getLabels.contactUs),
+                          trailing: InkWell(
+                            onTap: () =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => const ContactUs(),
+                            )),
+                            child: Icon(Platform.isIOS
+                                ? Icons.arrow_forward_ios_rounded
+                                : Icons.arrow_forward_outlined),
+                          ),
+                        ),
+                        ListTile(
+                          title: Text(getLabels.privacyPolicy),
+                          trailing: GestureDetector(
+                            onTap: () =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  const PrivacyPolicyOrTermsOfUseETM(
+                                      infoApp: InfosApp.privacyPolicy),
+                            )),
+                            child: Icon(Platform.isIOS
+                                ? Icons.arrow_forward_ios_rounded
+                                : Icons.arrow_forward_outlined),
+                          ),
+                        ),
+                        ListTile(
+                          title: Text(getLabels.termOfUse),
+                          trailing: GestureDetector(
+                            onTap: () =>
+                                Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) =>
+                                  const PrivacyPolicyOrTermsOfUseETM(
+                                      infoApp: InfosApp.termOfUse),
+                            )),
+                            child: Icon(Platform.isIOS
+                                ? Icons.arrow_forward_ios_rounded
+                                : Icons.arrow_forward_outlined),
+                          ),
+                        ),
+                        Gap(MediaQuery.of(context).size.height * 0.02),
+                        ListTile(
+                          title: Text(getLabels.themeMode),
+                          trailing: DayNightSwitcher(
+                            isDarkModeEnabled: tmProvider.isDarkGet,
+                            onStateChanged: (bool isDarkModeEnabled) async {
+                              await tmProvider.switchThemeApp(
+                                  context: context,
+                                  valueTheme: isDarkModeEnabled);
+                              if (!mounted) return;
+                            },
+                          ),
+                        ),
+                        Spacer(),
+                        Text.rich(
+                          TextSpan(
+                            children: [
+                              TextSpan(text: getLabels.appVersion),
+                              const TextSpan(text: ' 1.0.4'),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ));
   }
 }
