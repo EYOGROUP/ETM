@@ -71,11 +71,16 @@ class _StartTimePageState extends State<StartTimePage> {
     );
   }
 
+//ca-app-pub-6165489189371233/7954842835
+
   Future<void> loadRewardedAd() async {
+    final adUnitId = Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/5224354917'
+        : 'ca-app-pub-3940256099942544/1712485313';
     await RewardedAd.load(
-      adUnitId:
-          'ca-app-pub-3940256099942544/5224354917', // Deine Rewarded Ad Unit ID
+      adUnitId: adUnitId, // Deine Rewarded Ad Unit ID
       request: const AdRequest(),
+
       rewardedAdLoadCallback: RewardedAdLoadCallback(
         onAdLoaded: (RewardedAd ad) {
           setState(() {
@@ -514,7 +519,7 @@ class _StartTimePageState extends State<StartTimePage> {
             id: workDay['id']);
         if (!mounted) return;
         await tM.closeCategoryForNotPremiumUserAfterUseIt();
-
+        lockCategory();
         tM.resetSelectedCategory();
         await getHoursOrMinutesWorkedForToday();
         if (!mounted) return;
@@ -524,6 +529,18 @@ class _StartTimePageState extends State<StartTimePage> {
         });
       }
     }
+  }
+
+  void lockCategory() {
+    final tM = Provider.of<TimeManagementPovider>(context, listen: false);
+    var selectedCategoryId = tM.selectedCategory["id"];
+    Map<String, dynamic> getCategory = getCategories!.firstWhere(
+      (category) => category["id"] == selectedCategoryId,
+    );
+    getCategory.update(
+      'isAdsDisplayed',
+      (value) => 0,
+    );
   }
 
   Future<void> getCategoriesFromProvider(
@@ -896,10 +913,13 @@ class _StartTimePageState extends State<StartTimePage> {
                   children: [
                     TextButton(
                         onPressed: () async {
-                          TrackingDB db = TrackingDB();
-                          final data = await db.readData(
-                              sql: "select * from categories");
-                          print(data);
+                          // TrackingDB db = TrackingDB();
+                          // final data = await db.readData(
+                          //     sql: "select * from categories");
+                          // print(data);
+                          String sdkVersion =
+                              await MobileAds.instance.getVersionString();
+                          print("Google Mobile Ads SDK Version: $sdkVersion");
                         },
                         child: Text("he")),
                     Text(

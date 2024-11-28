@@ -46,15 +46,7 @@ class TimeManagementPovider with ChangeNotifier {
 
   initCategoryInDB({required BuildContext context}) async {
     final getLabels = AppLocalizations.of(context)!;
-    final List<String> categories = [
-      getLabels.productivity,
-      getLabels.healthFitness,
-      getLabels.education,
-      getLabels.business,
-      getLabels.finance,
-      getLabels.social,
-      getLabels.entertainment,
-    ];
+    List categories = ETMCategory.categories;
     TrackingDB db = TrackingDB();
     List<Map<String, dynamic>> initData;
     int? checkData;
@@ -63,16 +55,9 @@ class TimeManagementPovider with ChangeNotifier {
       initData = await db.readData(sql: 'select COUNT(*) from categories');
       checkData = Sqflite.firstIntValue(initData) ?? 0;
       if (checkData == 0) {
-        for (String category in categories) {
-          bool isAdsDisplayed = false;
-          if (category == getLabels.productivity) {
-            isAdsDisplayed = true;
-          }
-          ETMCategory etmCategory =
-              ETMCategory(name: category, isAdsDisplayed: isAdsDisplayed);
-
+        for (ETMCategory category in categories) {
           await db.insertData(
-              tableName: "categories", data: etmCategory.toMap());
+              tableName: "categories", data: category.toMap(isLokal: true));
         }
       }
     }
@@ -83,6 +68,7 @@ class TimeManagementPovider with ChangeNotifier {
     Map<String, dynamic> closeCategory = {"isAdsDisplayed": 0};
     if (_selectedCategory.isNotEmpty) {
       int categoryId = _selectedCategory["id"];
+
       switch (categoryId) {
         case 0:
           return;

@@ -1,8 +1,10 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/welcome.dart';
+import 'package:time_management/firebase_options.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:time_management/theme_app.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -13,8 +15,10 @@ void main() async {
       widgetsBinding: WidgetsFlutterBinding.ensureInitialized());
 
   WidgetsFlutterBinding.ensureInitialized();
-  MobileAds.instance.initialize();
-
+  await MobileAds.instance.initialize();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   FlutterNativeSplash.remove();
   runApp(const MyApp());
 }

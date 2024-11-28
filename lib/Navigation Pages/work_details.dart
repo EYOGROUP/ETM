@@ -116,7 +116,7 @@ class _WorkDetailsState extends State<WorkDetails> {
       int workTime = workData["workedTime"];
       workedDayInHourFormatInInt += workTime;
     }
-    if (workedDayInHourFormatInInt > 0) {
+    if (workedDayInHourFormatInInt >= 0) {
       int difference = workedDayInHourFormatInInt - totalBreakDuration;
       if (difference >= 60) {
         netWorkDayInHour = difference / 60;
