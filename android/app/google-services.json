@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "82637475051",
+    "project_id": "eyo-time-management",
+    "storage_bucket": "eyo-time-management.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82637475051:android:be51de58ae7e44cddb42ae",
+        "android_client_info": {
+          "package_name": "com.eyogroup.time_management"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "82637475051-p04ikf7s6bnvcnmddnmfc2oq8n3lagvf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.eyogroup.time_management",
+            "certificate_hash": "29f67895221f1af9a131d1d2d8e60554621c87ef"
+          }
+        },
+        {
+          "client_id": "82637475051-ukfe650asps57kgiu5bkv4cdp09r1n7s.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCJ-7F9utFfXJmlK7bxPDVLDBzxUMedsuE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82637475051-ukfe650asps57kgiu5bkv4cdp09r1n7s.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "82637475051-150ruq6rkap9c75cgh2e227k3a76l0g6.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.eyogroup.timeManagement"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

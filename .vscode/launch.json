@@ -14,7 +14,7 @@
         {
             "name": "Run iOS",
             "request": "launch",
-            "deviceId": "A3D00A44-686C-4D28-BFF4-3753D0BE9D17", // iOS Simulator ID
+            "deviceId": "519C5A4B-8D64-44D1-B5B3-75D697598EC2", // iOS Simulator ID
             "type": "dart",
             "program": "lib/main.dart",
             "flutterMode": "debug"

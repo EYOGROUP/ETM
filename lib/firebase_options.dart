@@ -63,9 +63,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '82637475051',
     projectId: 'eyo-time-management',
     storageBucket: 'eyo-time-management.firebasestorage.app',
-    androidClientId: '82637475051-p04ikf7s6bnvcnmddnmfc2oq8n3lagvf.apps.googleusercontent.com',
-    iosClientId: '82637475051-150ruq6rkap9c75cgh2e227k3a76l0g6.apps.googleusercontent.com',
+    androidClientId:
+        '82637475051-p04ikf7s6bnvcnmddnmfc2oq8n3lagvf.apps.googleusercontent.com',
+    iosClientId:
+        '82637475051-150ruq6rkap9c75cgh2e227k3a76l0g6.apps.googleusercontent.com',
     iosBundleId: 'com.eyogroup.timeManagement',
   );
-
 }
