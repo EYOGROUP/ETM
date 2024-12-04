@@ -6,7 +6,10 @@ import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
+import 'package:time_management/controller/category_architecture.dart';
+import 'package:time_management/provider/category_provider.dart';
 import 'package:time_management/provider/tm_provider.dart';
+import 'package:time_management/provider/user_provider.dart';
 
 class WorkDetails extends StatefulWidget {
   final DateTime workDate;
@@ -30,17 +33,30 @@ class _WorkDetailsState extends State<WorkDetails> {
   bool isWorkDeleting = false;
   bool isInHoursGross = true;
   bool isInHoursNet = true;
-  Map<String, dynamic>? _selectedCategoryForFilter;
+  ETMCategory? _selectedCategoryForFilter;
   final RefreshController _refreshController = RefreshController();
   String netWorkTimeLabel = '';
   String grossWorkTimeLabel = '';
 
-  Future<void> getAllCategoriesBreaks() async {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) async {
+        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        tm.setOrientation(context);
+        await getWorkData();
+      },
+    );
+  }
+
+  Future<void> getAllCategoriesBreaks({required String workSessionId}) async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
         .getBreaksFromSpecificDate(
             breakSessionTime: widget.workDate,
             mounted: mounted,
-            workSessionId: _selectedCategoryForFilter?["id"]);
+            workSessionId: workSessionId);
+
     if (!mounted) return;
     getTotalOfBreakDuration(breaks: breaks!);
   }
@@ -62,10 +78,9 @@ class _WorkDetailsState extends State<WorkDetails> {
         .getWorkDataFromSpecificDate(
             date: widget.workDate,
             mounted: mounted,
-            categoryId: _selectedCategoryForFilter?["id"]);
-    print(worksData);
+            categoryId: _selectedCategoryForFilter?.id);
     if (!mounted) return;
-    await getAllCategoriesBreaks();
+    await getAllCategoriesBreaks(workSessionId: worksData?.first["id"]);
     // await getBreaks(workSessionsId: worksData?.first["id"]);
     if (!mounted) return;
     getGrossWork(worksData: worksData!);
@@ -96,12 +111,12 @@ class _WorkDetailsState extends State<WorkDetails> {
     if (workedDayInHourFormatInInt >= 60) {
       grossWorkDayInHour = workedDayInHourFormatInInt / 60;
       if (grossWorkDayInHour % 1 == 0) {
-        grossWorkTimeLabel = "${grossWorkDayInHour.toInt()} H";
+        grossWorkTimeLabel = "${grossWorkDayInHour.toInt()}H  ";
       } else {
         List grossInHourSplit =
             grossWorkDayInHour.toStringAsFixed(2).split(".");
         grossWorkTimeLabel =
-            "${grossInHourSplit[0]}H ${grossInHourSplit[1]}min";
+            "${grossInHourSplit[0]}H ${grossInHourSplit[1]}min ";
       }
     } else {
       grossWorkTimeLabel = "$workedDayInHourFormatInInt min";
@@ -137,7 +152,7 @@ class _WorkDetailsState extends State<WorkDetails> {
   }
 
   Future<void> deleteWork(
-      {required int id,
+      {required String id,
       required String title,
       required String description,
       required String cancelText,
@@ -182,38 +197,29 @@ class _WorkDetailsState extends State<WorkDetails> {
     );
   }
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) async {
-        final tm = Provider.of<TimeManagementPovider>(context, listen: false);
-        tm.setOrientation(context);
-        await getWorkData();
-      },
-    );
-  }
-
   showBottomFilter({required AppLocalizations labels}) async {
-    List<Map<String, dynamic>> categories = [
-      {
-        "id": 0,
-        "name": labels.allCategories,
-      },
-    ];
-    final getCategories =
-        await Provider.of<TimeManagementPovider>(context, listen: false)
-            .getCategories(context: context, mounted: mounted);
-    if (!mounted) return;
-    if (getCategories.isNotEmpty) {
-      for (Map<String, dynamic> category in getCategories) {
-        categories.add(category);
-      }
-    }
-    if (_selectedCategoryForFilter == null ||
-        _selectedCategoryForFilter!.isEmpty) {
-      _selectedCategoryForFilter = categories.first;
-    }
+    // List<Map<String, dynamic>> categories = [
+    //   {
+    //     "id": 0,
+    //     "name": labels.allCategories,
+    //   },
+    // ];
+    // final getCategories =
+    //     await Provider.of<TimeManagementPovider>(context, listen: false)
+    //         .getCategories(context: context, mounted: mounted);
+    // if (!mounted) return;
+    // if (getCategories.isNotEmpty) {
+    //   for (Map<String, dynamic> category in getCategories) {
+    //     categories.add(category);
+    //   }
+    // }
+    // if (_selectedCategoryForFilter == null ||
+    //     _selectedCategoryForFilter!.isEmpty) {
+    //   _selectedCategoryForFilter = categories.first;
+    // }
+    List<ETMCategory> categories = ETMCategory.categories;
+    final eTMPovider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
 
     return showModalBottomSheet(
       context: context,
@@ -241,78 +247,79 @@ class _WorkDetailsState extends State<WorkDetails> {
                       style: const TextStyle(
                           fontWeight: FontWeight.bold, fontSize: 18.0)),
                   Gap(MediaQuery.of(context).size.height * 0.02),
-                  if (getCategories.isNotEmpty)
-                    StatefulBuilder(
-                      builder: (context, setState) {
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            DropdownButton(
-                              borderRadius: BorderRadius.circular(11.0),
-                              menuMaxHeight:
-                                  MediaQuery.of(context).size.height * 0.2,
-                              isExpanded: true,
-                              hint: Text(_selectedCategoryForFilter?['name']),
-                              items: categories
-                                  .map(
-                                    (category) => DropdownMenuItem(
-                                      value: category,
-                                      child: Text(category["name"]),
-                                    ),
-                                  )
-                                  .toList(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _selectedCategoryForFilter = value;
-                                });
-                              },
+                  StatefulBuilder(
+                    builder: (context, setState) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          DropdownButton(
+                            borderRadius: BorderRadius.circular(11.0),
+                            menuMaxHeight:
+                                MediaQuery.of(context).size.height * 0.2,
+                            isExpanded: true,
+                            hint: Text(_selectedCategoryForFilter?.name[
+                                    eTMPovider
+                                        .getCurrentLocalSystemLanguage()] ??
+                                labels.allCategories),
+                            items: categories
+                                .map(
+                                  (category) => DropdownMenuItem(
+                                    value: category,
+                                    child: Text(category.name[eTMPovider
+                                        .getCurrentLocalSystemLanguage()]),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) {
+                              setState(() {
+                                _selectedCategoryForFilter = value;
+                              });
+                            },
+                          ),
+                          Gap(MediaQuery.of(context).size.height * 0.02),
+                          GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedCategoryForFilter = categories.first;
+                              });
+                            },
+                            child: Text(
+                              "Reset Filters",
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  decoration: TextDecoration.underline),
                             ),
-                            Gap(MediaQuery.of(context).size.height * 0.02),
-                            GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  _selectedCategoryForFilter = categories.first;
-                                });
-                              },
-                              child: Text(
-                                "Reset Filters",
-                                style: TextStyle(
-                                    color:
-                                        Theme.of(context).colorScheme.primary,
-                                    decoration: TextDecoration.underline),
-                              ),
-                            ),
-                            Gap(MediaQuery.of(context).size.height * 0.12),
-                            Center(
-                              child: ElevatedButton(
-                                  style: ButtonStyle(
-                                      backgroundColor: WidgetStatePropertyAll(
-                                          Theme.of(context)
-                                              .colorScheme
-                                              .primaryContainer),
-                                      alignment: Alignment.center,
-                                      fixedSize: WidgetStatePropertyAll(Size(
-                                          MediaQuery.of(context).size.width *
-                                              0.7,
-                                          MediaQuery.of(context).size.height *
-                                              0.02))),
-                                  onPressed: () {
-                                    _refreshController.requestRefresh();
-                                    Navigator.of(context).pop();
-                                  },
-                                  child: Text(
-                                    "Save",
-                                    style: TextStyle(
-                                        fontSize: 18.0,
-                                        color: Theme.of(context)
+                          ),
+                          Gap(MediaQuery.of(context).size.height * 0.12),
+                          Center(
+                            child: ElevatedButton(
+                                style: ButtonStyle(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                        Theme.of(context)
                                             .colorScheme
-                                            .onSurface),
-                                  )),
-                            )
-                          ],
-                        );
-                      },
-                    ),
+                                            .primaryContainer),
+                                    alignment: Alignment.center,
+                                    fixedSize: WidgetStatePropertyAll(Size(
+                                        MediaQuery.of(context).size.width * 0.7,
+                                        MediaQuery.of(context).size.height *
+                                            0.02))),
+                                onPressed: () {
+                                  _refreshController.requestRefresh();
+                                  Navigator.of(context).pop();
+                                },
+                                child: Text(
+                                  "Save",
+                                  style: TextStyle(
+                                      fontSize: 18.0,
+                                      color: Theme.of(context)
+                                          .colorScheme
+                                          .onSurface),
+                                )),
+                          )
+                        ],
+                      );
+                    },
+                  ),
                 ],
               ),
             ),
@@ -337,6 +344,9 @@ class _WorkDetailsState extends State<WorkDetails> {
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
+
+    final eTMPovider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
 
     return Scaffold(
       appBar: AppBar(
@@ -383,7 +393,8 @@ class _WorkDetailsState extends State<WorkDetails> {
                     LeadingAndTitle(
                       leading: "Category:",
                       title: _selectedCategoryForFilter != null
-                          ? _selectedCategoryForFilter!["name"]
+                          ? _selectedCategoryForFilter!
+                              .name[eTMPovider.getCurrentLocalSystemLanguage()]
                           : getLabels.allCategories,
                     ),
                     LeadingAndTitle(
@@ -405,12 +416,24 @@ class _WorkDetailsState extends State<WorkDetails> {
                         leading: getLabels.workEndedAt,
                         title: worksData?.last['endTime'],
                       ),
-                      LeadingAndTitle(
-                        leading: isInHoursGross
-                            ? getLabels.youWorkedHours
-                            : getLabels.youWorkedInMinuteGross,
-                        title: grossWorkTimeLabel,
+                      Padding(
+                        padding: EdgeInsets.symmetric(
+                            horizontal:
+                                MediaQuery.of(context).size.width * 0.02,
+                            vertical: 5),
+                        child: RowLeadingAndTitle(
+                          leading: isInHoursGross
+                              ? getLabels.youWorkedHours
+                              : getLabels.youWorkedInMinuteGross,
+                          title: grossWorkTimeLabel,
+                        ),
                       ),
+                      // LeadingAndTitle(
+                      //   leading: isInHoursGross
+                      //       ? getLabels.youWorkedHours
+                      //       : getLabels.youWorkedInMinuteGross,
+                      //   title: grossWorkTimeLabel,
+                      // ),
                       Gap(MediaQuery.of(context).size.height * 0.01),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -434,8 +457,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 22.0),
                       ),
-                      if ((_selectedCategoryForFilter != null &&
-                          _selectedCategoryForFilter?["id"] != 0)) ...{
+                      if ((_selectedCategoryForFilter != null)) ...{
                         breaks != null && breaks!.isNotEmpty
                             ? SizedBox(
                                 height:
@@ -479,7 +501,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                                                     leading: getLabels
                                                         .breakStartedAt,
                                                     title: breaks?[index]
-                                                        ["breakStartTime"]),
+                                                        ["startTime"]),
                                                 Gap(MediaQuery.of(context)
                                                         .size
                                                         .height *
@@ -488,7 +510,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                                                     leading: getLabels
                                                         .breakFinishedAt,
                                                     title: breaks?[index]
-                                                        ["breakEndTime"]),
+                                                        ["endTime"]),
                                                 Gap(MediaQuery.of(context)
                                                         .size
                                                         .height *
@@ -515,8 +537,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                               ),
                       },
                       Gap(MediaQuery.of(context).size.height * 0.02),
-                      if (_selectedCategoryForFilter == null ||
-                          _selectedCategoryForFilter?["id"] == 0) ...{
+                      if (_selectedCategoryForFilter == null) ...{
                         Gap(MediaQuery.of(context).size.height * 0.05),
                         Text(getLabels.viewBreakDetails),
                         Gap(MediaQuery.of(context).size.height * 0.23),
@@ -537,8 +558,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                                 : getLabels.youWorkedInMinuteNet,
                             title: netWorkTimeLabel),
                       ),
-                      if (_selectedCategoryForFilter != null &&
-                          _selectedCategoryForFilter?['id'] != 0)
+                      if (_selectedCategoryForFilter != null)
                         TextButton(
                             style: const ButtonStyle(
                                 padding: WidgetStatePropertyAll(

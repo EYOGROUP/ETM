@@ -3,30 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:sqflite/sqflite.dart';
+
 import 'package:time_management/constants.dart';
-import 'package:time_management/controller/architecture.dart';
+
+import 'dart:io';
+
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
   bool get isDarkGet => _isDark;
-  Map<String, dynamic> _selectedCategory = {};
-  Map<String, dynamic> get selectedCategory => _selectedCategory;
-
-  set setCategory(Map<String, dynamic> categories) {
-    resetSelectedCategory();
-    _selectedCategory = categories;
-    notifyListeners();
-  }
-
-  void resetSelectedCategory() {
-    if (_selectedCategory.isNotEmpty) {
-      _selectedCategory.clear();
-    }
-  }
 
   Future<bool> isCategoryAlreadyInit({required TrackingDB db}) async {
     bool isAlreadyIn = true;
@@ -44,46 +33,45 @@ class TimeManagementPovider with ChangeNotifier {
     return isAlreadyIn;
   }
 
-  initCategoryInDB({required BuildContext context}) async {
-    final getLabels = AppLocalizations.of(context)!;
-    List categories = ETMCategory.categories;
-    TrackingDB db = TrackingDB();
-    List<Map<String, dynamic>> initData;
-    int? checkData;
-    bool isCategoryTableExist = await isCategoryAlreadyInit(db: db);
-    if (isCategoryTableExist) {
-      initData = await db.readData(sql: 'select COUNT(*) from categories');
-      checkData = Sqflite.firstIntValue(initData) ?? 0;
-      if (checkData == 0) {
-        for (ETMCategory category in categories) {
-          await db.insertData(
-              tableName: "categories", data: category.toMap(isLokal: true));
-        }
-      }
+  String getCurrentLocalSystemLanguage() {
+    String localeName = Platform.localeName;
+    List<String> supportLuanguages = ["en", "de", "fr"];
+    String currentLocalSystem = '';
+
+    if (localeName.contains("_") || localeName.contains("-")) {
+      // Split by the first occurring separator and return the language code
+      currentLocalSystem = localeName.split(RegExp(r'[_-]')).first;
+    } else {
+      currentLocalSystem =
+          localeName; // If no separator, return the locale name as is
     }
-  }
-
-// close Category
-  Future<void> closeCategoryForNotPremiumUserAfterUseIt() async {
-    Map<String, dynamic> closeCategory = {"isAdsDisplayed": 0};
-    if (_selectedCategory.isNotEmpty) {
-      int categoryId = _selectedCategory["id"];
-
-      switch (categoryId) {
-        case 0:
-          return;
-
-        case 1:
-          return;
-      }
-      TrackingDB db = TrackingDB();
-      await db.updateData(
-          tableName: "categories",
-          data: closeCategory,
-          id: categoryId,
-          columnId: "id");
+    if (supportLuanguages.contains(currentLocalSystem)) {
+      currentLocalSystem = currentLocalSystem;
+    } else {
+      currentLocalSystem = "en";
     }
+
+    return currentLocalSystem;
   }
+  // initCategoryInDB({required BuildContext context}) async {
+  //   final userProvider = Provider.of(context, listen: false);
+  //   final getLabels = AppLocalizations.of(context)!;
+  //   List categories = ETMCategory.categories;
+  //   TrackingDB db = TrackingDB();
+  //   List<Map<String, dynamic>> initData;
+  //   int? checkData;
+  //   bool isCategoryTableExist = await isCategoryAlreadyInit(db: db);
+  //   if (isCategoryTableExist) {
+  //     initData = await db.readData(sql: 'select COUNT(*) from categories');
+  //     checkData = Sqflite.firstIntValue(initData) ?? 0;
+  //     if (checkData == 0) {
+  //       for (ETMCategory category in categories) {
+  //         await db.insertData(
+  //             tableName: "categories", data: category.toMap(isLokal: true));
+  //       }
+  //     }
+  //   }
+  // }
 
   Future<List<Map<String, dynamic>>> getCategories(
       {required BuildContext context, required bool mounted}) async {
@@ -201,7 +189,7 @@ class TimeManagementPovider with ChangeNotifier {
         if (getWorkDay['id'] != null) {
           List<Map<String, dynamic>> breakSessions = await db.readData(
                   sql:
-                      "select * from break_sessions where workSessionId = ${getWorkDay['id']} and breakEndTime <> ''")
+                      "select * from break_sessions where workSessionId = '${getWorkDay['id']}' and endTime <> ''")
               as List<Map<String, dynamic>>;
           if (mounted) {
             numberOfBreaks += breakSessions.length;
@@ -249,26 +237,38 @@ class TimeManagementPovider with ChangeNotifier {
     bool isWorkFiniheshed = false;
     TrackingDB db = TrackingDB();
     String dateToday = DateFormat('yyyy-MM-dd').format(date);
-    List<Map<String, dynamic>> workSession = await db.readData(
+    List<Map<String, dynamic>> workSessions = await db.readData(
             sql:
-                'select * from work_sessions where isCompleted=1 and substr(startTime,1,10) ="$dateToday" ')
+                'select * from work_sessions where substr(startTime,1,10) ="$dateToday" ')
         as List<Map<String, dynamic>>;
-    if (workSession.isNotEmpty) {
-      isWorkFiniheshed = true;
+    if (workSessions.isNotEmpty) {
+      // isWorkFiniheshed = true;
+
+      // same logic
+      for (Map<String, dynamic> workSession in workSessions) {
+        if (workSession["isCompleted"] == 1) {
+          isWorkFiniheshed = true;
+        } else {
+          isWorkFiniheshed = false;
+        }
+      }
     }
+
     return isWorkFiniheshed;
   }
 
   Future<List<Map<String, dynamic>>> getWorkDataFromSpecificDate(
-      {required DateTime date, required bool mounted, int? categoryId}) async {
+      {required DateTime date,
+      required bool mounted,
+      String? categoryId}) async {
     List<Map<String, dynamic>> worksDataGet = [];
     TrackingDB db = TrackingDB();
     String formatDate = DateFormat("yyyy-MM-dd").format(date);
     List<Map<String, dynamic>> getWorkData = [];
-    if (categoryId != null && categoryId != 0) {
+    if (categoryId != null) {
       getWorkData = await db.readData(
           sql:
-              'select * from work_sessions where substr(startTime,1,10)="$formatDate" and categoryId=$categoryId');
+              'select * from work_sessions where substr(startTime,1,10)="$formatDate" and categoryId="$categoryId"');
     } else {
       getWorkData = await db.readData(
           sql:
@@ -308,7 +308,7 @@ class TimeManagementPovider with ChangeNotifier {
     TrackingDB db = TrackingDB();
     final getBreaksData = await db.readData(
         sql:
-            "select * from break_sessions where workSessionId=$workSessionsId ");
+            "select * from break_sessions where workSessionId='$workSessionsId' ");
 
     if (mounted) {
       if (getBreaksData.isNotEmpty) {
@@ -317,13 +317,13 @@ class TimeManagementPovider with ChangeNotifier {
             .toList();
         for (Map<String, dynamic> getBreakData in breaks) {
           DateTime? breakStartTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
-              .tryParse(getBreakData["breakStartTime"]);
-          getBreakData["breakStartTime"] =
+              .tryParse(getBreakData["startTime"]);
+          getBreakData["startTime"] =
               DateFormat("HH:mm").format(breakStartTimeAsDate!);
           DateTime? breakEndTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
-              .tryParse(getBreakData["breakEndTime"]);
+              .tryParse(getBreakData["endTime"]);
 
-          getBreakData["breakEndTime"] =
+          getBreakData["endTime"] =
               DateFormat("HH:mm").format(breakEndTimeAsDate!);
 
           getBreakData['duration'] =
@@ -337,19 +337,19 @@ class TimeManagementPovider with ChangeNotifier {
   Future<List<Map<String, dynamic>>> getBreaksFromSpecificDate(
       {required DateTime breakSessionTime,
       required bool mounted,
-      int? workSessionId}) async {
+      String? workSessionId}) async {
     List<Map<String, dynamic>> breaks = [];
     TrackingDB db = TrackingDB();
     String formatDate = DateFormat("yyyy-MM-dd").format(breakSessionTime);
     List<Map<String, dynamic>>? getBreaksData;
-    if (workSessionId != null && workSessionId != 0) {
+    if (workSessionId != null) {
       getBreaksData = await db.readData(
           sql:
-              'select * from break_sessions where workSessionId=$workSessionId ');
+              'select * from break_sessions where workSessionId= "$workSessionId" ');
     } else {
       getBreaksData = await db.readData(
           sql:
-              'select * from break_sessions where substr(breakEndTime,1,10)="$formatDate" ');
+              'select * from break_sessions where substr(endTime,1,10)="$formatDate" ');
     }
 
     if (mounted) {
@@ -359,13 +359,13 @@ class TimeManagementPovider with ChangeNotifier {
             .toList();
         for (Map<String, dynamic> getBreakData in breaks) {
           DateTime? breakStartTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
-              .tryParse(getBreakData["breakStartTime"]);
-          getBreakData["breakStartTime"] =
+              .tryParse(getBreakData["startTime"]);
+          getBreakData["startTime"] =
               DateFormat("HH:mm").format(breakStartTimeAsDate!);
           DateTime? breakEndTimeAsDate = DateFormat("yyyy-MM-dd HH:mm:ss")
-              .tryParse(getBreakData["breakEndTime"]);
+              .tryParse(getBreakData["endTime"]);
 
-          getBreakData["breakEndTime"] =
+          getBreakData["endTime"] =
               DateFormat("HH:mm").format(breakEndTimeAsDate!);
 
           getBreakData['duration'] =
@@ -382,22 +382,22 @@ class TimeManagementPovider with ChangeNotifier {
     TrackingDB db = TrackingDB();
     final getBreaks = await db.readData(
         sql:
-            "select * from break_sessions where workSessionId = ${workDay['id']}");
+            "select * from break_sessions where workSessionId = '${workDay['id']}'");
     List<Map<String, dynamic>> formatBreaksToList = getBreaks
         .map((breakData) => Map<String, dynamic>.from(breakData))
         .toList();
 
     for (Map<String, dynamic> breakData in formatBreaksToList) {
-      if (breakData['breakEndTime'] == '') {
+      if (breakData['endTime'] == '') {
         isAllBreaksClosed = false;
       }
     }
     return isAllBreaksClosed;
   }
 
-  Future<void> deleteWork({required int id}) async {
+  Future<void> deleteWork({required String id}) async {
     TrackingDB db = TrackingDB();
-    await db.deleteData(sql: "delete from work_sessions where id =$id");
+    await db.deleteData(sql: "delete from work_sessions where id ='$id'");
   }
 
   bool isPortrait(BuildContext context) {

@@ -21,15 +21,19 @@ class TrackingDB {
       onUpgrade: (db, oldVersion, newVersion) async {
         if (oldVersion < newVersion) {
           await db.execute(
-              '''CREATE TABLE IF NOT EXISTS categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,isAdsDisplayed INTEGER NOT NULL)''');
+              ''' CREATE TABLE IF NOT EXISTS categories (id TEXT KEY TEXT ,isUnlocked INTEGER NOT NULL,isPremium INTEGER NOT NULL,,unlockExpiry TEXT NOT NULL) ''');
           // 2. Create a new work_sessions table with the foreign key
           await db.execute('''
       CREATE TABLE work_sessions_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         startTime TEXT NOT NULL,
         endTime TEXT NOT NULL,
+        duration_minutes INTEGER NOT NULL,
+      breakTimeMinutes INTEGER DEFAULT 0,
+       taskDescription TEXT,
+       createdAt TEXT NOT NULL,
         isCompleted INTEGER NOT NULL,
-        categoryId INTEGER,
+        categoryId TEXT NOT NULL,
         FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
       );
     ''');
@@ -46,8 +50,10 @@ class TrackingDB {
           // 5. Rename the new work_sessions table to the original name
           await db
               .execute('ALTER TABLE work_sessions_new RENAME TO work_sessions');
+
+          ///
           const breakSessionTable =
-              ''' CREATE TABLE IF NOT EXISTS break_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT ,workSessionId, breakStartTime TEXT NOT NULL, breakEndTime TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
+              ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,workSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
           await db.execute(breakSessionTable);
         }
       },
@@ -62,12 +68,13 @@ class TrackingDB {
   _onCreate(Database db, int version) async {
     // When creating the db, create the table
     const categoriesTable =
-        ''' CREATE TABLE categories (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL,isAdsDisplayed INTEGER NOT NULL) ''';
+        ''' CREATE TABLE categories (id TEXT PRIMARY KEY,isUnlocked INTEGER NOT NULL,isPremium INTEGER NOT NULL,unlockExpiry TEXT NOT NULL) ''';
 
     const workSessionTable =
-        ''' CREATE TABLE work_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT , startTime TEXT NOT NULL, endTime TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId INTEGER, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
+        ''' CREATE TABLE work_sessions (id TEXT PRIMARY KEY , startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,
+      breakTimeMinutes INTEGER DEFAULT 0, taskDescription TEXT, createdAt TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId TEXT NOT NULL, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
     const breakSessionTable =
-        ''' CREATE TABLE break_sessions (id INTEGER PRIMARY KEY AUTOINCREMENT ,workSessionId, breakStartTime TEXT NOT NULL, breakEndTime TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
+        ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,workSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
     if (version == 1) {
       await db.execute(workSessionTable);
       await db.execute(breakSessionTable);
@@ -107,7 +114,7 @@ class TrackingDB {
       {required String tableName,
       required Map<String, dynamic> data,
       final columnId,
-      int? id}) async {
+      String? id}) async {
     Database? myDB = await db;
     int response = await myDB!.update(
       tableName,

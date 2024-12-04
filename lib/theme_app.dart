@@ -1,37 +1,65 @@
 import 'package:flex_color_scheme/flex_color_scheme.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 class ThemeApp {
   static final lightMode = FlexThemeData.light(
-    scheme: FlexScheme.cyanM3,
-    surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-    blendLevel: 7,
+    colors: const FlexSchemeColor(
+      // Custom colors
+      primary: Color(0xFF004881),
+      primaryContainer: Color(0xFFD0E4FF),
+      primaryLightRef: Color(0xFF004881),
+      secondary: Color(0xFFAC3306),
+      secondaryContainer: Color(0xFFFFDBCF),
+      secondaryLightRef: Color(0xFFAC3306),
+      tertiary: Color(0xFF006875),
+      tertiaryContainer: Color(0xFF95F0FF),
+      tertiaryLightRef: Color(0xFF006875),
+      appBarColor: Color(0xFFFFDBCF),
+      error: Color(0xFFBA1A1A),
+      errorContainer: Color(0xFFFFDAD6),
+    ),
     subThemesData: const FlexSubThemesData(
-      blendOnLevel: 10,
-      blendOnColors: false,
-      useMaterial3Typography: true,
+      interactionEffects: true,
+      tintedDisabledControls: true,
       useM2StyleDividerInM3: true,
+      inputDecoratorIsFilled: true,
+      inputDecoratorBorderType: FlexInputBorderType.outline,
       alignedDropdown: true,
-      useInputDecoratorThemeInDialogs: true,
+      navigationRailUseIndicator: true,
+      navigationRailLabelType: NavigationRailLabelType.all,
     ),
     visualDensity: FlexColorScheme.comfortablePlatformDensity,
-    useMaterial3: true,
-    swapLegacyOnMaterial3: true,
-    // To use the Playground font, add GoogleFonts package and uncomment
-    // fontFamily: GoogleFonts.notoSans().fontFamily,
+    cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
   );
   static final darkMode = FlexThemeData.dark(
-    scheme: FlexScheme.cyanM3,
-    surfaceMode: FlexSurfaceMode.levelSurfacesLowScaffold,
-    blendLevel: 13,
+    colors: const FlexSchemeColor(
+      // Custom colors
+      primary: Color(0xFF9FC9FF),
+      primaryContainer: Color(0xFF00325B),
+      primaryLightRef: Color(0xFF004881),
+      secondary: Color(0xFFFFB59D),
+      secondaryContainer: Color(0xFF872100),
+      secondaryLightRef: Color(0xFFAC3306),
+      tertiary: Color(0xFF86D2E1),
+      tertiaryContainer: Color(0xFF004E59),
+      tertiaryLightRef: Color(0xFF006875),
+      appBarColor: Color(0xFFFFDBCF),
+      error: Color(0xFFFFB4AB),
+      errorContainer: Color(0xFF93000A),
+    ),
     subThemesData: const FlexSubThemesData(
-      blendOnLevel: 20,
-      useMaterial3Typography: true,
+      interactionEffects: true,
+      tintedDisabledControls: true,
+      blendOnColors: true,
       useM2StyleDividerInM3: true,
+      inputDecoratorIsFilled: true,
+      inputDecoratorBorderType: FlexInputBorderType.outline,
       alignedDropdown: true,
-      useInputDecoratorThemeInDialogs: true,
+      navigationRailUseIndicator: true,
+      navigationRailLabelType: NavigationRailLabelType.all,
     ),
     visualDensity: FlexColorScheme.comfortablePlatformDensity,
-    useMaterial3: true,
-    swapLegacyOnMaterial3: true,
+    cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
   );
 }

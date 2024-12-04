@@ -16,7 +16,7 @@ class _PagesControllerState extends State<PagesController> {
   List<Widget> items = [
     const Icon(Icons.home_outlined, size: 30),
     const Icon(Icons.list, size: 30),
-    const Icon(Icons.settings, size: 30),
+    const Icon(Icons.person, size: 30),
   ];
   @override
   void dispose() {
@@ -37,8 +37,8 @@ class _PagesControllerState extends State<PagesController> {
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
-        backgroundColor: Theme.of(context).colorScheme.secondary,
-        color: Theme.of(context).colorScheme.primaryContainer,
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+        color: Theme.of(context).colorScheme.primary,
         items: items,
         index: 0,
         onTap: (value) {

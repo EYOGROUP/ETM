@@ -151,7 +151,27 @@
   "dontForgetTasks": "Don't forget your planned tasks for today. Every moment counts!",
   "viewBreakDetails": "Choose a category to view the break details.",
   "allCategories": "All Categories",
-  "noDataFound": "Oops! No data available."
+  "noDataFound": "Oops! No data available.",
+  "signInToContinue":"Sign in to continue",
+  "signInWithGoogle":"Sign in with Google",
+  "signInWithEmail": "Sign in with Email",
+  "newUserRegisterHere": "New user? Register here",
+  "signIn": "Sign In",
+  "cannotBeEmpty": "Can't be empty",
+  "emailNotValid": "Email not valid",
+  "continueLabel": "Continue",
+  "emailAddress": "E-Mail Address",
+    "completeYourProfile": "Complete your profile for an even better and personalized experience!",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "phone": "Phone",
+    "create": "Create",
+    "signUp": "Sign Up",
+    "emailRegistration": "Email Registration",
+    "alreadyHaveAnAccount": "Already have an account?",
+    "loginHere": "Login here"
 
 
 }

@@ -5,7 +5,9 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/welcome.dart';
 import 'package:time_management/firebase_options.dart';
+import 'package:time_management/provider/category_provider.dart';
 import 'package:time_management/provider/tm_provider.dart';
+import 'package:time_management/provider/user_provider.dart';
 import 'package:time_management/theme_app.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -29,9 +31,18 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (context) =>
-          TimeManagementPovider()..getThemeApp(context: context),
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+            create: (context) =>
+                TimeManagementPovider()..getThemeApp(context: context)),
+        ChangeNotifierProvider(
+          create: (context) => UserProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => CategoryProvider(),
+        ),
+      ],
       child: Consumer<TimeManagementPovider>(
         builder: (context, tMProvider, child) => MaterialApp(
           localizationsDelegates: const [
@@ -41,8 +52,8 @@ class MyApp extends StatelessWidget {
             GlobalCupertinoLocalizations.delegate,
           ],
           supportedLocales: const [
-            Locale('de'),
             Locale('en'),
+            Locale('de'),
             Locale('fr'),
           ],
           title: 'Eyo Time Management',

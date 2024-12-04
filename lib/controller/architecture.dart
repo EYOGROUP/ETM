@@ -1,209 +1,64 @@
-import 'package:flutter/material.dart';
-
 class WorkSession {
-  int? id;
-  final String startTime;
-  final String endTime;
-  final int categoryId;
+  final String id;
+  final DateTime startTime;
+  DateTime? endTime;
+  final String categoryId;
+  int? durationMinutes;
+  int? breakTimeMinutes;
+  String? taskDescription;
+  final DateTime createdAt;
   bool isCompleted;
   WorkSession(
-      {this.id,
+      {required this.id,
       required this.startTime,
-      required this.endTime,
+      this.endTime,
+      this.durationMinutes = 0,
+      this.breakTimeMinutes = 0,
+      this.taskDescription = '',
+      required this.createdAt,
       required this.categoryId,
       this.isCompleted = false});
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> lokalToMap() {
     return {
       'id': id,
-      'startTime': startTime,
-      'endTime': endTime,
+      'startTime': startTime.toString(),
+      'endTime': endTime?.toString() ?? '',
+      "durationMinutes": durationMinutes ?? 0,
+      "breakTimeMinutes": breakTimeMinutes ?? 0,
+      "createdAt": createdAt.toString(),
       'categoryId': categoryId,
+      "taskDescription": taskDescription,
       'isCompleted': isCompleted ? 1 : 0,
     };
   }
 }
 
 class BreakSession {
-  int? id;
-  final int workSessionId;
-  final String breakStartTime;
-  final String breakEndTime;
-  BreakSession(
-      {this.id,
-      required this.workSessionId,
-      required this.breakStartTime,
-      required this.breakEndTime});
-  Map<String, dynamic> toMap() {
+  final String id;
+  final String workSessionId;
+  final DateTime startTime;
+  DateTime? endTime;
+  int? durationMinutes;
+  String? reason;
+  final DateTime createdAt;
+  BreakSession({
+    required this.id,
+    required this.workSessionId,
+    required this.startTime,
+    this.endTime,
+    this.durationMinutes,
+    this.reason,
+    required this.createdAt,
+  });
+  Map<String, dynamic> lokalToMap() {
     return {
       'id': id,
       'workSessionId': workSessionId,
-      'breakStartTime': breakStartTime,
-      'breakEndTime': breakEndTime,
+      'startTime': startTime.toString(),
+      'endTime': endTime?.toString() ?? "",
+      "durationMinutes": durationMinutes ?? 0,
+      "reason": reason ?? '',
+      "createdAt": createdAt.toString(),
     };
   }
-}
-
-class ETMCategory {
-  final String id; // Unique identifier for the category
-  final Map<String, dynamic> name; // Name of the category (e.g., "Fitness")
-  final Map<String, dynamic>? description; // Short description (optional)
-  final bool isPremium; // Indicates if the category requires a premium account
-  final bool
-      isUnlocked; // Tracks if the category is unlocked (e.g., via ad or premium)
-  final DateTime?
-      unlockExpiry; // Expiry timestamp if unlocked temporarily (e.g., via ad)
-  final String icon;
-  ETMCategory({
-    this.description,
-    this.isPremium = false,
-    this.isUnlocked = false,
-    required this.unlockExpiry,
-    required this.icon,
-    required this.id,
-    required this.name,
-  });
-  Map<String, dynamic> toMap({required bool isLokal}) {
-    return {
-      "id": id,
-      "name": name,
-      "description": description,
-      "isPremium": isLokal
-          ? isPremium
-              ? 1
-              : 0
-          : isPremium,
-      "unlockExpiry": unlockExpiry,
-      "isUnlocked": isLokal
-          ? isUnlocked
-              ? 1
-              : 0
-          : isUnlocked,
-    };
-  }
-
-  static final List<ETMCategory> categories = [
-    ETMCategory(
-        id: '',
-        name: {"en": "Work", "fr": "Travail", "de": "Arbeiten"},
-        description: {
-          "en": "Tasks and responsibilities related to your professional life.",
-          "fr": "Tâches et responsabilités liées à votre vie professionnelle.",
-          "de": "Aufgaben und Verantwortlichkeiten im beruflichen Leben."
-        },
-        icon: Icons.work_outline.toString(),
-        unlockExpiry: null,
-        isUnlocked: true),
-    ETMCategory(
-      id: '',
-      name: {"en": "Learning", "fr": "Apprentissage", "de": "Lernen"},
-      description: {
-        "en": "Activities aimed at acquiring knowledge or skills.",
-        "fr":
-            "Activités visant à acquérir des connaissances ou des compétences.",
-        "de": "Aktivitäten zur Wissens- oder Fähigkeitenvermittlung."
-      },
-      icon: Icons.school.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Fitness", "fr": "Fitness", "de": "Fitness"},
-      description: {
-        "en":
-            "Physical activities to improve or maintain your health and fitness.",
-        "fr":
-            "Activités physiques pour améliorer ou maintenir votre santé et votre forme.",
-        "de":
-            "Körperliche Aktivitäten zur Verbesserung oder Erhaltung der Gesundheit."
-      },
-      icon: Icons.fitness_center.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Leisure", "fr": "Loisir", "de": "Freizeit"},
-      description: {
-        "en":
-            "Activities for relaxation and enjoyment outside of work or responsibilities.",
-        "fr":
-            "Activités de détente et de plaisir en dehors du travail ou des responsabilités.",
-        "de":
-            "Aktivitäten zur Entspannung und zum Vergnügen außerhalb der Arbeit."
-      },
-      icon: Icons.beach_access.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Household", "fr": "Ménage", "de": "Haushalt"},
-      description: {
-        "en": "Tasks related to maintaining and organizing your home.",
-        "fr": "Tâches liées à l'entretien et à l'organisation de la maison.",
-        "de": "Aufgaben zur Pflege und Organisation des Haushalts."
-      },
-      icon: Icons.house.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Finances", "fr": "Finances", "de": "Finanzen"},
-      description: {
-        "en": "Managing your income, expenses, investments, and savings.",
-        "fr": "Gestion de vos revenus, dépenses, investissements et économies.",
-        "de":
-            "Verwaltung von Einnahmen, Ausgaben, Investitionen und Ersparnissen."
-      },
-      icon: Icons.account_balance.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Family", "fr": "Famille", "de": "Familie"},
-      description: {
-        "en": "Activities and responsibilities related to your family life.",
-        "fr": "Activités et responsabilités liées à votre vie familiale.",
-        "de": "Aktivitäten und Verantwortlichkeiten im Familienleben."
-      },
-      icon: Icons.family_restroom.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Meditation", "fr": "Méditation", "de": "Meditation"},
-      description: {
-        "en": "Activities for mindfulness, relaxation, and mental well-being.",
-        "fr":
-            "Activités de pleine conscience, de relaxation et de bien-être mental.",
-        "de":
-            "Aktivitäten zur Achtsamkeit, Entspannung und geistigem Wohlbefinden."
-      },
-      icon: Icons.spa.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Travel", "fr": "Voyage", "de": "Reisen"},
-      description: {
-        "en": "Exploring new places and experiencing different cultures.",
-        "fr":
-            "Explorer de nouveaux endroits et découvrir différentes cultures.",
-        "de": "Neue Orte entdecken und verschiedene Kulturen erleben."
-      },
-      icon: Icons.airplanemode_active.toString(),
-      unlockExpiry: null,
-    ),
-    ETMCategory(
-      id: '',
-      name: {"en": "Projects", "fr": "Projets", "de": "Projekte"},
-      description: {
-        "en": "Tasks and goals related to personal or professional projects.",
-        "fr":
-            "Tâches et objectifs liés à des projets personnels ou professionnels.",
-        "de":
-            "Aufgaben und Ziele im Zusammenhang mit persönlichen oder beruflichen Projekten."
-      },
-      icon: Icons.assignment.toString(),
-      unlockExpiry: null,
-    ),
-  ];
 }

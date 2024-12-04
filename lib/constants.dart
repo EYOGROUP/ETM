@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 enum InfosApp {
   privacyPolicy,
@@ -53,5 +54,70 @@ class Constants {
         ],
       ),
     );
+  }
+}
+
+class TextFieldWithValidator extends StatelessWidget {
+  const TextFieldWithValidator({
+    super.key,
+    required this.controller,
+    required this.getLabels,
+    required this.validator,
+    required this.textType,
+  });
+
+  final TextEditingController controller;
+  final String getLabels;
+  final String? Function(String?)? validator;
+  final TextInputType textType;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: textType,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      decoration: InputDecoration(
+          contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10),
+          border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(9.0),
+              borderSide: BorderSide(
+                  width: 1, color: Theme.of(context).colorScheme.primary)),
+          filled: true,
+          fillColor:
+              Theme.of(context).colorScheme.primaryContainer.withOpacity(0.78),
+          hintText: getLabels,
+          constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width / 1.1)),
+      validator: validator,
+    );
+  }
+}
+
+class ElevatedButtonCreated extends StatelessWidget {
+  const ElevatedButtonCreated({
+    super.key,
+    required this.onTap,
+    required this.getLabels,
+  });
+
+  final String getLabels;
+  final Function()? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+        style: ButtonStyle(
+            padding: WidgetStatePropertyAll(EdgeInsets.symmetric(vertical: 10)),
+            fixedSize: WidgetStatePropertyAll(Size(
+              MediaQuery.of(context).size.width * 0.88,
+              MediaQuery.of(context).size.height * 0.055,
+            )),
+            shape: WidgetStatePropertyAll(RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12.0))),
+            backgroundColor: WidgetStatePropertyAll(
+                Theme.of(context).colorScheme.primaryContainer)),
+        onPressed: onTap,
+        child: Text(getLabels));
   }
 }
