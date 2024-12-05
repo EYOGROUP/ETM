@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:time_management/constants.dart';
 
 class UserProvider extends ChangeNotifier {
   bool isUserLogin() {

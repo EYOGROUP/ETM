@@ -64,6 +64,7 @@ dependencies:
   flutter_svg: ^2.0.16
   google_sign_in: ^6.2.2
   google_sign_in_ios: ^5.7.8
+  flutter_multi_formatter: ^2.13.0
 
   
  

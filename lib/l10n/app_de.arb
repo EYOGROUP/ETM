@@ -172,5 +172,7 @@
      "signUp": "Registrieren",
     "emailRegistration": "E-Mail Registrierung",
     "alreadyHaveAnAccount": "Bereits ein Konto?",
-    "loginHere": "Hier einloggen"
+    "loginHere": "Hier einloggen",
+     "searchByCountryOrDialCode": "Suche nach Ländernamen oder Vorwahl",
+    "phoneNumber": "Telefonnummer"
 }

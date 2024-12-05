@@ -171,7 +171,9 @@
     "signUp": "Sign Up",
     "emailRegistration": "Email Registration",
     "alreadyHaveAnAccount": "Already have an account?",
-    "loginHere": "Login here"
+    "loginHere": "Login here",
+    "searchByCountryOrDialCode": "Search by Country name or dial code",
+    "phoneNumber": "Phone Number"
 
 
 }

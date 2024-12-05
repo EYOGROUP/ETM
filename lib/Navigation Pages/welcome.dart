@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
@@ -6,12 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
-import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/db/mydb.dart';
 import 'package:time_management/provider/category_provider.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:time_management/provider/user_provider.dart';
-import 'package:uuid/uuid.dart';
 
 class WelcomePage extends StatefulWidget {
   const WelcomePage({super.key});

@@ -7,9 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:time_management/controller/category_architecture.dart';
-import 'package:time_management/provider/category_provider.dart';
 import 'package:time_management/provider/tm_provider.dart';
-import 'package:time_management/provider/user_provider.dart';
 
 class WorkDetails extends StatefulWidget {
   final DateTime workDate;
