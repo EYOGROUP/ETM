@@ -120,3 +120,33 @@ class ElevatedButtonCreated extends StatelessWidget {
         child: Text(getLabels));
   }
 }
+
+class TextFieldFlexibel extends StatelessWidget {
+  TextFieldFlexibel({
+    super.key,
+    required this.controller,
+    required this.hintText,
+    this.maxLines,
+    this.maxLength,
+  });
+
+  final TextEditingController controller;
+  final String hintText;
+  int? maxLines;
+  int? maxLength;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(
+      keyboardType: TextInputType.text,
+      maxLength: maxLength,
+      maxLines: maxLines,
+      controller: controller,
+      decoration: InputDecoration(
+          hintText: hintText,
+          filled: true,
+          fillColor: Theme.of(context).colorScheme.primaryContainer,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(9.0))),
+    );
+  }
+}

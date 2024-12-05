@@ -17,6 +17,22 @@ class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
   bool get isDarkGet => _isDark;
 
+  bool _isInAddingTask = false;
+  bool get isInAddingTaskGet => _isInAddingTask;
+
+  bool _isInAddingReason = false;
+  bool get isInAddingReasonGet => _isInAddingReason;
+
+  set isInAddingTaskSet(bool isInAdding) {
+    _isInAddingTask = isInAdding;
+    notifyListeners();
+  }
+
+  set isInAddingReasonSet(bool isInAdding) {
+    _isInAddingReason = isInAdding;
+    notifyListeners();
+  }
+
   Future<bool> isCategoryAlreadyInit({required TrackingDB db}) async {
     bool isAlreadyIn = true;
     try {

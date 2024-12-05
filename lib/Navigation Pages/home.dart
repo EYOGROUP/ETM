@@ -61,7 +61,8 @@ class _StartTimePageState extends State<StartTimePage> {
 // Category
   Map<String, dynamic> categoryHint = {};
   bool isSwitchCategoryAvailable = true;
-
+  final TextEditingController _todoController = TextEditingController();
+  final TextEditingController _breakReasonController = TextEditingController();
   RewardedAd? _rewardedAd;
   List<Map<String, dynamic>> activatedCategories = [];
 
@@ -575,7 +576,8 @@ class _StartTimePageState extends State<StartTimePage> {
       if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
         Map<String, dynamic> updateData = {
           'endTime': workFinishTime.toString(),
-          'isCompleted': 1
+          'isCompleted': 1,
+          'taskDescription': _todoController.text
         };
         //check if all breaks closed
         bool isAllBreaksClosed =
@@ -826,6 +828,7 @@ class _StartTimePageState extends State<StartTimePage> {
                 if (!mounted) return;
                 Map<String, dynamic> endTimeUpdate = {
                   'endTime': breakTime.toString(),
+                  'reason': _breakReasonController.text
                 };
                 await db.updateData(
                     tableName: 'break_sessions',
@@ -1002,8 +1005,7 @@ class _StartTimePageState extends State<StartTimePage> {
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
     final categoryProvider = Provider.of<CategoryProvider>(context);
-    final timeManagementPovider =
-        Provider.of<TimeManagementPovider>(context, listen: false);
+    final timeManagementPovider = Provider.of<TimeManagementPovider>(context);
     List<ETMCategory> categories = ETMCategory.categories;
     return Scaffold(
       key: _scaffoldKey,
@@ -1214,6 +1216,57 @@ class _StartTimePageState extends State<StartTimePage> {
                             sliderForWorkingTimeLabel: sliderForWorkingTime,
                             isSmallLabel: isSmallLabel),
                         Gap(MediaQuery.of(context).size.height * 0.02),
+                        if (_isStartWork) ...{
+                          Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    "Task Description:",
+                                    style: const TextStyle(
+                                        fontSize: 20.0,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  IconButton(
+                                    alignment: Alignment.center,
+                                    padding: EdgeInsets.all(3.0),
+                                    iconSize: 25,
+                                    constraints: BoxConstraints(
+                                        maxHeight: 35, maxWidth: 35),
+                                    style: ButtonStyle(
+                                        backgroundColor: WidgetStatePropertyAll(
+                                            Theme.of(context)
+                                                .colorScheme
+                                                .primaryContainer)),
+                                    onPressed: () => timeManagementPovider
+                                            .isInAddingTaskSet =
+                                        !timeManagementPovider
+                                            .isInAddingTaskGet,
+                                    icon: Icon(
+                                        !timeManagementPovider.isInAddingTaskGet
+                                            ? Icons.add
+                                            : Icons.clear_outlined),
+                                    color: !timeManagementPovider
+                                            .isInAddingTaskGet
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).colorScheme.error,
+                                  )
+                                ],
+                              )
+                            ],
+                          ),
+                          if (timeManagementPovider.isInAddingTaskGet) ...{
+                            Gap(MediaQuery.of(context).size.height * 0.02),
+                            TextFieldFlexibel(
+                              controller: _todoController,
+                              hintText: "Describ your Task...",
+                              maxLength: 300,
+                              maxLines: 3,
+                            ),
+                          },
+                        },
                         ListTile(
                           leading: Text(
                             getLabels.workStartedAt,
@@ -1299,7 +1352,57 @@ class _StartTimePageState extends State<StartTimePage> {
                             isSmallLabel: isSmallBreakSliderLabel)
                       ],
                     ),
-                    Gap(MediaQuery.of(context).size.height * 0.04),
+                    Gap(MediaQuery.of(context).size.height * 0.02),
+                    if (_isBreak) ...{
+                      Column(
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                "Reason:",
+                                style: const TextStyle(
+                                    fontSize: 20.0,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              IconButton(
+                                alignment: Alignment.center,
+                                padding: EdgeInsets.all(3.0),
+                                iconSize: 25,
+                                constraints:
+                                    BoxConstraints(maxHeight: 35, maxWidth: 35),
+                                style: ButtonStyle(
+                                    backgroundColor: WidgetStatePropertyAll(
+                                        Theme.of(context)
+                                            .colorScheme
+                                            .primaryContainer)),
+                                onPressed: () => timeManagementPovider
+                                        .isInAddingReasonSet =
+                                    !timeManagementPovider.isInAddingReasonGet,
+                                icon: Icon(
+                                    !timeManagementPovider.isInAddingReasonGet
+                                        ? Icons.add
+                                        : Icons.clear_outlined),
+                                color:
+                                    !timeManagementPovider.isInAddingReasonGet
+                                        ? Theme.of(context).colorScheme.primary
+                                        : Theme.of(context).colorScheme.error,
+                              )
+                            ],
+                          )
+                        ],
+                      ),
+                      if (timeManagementPovider.isInAddingReasonGet) ...{
+                        Gap(MediaQuery.of(context).size.height * 0.02),
+                        TextFieldFlexibel(
+                          controller: _breakReasonController,
+                          hintText: "Reason...",
+                          maxLength: 50,
+                          maxLines: 1,
+                        ),
+                      },
+                      Gap(MediaQuery.of(context).size.height * 0.02),
+                    },
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
