@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
@@ -65,12 +66,15 @@ class _StartTimePageState extends State<StartTimePage> {
   final TextEditingController _breakReasonController = TextEditingController();
   RewardedAd? _rewardedAd;
   List<Map<String, dynamic>> activatedCategories = [];
+  List<ETMCategory> _categories = [];
+  Map<String, dynamic>? choosedCategory;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
+        _categories = ETMCategory.categories;
         await loadRewardedAd();
         await getAllData(isSwitchCategory: false, isInit: true);
       },
@@ -210,7 +214,7 @@ class _StartTimePageState extends State<StartTimePage> {
     if (!userProvider.isUserLogin()) {
       // check if Category is locked
 
-      if (categorySet["isUnlocked"] || categorySet["isPremium"]) {
+      if (categorySet["isUnlocked"] != 0 || categorySet["isPremium"] != 0) {
         isAlreadyActivate = true;
       } else {
         final categoryProvider =
@@ -264,6 +268,7 @@ class _StartTimePageState extends State<StartTimePage> {
           resetAllData();
           categoryProvider.resetSelectedCategory();
           await setCategory(categorySet: categorySet);
+          await categoryProvider.getLockedCategories(mounted: mounted);
           // getCategoriesFromProvider(categoryProvider: categoryProvider, isInit: false);
         },
       );
@@ -321,7 +326,10 @@ class _StartTimePageState extends State<StartTimePage> {
                 ? categoryProvider.selectedCategory
                 : categorySet);
         await getNumberOfBreaks(isSwitchCategory: isSwitchCategory);
-        await getHoursOrMinutesWorkedForToday();
+        await getHoursOrMinutesWorkedForToday(
+            categoryIdSet: categoryProvider.selectedCategory.isNotEmpty
+                ? categoryProvider.selectedCategory["id"]
+                : categorySet?['id']);
         await checkIfWorkAndBreakForTodayNotFinished();
 
         if (!mounted) return;
@@ -341,6 +349,7 @@ class _StartTimePageState extends State<StartTimePage> {
       workFinishTime = null;
       numberOfBreaks = 0;
       workedTime = 0;
+
       workEndedTime = null;
       isInhours = false;
     });
@@ -532,10 +541,11 @@ class _StartTimePageState extends State<StartTimePage> {
       works = await db.readData(
               sql: 'select * from work_sessions where categoryId="$categoryId"')
           as List<Map<String, dynamic>>;
-    } else {
-      works = await db.readData(sql: 'select * from work_sessions')
-          as List<Map<String, dynamic>>;
     }
+    //  else {
+    //   works = await db.readData(sql: 'select * from work_sessions')
+    //       as List<Map<String, dynamic>>;
+    // }
 
     for (Map<String, dynamic> work in works) {
       DateTime? startTimeToday =
@@ -659,7 +669,7 @@ class _StartTimePageState extends State<StartTimePage> {
         return;
       }
     }
-
+    print(worksDay);
     startLoadingAnimation();
     for (Map<String, dynamic> workDay in worksDay) {
       DateTime? start =
@@ -756,15 +766,6 @@ class _StartTimePageState extends State<StartTimePage> {
 
     if (categoryProvider.selectedCategory.isNotEmpty) {
       categoryId = categoryProvider.selectedCategory["id"];
-
-      // final getCategory = await db.readData(
-      //         sql: "select * from categories where id = $categoryIdSelected")
-      //     as List<Map<String, dynamic>>;
-      // if (!mounted) return;
-
-      // if (getCategory.isNotEmpty) {
-      // }
-      //   categoryId = getCategory[0]["id"];
     }
 
     List<Map<String, dynamic>> getWorksDayData =
@@ -1105,9 +1106,21 @@ class _StartTimePageState extends State<StartTimePage> {
                         //     if (!mounted) return;
                         //   },
                         // ),
-                        DropdownMenu(
-                          menuHeight: MediaQuery.of(context).size.height * 0.35,
-                          hintText: categoryHint.isEmpty &&
+                        DropdownButtonFormField2(
+                          decoration: InputDecoration(
+                              filled: true,
+                              fillColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
+                              border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12.0))),
+                          dropdownStyleData: DropdownStyleData(
+                              useSafeArea: true,
+                              decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12.0)),
+                              maxHeight:
+                                  MediaQuery.of(context).size.height * 0.35),
+                          hint: Text(categoryHint.isEmpty &&
                                   categoryProvider.selectedCategory.isEmpty
                               ? getLabels.selectCategory
                               : categoryHint.isEmpty
@@ -1115,50 +1128,133 @@ class _StartTimePageState extends State<StartTimePage> {
                                       timeManagementPovider
                                           .getCurrentLocalSystemLanguage()]
                                   : categoryHint['name'][timeManagementPovider
-                                      .getCurrentLocalSystemLanguage()],
-                          expandedInsets: const EdgeInsets.all(5.0),
-                          inputDecorationTheme: InputDecorationTheme(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0))),
-                          dropdownMenuEntries: categories
+                                      .getCurrentLocalSystemLanguage()]),
+                          // value: categoryProvider.selectedCategory.isNotEmpty
+                          //     ? categoryProvider.selectedCategory['id']
+                          //     : categories.first.id,
+                          items: _categories
                               .map(
-                                (category) => DropdownMenuEntry(
+                                (category) => DropdownMenuItem(
                                     enabled: isSwitchCategoryAvailable
                                         ? true
                                         : false,
-                                    label: category.name[timeManagementPovider
-                                        .getCurrentLocalSystemLanguage()],
-                                    value: category.toMap(isLokal: false),
-                                    trailingIcon: Icon(
-                                      categoryProvider.lockedCategories
-                                                  .where((lockedCategory) =>
-                                                      lockedCategory["id"] ==
-                                                      category.id)
-                                                  .isNotEmpty ||
-                                              category.isUnlocked
-                                          ? Icons.lock_open_outlined
-                                          : Icons.lock_outline_rounded,
-                                      color: categoryProvider.lockedCategories
-                                                  .where((lockedCategory) =>
-                                                      lockedCategory["id"] ==
-                                                      category.id)
-                                                  .isNotEmpty ||
-                                              category.isUnlocked
-                                          ? Constants.green
-                                          : Constants.red,
+                                    value: category.id,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(category.name[timeManagementPovider
+                                            .getCurrentLocalSystemLanguage()]),
+                                        Gap(190),
+                                        Icon(
+                                          categoryProvider.lockedCategories
+                                                      .where((lockedCategory) =>
+                                                          lockedCategory[
+                                                              "id"] ==
+                                                          category.id)
+                                                      .isNotEmpty ||
+                                                  category.isUnlocked
+                                              ? Icons.lock_open_outlined
+                                              : Icons.lock_outline_rounded,
+                                          color: categoryProvider
+                                                      .lockedCategories
+                                                      .where((lockedCategory) =>
+                                                          lockedCategory[
+                                                              "id"] ==
+                                                          category.id)
+                                                      .isNotEmpty ||
+                                                  category.isUnlocked
+                                              ? Constants.green
+                                              : Constants.red,
+                                        ),
+                                      ],
                                     )),
                               )
                               .toList(),
-                          onSelected: (category) async {
-                            await _showRewardedAd(categorySet: category!);
+                          onChanged: (category) async {
+                            Map<String, dynamic> categoryToMap = ETMCategory
+                                .categories
+                                .firstWhere(
+                                    (categoryGet) => categoryGet.id == category)
+                                .toMap(isLokal: true);
+
+                            await _showRewardedAd(categorySet: categoryToMap);
 
                             await getAllData(
                                 isSwitchCategory: true,
-                                categorySet: category,
+                                categorySet: categoryToMap,
                                 isInit: false);
-                            if (!mounted) return;
                           },
                         ),
+                        // DropdownMenu(
+                        //   hintText: categoryHint.isEmpty &&
+                        //           categoryProvider.selectedCategory.isEmpty
+                        //       ? getLabels.selectCategory
+                        //       : categoryHint.isEmpty
+                        //           ? categoryProvider.selectedCategory['name'][
+                        //               timeManagementPovider
+                        //                   .getCurrentLocalSystemLanguage()]
+                        //           : categoryHint['name'][timeManagementPovider
+                        //               .getCurrentLocalSystemLanguage()],
+                        //   expandedInsets: const EdgeInsets.all(5.0),
+                        //   menuStyle: MenuStyle(
+                        //     maximumSize: WidgetStatePropertyAll(Size(
+                        //         MediaQuery.of(context).size.width * 0.9,
+                        //         MediaQuery.of(context).size.height * 0.35)),
+                        //   ),
+                        //   inputDecorationTheme: InputDecorationTheme(
+                        //       border: OutlineInputBorder(
+                        //           borderRadius: BorderRadius.circular(12.0))),
+                        //   dropdownMenuEntries: _categories
+                        //       .map(
+                        //         (category) => DropdownMenuEntry(
+                        //           enabled:
+                        //               isSwitchCategoryAvailable ? true : false,
+                        //           label: category.name[timeManagementPovider
+                        //               .getCurrentLocalSystemLanguage()],
+                        //           value: category.id,
+                        //           trailingIcon: Icon(
+                        //             categoryProvider.lockedCategories
+                        //                         .where((lockedCategory) =>
+                        //                             lockedCategory["id"] ==
+                        //                             category.id)
+                        //                         .isNotEmpty ||
+                        //                     category.isUnlocked
+                        //                 ? Icons.lock_open_outlined
+                        //                 : Icons.lock_outline_rounded,
+                        //             color: categoryProvider.lockedCategories
+                        //                         .where((lockedCategory) =>
+                        //                             lockedCategory["id"] ==
+                        //                             category.id)
+                        //                         .isNotEmpty ||
+                        //                     category.isUnlocked
+                        //                 ? Constants.green
+                        //                 : Constants.red,
+                        //           ),
+                        //         ),
+                        //       )
+                        //       .toList(),
+                        //   onSelected: (category) async {
+                        //     print("hey");
+                        //     print(category);
+                        //     Map<String, dynamic> categoryToMap =
+                        //         ETMCategory.categories
+                        //             .firstWhere(
+                        //               (categoryGet) =>
+                        //                   categoryGet.id == category,
+                        //             )
+                        //             .toMap(isLokal: true);
+                        //     print(categoryToMap);
+                        //     // await _showRewardedAd(categorySet: category!);
+
+                        //     // await getAllData(
+                        //     //     isSwitchCategory: true,
+                        //     //     categorySet: category,
+                        //     //     isInit: false);
+                        //     if (!mounted) return;
+                        //   },
+                        // ),
+
                         Gap(MediaQuery.of(context).size.height * 0.06),
                         Text(
                           getLabels.workTime,
