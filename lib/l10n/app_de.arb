@@ -156,6 +156,9 @@
   "signInToContinue":"Melden Sie sich an, um fortzufahren",
   "signInWithGoogle":"Anmeldung mit Google",
   "signInWithEmail":"Melden Sie sich mit E-Mail an",
+  "noAccount": "Sie haben noch kein Konto?",
+  "registerNow":"Jetzt registrieren",
+  "forgotPassword":"Passwort vergessen?",
   "newUserRegisterHere":"Neue Benutzer? Hier registrieren",
   "signIn": "Anmelden",
   "cannotBeEmpty": "Darf nicht leer sein",
@@ -174,5 +177,14 @@
     "alreadyHaveAnAccount": "Bereits ein Konto?",
     "loginHere": "Hier einloggen",
      "searchByCountryOrDialCode": "Suche nach Ländernamen oder Vorwahl",
-    "phoneNumber": "Telefonnummer"
+    "phoneNumber": "Telefonnummer",
+    "previouslyWrittenTask": "Du hast eine zuvor festgelegte Aufgabe.",
+    "checkItOut": "Schauen Sie mal rein!",
+    "taskDescription": "Aufgabenbeschreibung:",
+    "breakReason": "Grund für die Pause:",
+    "breakReasonSet":"Pausen-Grund festgelegt.",
+    "passwordTooShort":"Das Passwort darf nicht weniger als 8 Zeichen lang sein.",
+    "passwordMissingSpecialCharacter":"Das Passwort fehlt ein Sonderzeichen.",
+    "passwordDoesntMatch":"Das Passwort stimmt nicht überein."
+  
 }

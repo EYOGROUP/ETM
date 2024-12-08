@@ -5,7 +5,8 @@ import 'package:time_management/Navigation%20Pages/home.dart';
 import 'package:time_management/Navigation%20Pages/work_archieves.dart';
 
 class PagesController extends StatefulWidget {
-  const PagesController({super.key});
+  int? indexPage;
+  PagesController({super.key, this.indexPage});
 
   @override
   State<PagesController> createState() => _PagesControllerState();
@@ -19,6 +20,20 @@ class _PagesControllerState extends State<PagesController> {
     const Icon(Icons.person, size: 30),
   ];
   @override
+  void initState() {
+    super.initState();
+    jumpPageAfterLogin();
+  }
+
+  jumpPageAfterLogin() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.indexPage != null) {
+        _pageController.jumpToPage(widget.indexPage!);
+      }
+    });
+  }
+
+  @override
   void dispose() {
     super.dispose();
     _pageController.dispose();
@@ -29,7 +44,7 @@ class _PagesControllerState extends State<PagesController> {
     return Scaffold(
       body: PageView(
         controller: _pageController,
-        physics: const NeverScrollableScrollPhysics(),
+        // physics: const NeverScrollableScrollPhysics(),
         children: const [
           StartTimePage(),
           WorkArchieves(),
@@ -40,7 +55,7 @@ class _PagesControllerState extends State<PagesController> {
         backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         color: Theme.of(context).colorScheme.primary,
         items: items,
-        index: 0,
+        index: widget.indexPage ?? 0,
         onTap: (value) {
           _pageController.jumpToPage(value);
         },

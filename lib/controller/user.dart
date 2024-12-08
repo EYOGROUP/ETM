@@ -1,4 +1,4 @@
-class User {
+class ETMUser {
   final String id;
   final String firstName;
   final String lastName;
@@ -11,7 +11,7 @@ class User {
   final DateTime createdAt;
   final bool notificationsEnabled;
 
-  const User({
+  const ETMUser({
     required this.id,
     required this.firstName,
     required this.lastName,
@@ -24,9 +24,25 @@ class User {
     required this.createdAt,
     required this.notificationsEnabled,
   });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'firstName': firstName,
+      'lastName': lastName,
+      'email': email,
+      'phoneCountryCode': phoneCountryCode,
+      'phoneNumber': phoneNumber,
+      'isPremium': isPremium,
+      'isVerified': isVerified,
+      'createdAt': createdAt,
+      'role': role,
+      'notificationsEnabled': notificationsEnabled,
+    };
+  }
 }
 
-class BusinessUser extends User {
+class BusinessUser extends ETMUser {
   final String companyName;
   final String businessType;
   final String businessEmail;

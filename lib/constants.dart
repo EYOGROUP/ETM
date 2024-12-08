@@ -57,26 +57,32 @@ class Constants {
 }
 
 class TextFieldWithValidator extends StatelessWidget {
-  const TextFieldWithValidator({
+  TextFieldWithValidator({
     super.key,
     required this.controller,
     required this.getLabels,
     required this.validator,
     required this.textType,
+    this.obscureText = false,
+    this.suffixIcon,
   });
 
   final TextEditingController controller;
   final String getLabels;
   final String? Function(String?)? validator;
   final TextInputType textType;
+  bool obscureText = false;
+  Widget? suffixIcon;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
+      obscureText: obscureText,
       controller: controller,
       keyboardType: textType,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
+          suffixIcon: suffixIcon,
           contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10),
           border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(9.0),
@@ -97,10 +103,10 @@ class ElevatedButtonCreated extends StatelessWidget {
   const ElevatedButtonCreated({
     super.key,
     required this.onTap,
-    required this.getLabels,
+    required this.textWidget,
   });
 
-  final String getLabels;
+  final Widget textWidget;
   final Function()? onTap;
 
   @override
@@ -117,7 +123,7 @@ class ElevatedButtonCreated extends StatelessWidget {
             backgroundColor: WidgetStatePropertyAll(
                 Theme.of(context).colorScheme.primaryContainer)),
         onPressed: onTap,
-        child: Text(getLabels));
+        child: textWidget);
   }
 }
 

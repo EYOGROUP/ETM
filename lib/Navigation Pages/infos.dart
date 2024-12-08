@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/contact_us.dart';
 import 'package:time_management/Navigation%20Pages/login_page.dart';
 import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.dart';
+import 'package:time_management/Navigation%20Pages/register_page.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/db/mydb.dart';
 import 'package:time_management/provider/tm_provider.dart';
@@ -93,7 +94,11 @@ class _InfosPageState extends State<InfosPage> {
                           assetName: assetNamePerson,
                           containerText: getLabels.newUserRegisterHere,
                           isSVG: false,
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => RegisterPage(),
+                            ));
+                          },
                         ),
                         Gap(MediaQuery.of(context).size.height * 0.02),
                         ListTile(

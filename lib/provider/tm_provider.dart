@@ -281,7 +281,7 @@ class TimeManagementPovider with ChangeNotifier {
     TrackingDB db = TrackingDB();
     String formatDate = DateFormat("yyyy-MM-dd").format(date);
     List<Map<String, dynamic>> getWorkData = [];
-    if (categoryId != null) {
+    if (categoryId != null && categoryId != '') {
       getWorkData = await db.readData(
           sql:
               'select * from work_sessions where substr(startTime,1,10)="$formatDate" and categoryId="$categoryId"');
@@ -290,6 +290,7 @@ class TimeManagementPovider with ChangeNotifier {
           sql:
               'select * from work_sessions where substr(startTime,1,10)="$formatDate"');
     }
+
     if (mounted) {
       worksDataGet.clear();
 
@@ -315,6 +316,7 @@ class TimeManagementPovider with ChangeNotifier {
         }
       }
     }
+
     return worksDataGet;
   }
 

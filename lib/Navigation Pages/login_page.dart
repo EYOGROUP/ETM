@@ -14,7 +14,16 @@ class LoginPage extends StatefulWidget {
 
 class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  bool isObscurePassword = true;
+  @override
+  void dispose() {
+    super.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
@@ -33,7 +42,7 @@ class _LoginPageState extends State<LoginPage> {
                   height: MediaQuery.of(context).size.height * 0.85,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Center(
                         child: Column(
@@ -61,27 +70,74 @@ class _LoginPageState extends State<LoginPage> {
                                 }
                               },
                             ),
+                            Gap(MediaQuery.of(context).size.height * 0.02),
+                            TextFieldWithValidator(
+                              obscureText: isObscurePassword,
+                              suffixIcon: GestureDetector(
+                                onTap: () => setState(() =>
+                                    isObscurePassword = !isObscurePassword),
+                                child: Icon(isObscurePassword
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined),
+                              ),
+                              textType: TextInputType.visiblePassword,
+                              controller: _passwordController,
+                              getLabels: getLabels.password,
+                              validator: (passoword) {
+                                if (passoword!.isEmpty) {
+                                  return getLabels.fieldMustNotBeEmpty;
+                                }
+                                return null;
+                              },
+                            ),
                           ],
                         ),
                       ),
                       Gap(MediaQuery.of(context).size.height * 0.04),
                       Center(
                         child: ElevatedButtonCreated(
-                          getLabels: getLabels.continueLabel,
+                          textWidget:
+                              Text(getLabels.continueLabel.toUpperCase()),
                           onTap: () {},
                         ),
                       ),
-                      Gap(MediaQuery.of(context).size.height * 0.03),
+                      Gap(MediaQuery.of(context).size.height * 0.01),
                       TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => RegisterPage(),
-                            ));
-                          },
-                          child: Text(
-                            getLabels.newUserRegisterHere,
-                            style: TextStyle(fontSize: 17.0),
-                          ))
+                        onPressed: () {
+                          Navigator.of(context).push(MaterialPageRoute(
+                            builder: (context) => RegisterPage(),
+                          ));
+                        },
+                        child: Text(
+                          getLabels.forgotPassword.toUpperCase(),
+                          style: TextStyle(
+                              fontSize: 16.0,
+                              fontWeight: FontWeight.bold,
+                              decoration: TextDecoration.underline),
+                        ),
+                      ),
+                      Gap(MediaQuery.of(context).size.height * 0.01),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            getLabels.noAccount,
+                            style: TextStyle(fontSize: 16.0),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => RegisterPage(),
+                              ));
+                            },
+                            child: Text(
+                              getLabels.registerNow.toUpperCase(),
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ),

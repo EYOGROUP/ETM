@@ -60,7 +60,7 @@ class _WelcomePageState extends State<WelcomePage> {
         child: Stack(
           children: [
             Image.asset(
-              '${Constants.imagePath}welcome_image.jpg',
+              '${Constants.imagePath}etm_back.png',
               height: MediaQuery.of(context).size.height * 0.53,
               width: MediaQuery.of(context).size.width,
               fit: BoxFit.cover,
@@ -131,7 +131,7 @@ class _WelcomePageState extends State<WelcomePage> {
                                 MediaQuery.of(context).size.height * 0.06))),
                         onPressed: () =>
                             Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const PagesController(),
+                              builder: (context) => PagesController(),
                             )),
                         child: Text(
                           AppLocalizations.of(context)!.startNow,

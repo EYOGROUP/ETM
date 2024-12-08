@@ -155,7 +155,10 @@
   "signInToContinue":"Sign in to continue",
   "signInWithGoogle":"Sign in with Google",
   "signInWithEmail": "Sign in with Email",
-  "newUserRegisterHere": "New user? Register here",
+  "noAccount": "Don't have an account?",
+  "registerNow":"Register now",
+  "forgotPassword":"Forgot password?",
+  "newUserRegisterHere":"New user? Register here",
   "signIn": "Sign In",
   "cannotBeEmpty": "Can't be empty",
   "emailNotValid": "Email not valid",
@@ -173,7 +176,15 @@
     "alreadyHaveAnAccount": "Already have an account?",
     "loginHere": "Login here",
     "searchByCountryOrDialCode": "Search by Country name or dial code",
-    "phoneNumber": "Phone Number"
+    "phoneNumber": "Phone Number",
+    "previouslyWrittenTask": "You have a previously written task.",
+    "checkItOut": "Check it Out!",
+    "taskDescription": "Task description:",
+    "breakReason": "Break reason:",
+    "breakReasonSet":"Break reason set.",
+    "passwordTooShort":"Password can't be less than 8 characters.",
+    "passwordMissingSpecialCharacter":"Password is missing a special character.",
+    "passwordDoesntMatch":"Password doesn't match."
 
 
 }

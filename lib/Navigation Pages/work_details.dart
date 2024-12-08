@@ -77,12 +77,15 @@ class _WorkDetailsState extends State<WorkDetails> {
             date: widget.workDate,
             mounted: mounted,
             categoryId: _selectedCategoryForFilter?.id);
+
     if (!mounted) return;
-    await getAllCategoriesBreaks(workSessionId: worksData?.first["id"]);
-    // await getBreaks(workSessionsId: worksData?.first["id"]);
-    if (!mounted) return;
-    getGrossWork(worksData: worksData!);
-    getNettWork(worksData: worksData!);
+    if (worksData != null && worksData!.isNotEmpty) {
+      await getAllCategoriesBreaks(workSessionId: worksData?.first["id"]);
+      // await getBreaks(workSessionsId: worksData?.first["id"]);
+      if (!mounted) return;
+      getGrossWork(worksData: worksData!);
+      getNettWork(worksData: worksData!);
+    }
 
     setState(() {
       isLoadingData = false;
@@ -327,6 +330,46 @@ class _WorkDetailsState extends State<WorkDetails> {
     );
   }
 
+  Future<Dialog?> showNotice({
+    required String textTitle,
+    required String description,
+  }) {
+    return showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(horizontal: 15, vertical: 20),
+          child: SizedBox(
+            width: double.maxFinite,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: double.maxFinite,
+                  child: Align(
+                      alignment: Alignment.topRight,
+                      child: InkWell(
+                          onTap: () => Navigator.of(context).pop(),
+                          child: Icon(Icons.clear))),
+                ),
+                Text(
+                  textTitle,
+                  style: TextStyle(fontSize: 20.0, fontWeight: FontWeight.bold),
+                ),
+                Gap(MediaQuery.of(context).size.height * 0.02),
+                Text(
+                  description,
+                  style: TextStyle(fontSize: 18.0),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> refreshFunction() async {
     await getWorkData();
     if (!mounted) return;
@@ -417,7 +460,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                       Padding(
                         padding: EdgeInsets.symmetric(
                             horizontal:
-                                MediaQuery.of(context).size.width * 0.02,
+                                MediaQuery.of(context).size.width * 0.04,
                             vertical: 5),
                         child: RowLeadingAndTitle(
                           leading: isInHoursGross
@@ -432,6 +475,40 @@ class _WorkDetailsState extends State<WorkDetails> {
                       //       : getLabels.youWorkedInMinuteGross,
                       //   title: grossWorkTimeLabel,
                       // ),
+                      if (_selectedCategoryForFilter != null) ...{
+                        if (worksData?.last['taskDescription'] != '') ...[
+                          Gap(MediaQuery.of(context).size.height * 0.01),
+                          Padding(
+                            padding: EdgeInsets.only(
+                              left: MediaQuery.of(context).size.width * 0.04,
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  getLabels.previouslyWrittenTask,
+                                  style: TextStyle(fontSize: 13.0),
+                                ),
+                                Expanded(
+                                  child: TextButton(
+                                      onPressed: () {
+                                        showNotice(
+                                            textTitle:
+                                                getLabels.taskDescription,
+                                            description: worksData
+                                                ?.first['taskDescription']);
+                                      },
+                                      child: Text(
+                                        getLabels.checkItOut,
+                                        style: TextStyle(fontSize: 12.0),
+                                      )),
+                                )
+                              ],
+                            ),
+                          ),
+                        ]
+                      },
+
                       Gap(MediaQuery.of(context).size.height * 0.01),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -514,7 +591,41 @@ class _WorkDetailsState extends State<WorkDetails> {
                                                         .height *
                                                     0.01),
                                                 Text(getLabels.youTook(
-                                                    "${breaks?[index]["duration"].toString()} Min"))
+                                                    "${breaks?[index]["duration"].toString()} Min")),
+                                                if (breaks != null)
+                                                  Row(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment
+                                                            .spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        getLabels
+                                                            .breakReasonSet,
+                                                        style: TextStyle(
+                                                            fontSize: 13.0),
+                                                      ),
+                                                      Expanded(
+                                                        child: TextButton(
+                                                            onPressed: () {
+                                                              showNotice(
+                                                                  textTitle:
+                                                                      getLabels
+                                                                          .breakReason,
+                                                                  description: breaks?[
+                                                                          index]
+                                                                      [
+                                                                      'reason']);
+                                                            },
+                                                            child: Text(
+                                                              getLabels
+                                                                  .checkItOut,
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      12.0),
+                                                            )),
+                                                      )
+                                                    ],
+                                                  ),
                                               ],
                                             ),
                                           ),

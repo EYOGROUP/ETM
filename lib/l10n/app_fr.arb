@@ -155,7 +155,10 @@
   "signInToContinue":"Connectez-vous pour continuer",
   "signInWithGoogle": "Connectez-vous avec Google",
   "signInWithEmail": "Connectez-vous avec Email",
-  "newUserRegisterHere": "Nouvel utilisateur ? Inscrivez-vous ici",
+  "noAccount": "Vous n'avez pas de compte ?",
+  "registerNow":"Inscrivez-vous maintenant",
+  "forgotPassword":"Mot de passe oublié ?",
+  "newUserRegisterHere":"Nouvel utilisateur ? Inscrivez-vous ici",
   "signIn": "Se connecter",
   "cannotBeEmpty": "Ne peut pas être vide",
   "emailNotValid": "Email non valide",
@@ -173,5 +176,15 @@
     "alreadyHaveAnAccount": "Vous avez déjà un compte?",
     "loginHere": "Connectez-vous ici",
     "searchByCountryOrDialCode": "Recherchez par nom de pays ou indicatif",
-    "phoneNumber": "Numéro de téléphone"
+    "phoneNumber": "Numéro de téléphone",
+    "previouslyWrittenTask": "Vous avez une tâche écrite précédemment.",
+    "checkItOut": "Découvrez-le !",
+    "taskDescription": "Description de la tâche :",
+    "breakReason": "Raison de la pause :",
+    "breakReasonSet":"Raison de pause définie.",
+    "passwordTooShort":"Le mot de passe ne peut pas comporter moins de 8 caractères.",
+    "passwordMissingSpecialCharacter":"Le mot de passe manque un caractère spécial.",
+    "passwordDoesntMatch":"Le mot de passe ne correspond pas."
+
+
 }
