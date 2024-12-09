@@ -196,5 +196,10 @@
     "profileSettings":"Profile Settings",
     "account":"Account",
     "notVerified":"Not Verified",
-    "verified":"Verified"
+    "verified":"Verified",
+    "enterNewName":"Please enter your new name in the field below. Make sure to double-check for any spelling mistakes before confirming the change.",
+    "selectGender": "Select Your Gender",
+    "male":"Male",
+    "female":"Women",
+    "noDisplay":"Don't display"
 }

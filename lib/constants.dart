@@ -72,21 +72,22 @@ class Constants {
 }
 
 class TextFieldWithValidator extends StatelessWidget {
-  TextFieldWithValidator({
-    super.key,
-    required this.controller,
-    required this.getLabels,
-    required this.validator,
-    required this.textType,
-    this.obscureText = false,
-    this.suffixIcon,
-    this.onChange,
-  });
+  TextFieldWithValidator(
+      {super.key,
+      required this.controller,
+      required this.getLabels,
+      required this.validator,
+      required this.textType,
+      this.obscureText = false,
+      this.suffixIcon,
+      this.onChange,
+      this.maxLength});
 
   final TextEditingController controller;
   final String getLabels;
   final String? Function(String?)? validator;
   final TextInputType textType;
+  int? maxLength;
   bool obscureText = false;
   Widget? suffixIcon;
   final String? Function(String?)? onChange;
@@ -97,8 +98,10 @@ class TextFieldWithValidator extends StatelessWidget {
       obscureText: obscureText,
       controller: controller,
       keyboardType: textType,
+      maxLength: maxLength,
       autovalidateMode: AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
+          counter: Text(''),
           suffixIcon: suffixIcon,
           contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 10),
           border: OutlineInputBorder(

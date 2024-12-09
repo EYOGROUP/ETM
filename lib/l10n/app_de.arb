@@ -197,6 +197,11 @@
     "profileSettings":"Profileinstellungen",
     "account":"Konto",
     "notVerified":"Nicht verifiziert",
-    "verified":"Verifiziert"
-  
+    "verified":"Verifiziert",
+    "enterNewName":"Bitte geben Sie Ihren neuen Namen in das Feld unten ein. Überprüfen Sie vor dem Bestätigen sorgfältig auf Rechtschreibfehler.",
+    "selectGender": "Wählen Sie Ihr Geschlecht",
+    "male":"Männlich",
+    "female":"Weiblich",
+    "noDisplay":"Nicht anzeigen"
+
 }

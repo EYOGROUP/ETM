@@ -196,7 +196,12 @@
     "profileSettings":"Paramètres du profil",
     "account":"Compte",
     "notVerified":"Non vérifié",
-    "verified":"Vérifié"
+    "verified":"Vérifié",
+    "enterNewName":"Veuillez entrer votre nouveau nom dans le champ ci-dessous. Assurez-vous de vérifier attentivement les fautes d'orthographe avant de confirmer le changement.",
+    "selectGender": "Sélectionnez votre genre",
+    "male":"Homme",
+    "female":"Femme",
+    "noDisplay":"Ne pas afficher"
 
 
 }

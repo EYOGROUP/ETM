@@ -40,7 +40,7 @@ class _EditNamePageState extends State<EditNamePage> {
     }
     if (userNameUpdate.isNotEmpty) {
       final userProvider = Provider.of<UserProvider>(context, listen: false);
-      await userProvider.editUserName(
+      await userProvider.editUserFullName(
           userNameUpdateMap: userNameUpdate,
           userId: widget.userData["id"],
           context: context);
@@ -92,6 +92,14 @@ class _EditNamePageState extends State<EditNamePage> {
         body: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            Gap(20.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                getLabels.enterNewName,
+                style: TextStyle(fontSize: 16.0),
+              ),
+            ),
             Gap(20.0),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,

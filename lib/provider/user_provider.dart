@@ -160,6 +160,25 @@ class UserProvider extends ChangeNotifier {
     return userData;
   }
 
+// edit UserName firstname and lastname
+  Future<void> editUserFullName({
+    required userNameUpdateMap,
+    required String userId,
+    required BuildContext context,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .update(userNameUpdateMap);
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(value: error.toString(), context: context);
+      }
+    }
+  }
+
+  // edit UserName
   Future<void> editUserName({
     required userNameUpdateMap,
     required String userId,
@@ -175,5 +194,24 @@ class UserProvider extends ChangeNotifier {
         Constants.showInSnackBar(value: error.toString(), context: context);
       }
     }
+  }
+
+  bool isUserAlreadyHasGender(
+      {required BuildContext context, required Map<String, dynamic> userData}) {
+    bool isUserAlreadyHasGender = true;
+    if (userData["gender"] == null || userData["gender"] == '') {
+      isUserAlreadyHasGender = false;
+    }
+    return isUserAlreadyHasGender;
+  }
+
+  Future<void> saveUserGender(
+      {required BuildContext context,
+      required String userId,
+      required Map<String, dynamic> selectedGenderMap}) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userId)
+        .update(selectedGenderMap);
   }
 }
