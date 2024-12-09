@@ -202,6 +202,11 @@
     "selectGender": "Wählen Sie Ihr Geschlecht",
     "male":"Männlich",
     "female":"Weiblich",
-    "noDisplay":"Nicht anzeigen"
+    "noDisplay":"Nicht anzeigen",
+    "gender":"Geschlecht",
+    "accountType":"Kontotyp",
+    "accountStatus":"Kontostatus",
+    "none":"Keine",
+    "aboutYou":"Über dich"
 
 }

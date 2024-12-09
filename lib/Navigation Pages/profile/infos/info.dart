@@ -193,7 +193,7 @@ class _InfoPageState extends State<InfoPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'About you',
+            getLabels.aboutYou,
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
           ),
           Gap(5.0),
@@ -226,11 +226,11 @@ class _InfoPageState extends State<InfoPage> {
             },
           ),
           CardLeadingAndTrailing(
-            leading: "Gender",
+            leading: getLabels.gender,
             trailing: userData["gender"] != null && userData["gender"] != ""
                 ? getGenderString(
                     gender: userData["gender"], getLabels: getLabels)
-                : "None",
+                : getLabels.none,
             onTap: () {
               if (userProvider.isUserAlreadyHasGender(
                   context: context, userData: userData)) {
@@ -314,12 +314,12 @@ class _InfoPageState extends State<InfoPage> {
             onTap: () {},
           ),
           CardLeadingAndTrailing(
-            leading: "Account Typ",
-            trailing: "type",
+            leading: getLabels.accountType,
+            trailing: getLabels.none,
             onTap: () {},
           ),
           CardLeadingAndTrailing(
-            leading: "Account Status",
+            leading: getLabels.accountStatus,
             trailing: userData["isVerified"]
                 ? getLabels.verified
                 : getLabels.notVerified,
