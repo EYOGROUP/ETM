@@ -184,7 +184,17 @@
     "breakReasonSet":"Break reason set.",
     "passwordTooShort":"Password can't be less than 8 characters.",
     "passwordMissingSpecialCharacter":"Password is missing a special character.",
-    "passwordDoesntMatch":"Password doesn't match."
-
-
+    "passwordDoesntMatch":"Password doesn't match.",
+    "usernameTaken":"This username is already taken. Please choose another.",
+    "userName":"Username",
+    "welcome":"Welcome",
+    "accountCreated":"Account created:",
+    "premiumStatus":"Premium Status:",
+    "active":"Active",
+    "inactive":"Inactive",
+    "info":"Info",
+    "profileSettings":"Profile Settings",
+    "account":"Account",
+    "notVerified":"Not Verified",
+    "verified":"Verified"
 }

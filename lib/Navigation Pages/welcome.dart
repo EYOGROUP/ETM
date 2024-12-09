@@ -82,7 +82,7 @@ class _WelcomePageState extends State<WelcomePage> {
                           // await delete.deleteDB();
                           final currentUser =
                               Provider.of<UserProvider>(context, listen: false);
-                          print(currentUser.isUserLogin());
+                          print(currentUser.isUserLogin(context: context));
                           final categ = Provider.of<CategoryProvider>(context,
                               listen: false);
                           String catId = categ.selectedCategory['id'];

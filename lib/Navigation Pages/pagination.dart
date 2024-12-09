@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
-import 'package:time_management/Navigation%20Pages/infos.dart';
+import 'package:time_management/Navigation%20Pages/profile/profile.dart';
 import 'package:time_management/Navigation%20Pages/home.dart';
 import 'package:time_management/Navigation%20Pages/work_archieves.dart';
 
@@ -48,7 +48,7 @@ class _PagesControllerState extends State<PagesController> {
         children: const [
           StartTimePage(),
           WorkArchieves(),
-          InfosPage(),
+          ProfilePage(),
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(

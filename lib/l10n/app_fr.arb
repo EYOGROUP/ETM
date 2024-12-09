@@ -184,7 +184,19 @@
     "breakReasonSet":"Raison de pause définie.",
     "passwordTooShort":"Le mot de passe ne peut pas comporter moins de 8 caractères.",
     "passwordMissingSpecialCharacter":"Le mot de passe manque un caractère spécial.",
-    "passwordDoesntMatch":"Le mot de passe ne correspond pas."
+    "passwordDoesntMatch":"Le mot de passe ne correspond pas.",
+    "usernameTaken":"Ce nom d'utilisateur est déjà pris. Veuillez en choisir un autre.",
+    "userName":"Nom d'utilisateur",
+    "welcome":"Bienvenue",
+    "accountCreated":"Compte créé :",
+    "premiumStatus":"Statut Premium :",
+    "active":"Actif",
+    "inactive":"Inactif",
+    "info":"Infos",
+    "profileSettings":"Paramètres du profil",
+    "account":"Compte",
+    "notVerified":"Non vérifié",
+    "verified":"Vérifié"
 
 
 }

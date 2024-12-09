@@ -211,7 +211,8 @@ class _StartTimePageState extends State<StartTimePage> {
     bool isAlreadyActivate = false;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     // if false: Is user as Lokal
-    if (!userProvider.isUserLogin()) {
+    bool isUserExists = await userProvider.isUserLogin(context: context);
+    if (!isUserExists) {
       // check if Category is locked
 
       if (categorySet["isUnlocked"] != 0 || categorySet["isPremium"] != 0) {
@@ -1107,6 +1108,7 @@ class _StartTimePageState extends State<StartTimePage> {
                         //   },
                         // ),
                         DropdownButtonFormField2(
+                          isExpanded: true,
                           decoration: InputDecoration(
                               filled: true,
                               fillColor: Theme.of(context)
@@ -1120,6 +1122,7 @@ class _StartTimePageState extends State<StartTimePage> {
                                   borderRadius: BorderRadius.circular(12.0)),
                               maxHeight:
                                   MediaQuery.of(context).size.height * 0.35),
+
                           hint: Text(categoryHint.isEmpty &&
                                   categoryProvider.selectedCategory.isEmpty
                               ? getLabels.selectCategory

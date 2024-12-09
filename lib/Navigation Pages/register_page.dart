@@ -23,11 +23,13 @@ class _RegisterPageState extends State<RegisterPage> {
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
+  final TextEditingController _userNameController = TextEditingController();
   PhoneCountryData? _initialCountryData;
   final TextEditingController _phoneNumberController = TextEditingController();
   bool isObscurePassword = true;
   bool isSendingData = false;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  bool isUserNameAlreadyExists = false;
 
   Future<void> userRegistration() async {
     setState(() {
@@ -43,6 +45,8 @@ class _RegisterPageState extends State<RegisterPage> {
       password: _passwordController.text,
       phoneCountryCode: _initialCountryData?.countryCode,
       phoneNumber: _phoneNumberController.text,
+      userName: _userNameController.text,
+      phoneCode: _initialCountryData?.phoneCode,
     );
     if (!mounted) return;
     setState(() {
@@ -53,6 +57,7 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -82,9 +87,54 @@ class _RegisterPageState extends State<RegisterPage> {
                   ],
                 ),
                 Gap(MediaQuery.of(context).size.height * 0.03),
+                TextFieldWithValidator(
+                  textType: TextInputType.emailAddress,
+                  controller: _userNameController,
+                  getLabels: getLabels.userName,
+                  suffixIcon: Icon(isUserNameAlreadyExists
+                      ? Icons.remove_circle_outline
+                      : Icons.check_circle_outline_outlined),
+                  onChange: (userName) {
+                    userProvider
+                        .isUserNameAlreadyUser(
+                            userNameChoosed: userName!, context: context)
+                        .then(
+                      (isUserNameExists) {
+                        if (isUserNameExists) {
+                          setState(() {
+                            isUserNameAlreadyExists = isUserNameExists;
+                          });
+                        } else {
+                          setState(() {
+                            isUserNameAlreadyExists = isUserNameExists;
+                          });
+                        }
+                      },
+                    );
+                  },
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return getLabels.cannotBeEmpty;
+                    } else {
+                      if (isUserNameAlreadyExists) {
+                        return getLabels.usernameTaken;
+                      }
+                    }
+
+                    // if (isUserNameAlreadyExist) {
+                    //   return "already Exist";
+                    // }
+
+                    return null;
+                  },
+                ),
+
+                Gap(MediaQuery.of(context).size.height * 0.03),
                 Row(
                   children: [
-                    Expanded(
+                    SizedBox(
+                      height: 80,
+                      width: MediaQuery.of(context).size.width / 2.2,
                       child: TextFieldWithValidator(
                         textType: TextInputType.name,
                         controller: _firstNameController,
@@ -97,7 +147,9 @@ class _RegisterPageState extends State<RegisterPage> {
                       ),
                     ),
                     Gap(MediaQuery.of(context).size.width * 0.03),
-                    Expanded(
+                    SizedBox(
+                      height: 80.0,
+                      width: MediaQuery.of(context).size.width / 2.3,
                       child: TextFieldWithValidator(
                         textType: TextInputType.name,
                         controller: _lastNameController,
@@ -111,7 +163,7 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                   ],
                 ),
-                Gap(MediaQuery.of(context).size.height * 0.03),
+                Gap(MediaQuery.of(context).size.height * 0.02),
                 TextFieldWithValidator(
                   textType: TextInputType.emailAddress,
                   controller: _emailController,
@@ -141,13 +193,14 @@ class _RegisterPageState extends State<RegisterPage> {
                         // printCountryName: true,
                         decoration: InputDecoration(
                             filled: true,
-                            fillColor:
-                                Theme.of(context).colorScheme.primaryContainer),
+                            fillColor: Theme.of(context)
+                                .colorScheme
+                                .primaryContainer
+                                .withOpacity(0.78)),
                         onCountrySelected: (PhoneCountryData countryData) {
                           setState(() {
                             _initialCountryData = countryData;
                           });
-                          print(_initialCountryData);
                         },
                       ),
                     ),
@@ -157,13 +210,13 @@ class _RegisterPageState extends State<RegisterPage> {
                       child: TextFormField(
                         controller: _phoneNumberController,
                         decoration: InputDecoration(
-                          fillColor:
-                              Theme.of(context).colorScheme.primaryContainer,
                           filled: true,
+                          fillColor: Theme.of(context)
+                              .colorScheme
+                              .primaryContainer
+                              .withOpacity(0.78),
                           border: OutlineInputBorder(),
                           hintText: getLabels.phoneNumber,
-                          hintStyle:
-                              TextStyle(color: Colors.black.withOpacity(.3)),
                           errorStyle: TextStyle(
                             color: Colors.red,
                           ),

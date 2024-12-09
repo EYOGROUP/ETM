@@ -185,6 +185,18 @@
     "breakReasonSet":"Pausen-Grund festgelegt.",
     "passwordTooShort":"Das Passwort darf nicht weniger als 8 Zeichen lang sein.",
     "passwordMissingSpecialCharacter":"Das Passwort fehlt ein Sonderzeichen.",
-    "passwordDoesntMatch":"Das Passwort stimmt nicht überein."
+    "passwordDoesntMatch":"Das Passwort stimmt nicht überein.",
+    "usernameTaken":"Dieser Benutzername ist bereits vergeben. Bitte wählen Sie einen anderen.",
+    "userName":"Benutzername",
+    "welcome":"Willkommen",
+    "accountCreated":"Konto erstellt:",
+    "premiumStatus":"Premium Status:",
+    "active":"Activ",
+    "inactive":"Inaktiv",
+    "info":"Infos",
+    "profileSettings":"Profileinstellungen",
+    "account":"Konto",
+    "notVerified":"Nicht verifiziert",
+    "verified":"Verifiziert"
   
 }

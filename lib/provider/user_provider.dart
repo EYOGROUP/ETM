@@ -8,11 +8,14 @@ import 'package:time_management/controller/user.dart';
 import 'package:uuid/uuid.dart';
 
 class UserProvider extends ChangeNotifier {
-  bool isUserLogin() {
+  Future<bool> isUserLogin({required BuildContext context}) async {
     bool isUserIn = true;
-    final currentUser = FirebaseAuth.instance.currentUser?.isAnonymous;
-    if (currentUser == null) {
-      isUserIn = false;
+    await FirebaseAuth.instance.currentUser?.reload();
+    if (context.mounted) {
+      final currentUser = FirebaseAuth.instance.currentUser?.isAnonymous;
+      if (currentUser == null) {
+        isUserIn = false;
+      }
     }
     return isUserIn;
   }
@@ -35,6 +38,28 @@ class UserProvider extends ChangeNotifier {
     await FirebaseAuth.instance.signInWithCredential(credential);
   }
 
+// check user name already used
+  Future<bool> isUserNameAlreadyUser(
+      {required String userNameChoosed, required BuildContext context}) async {
+    bool isUserNameAlreadyExist = false;
+    try {
+      final users = await FirebaseFirestore.instance
+          .collection('users')
+          .where('userName', isEqualTo: userNameChoosed)
+          .get();
+      if (context.mounted) {
+        if (users.size >= 1) {
+          isUserNameAlreadyExist = true;
+        }
+      }
+    } on FirebaseException catch (error) {
+      Constants.showInSnackBar(
+          value: error.message.toString(), context: context);
+    }
+    return isUserNameAlreadyExist;
+  }
+
+// signUp user only with email and password
   Future<bool> signUpUser(
       {required BuildContext context,
       required String email,
@@ -62,6 +87,8 @@ class UserProvider extends ChangeNotifier {
       required String lastName,
       required String email,
       required String password,
+      required String userName,
+      String? phoneCode,
       String? phoneNumber,
       String? phoneCountryCode}) async {
     try {
@@ -69,14 +96,16 @@ class UserProvider extends ChangeNotifier {
           await signUpUser(context: context, email: email, password: password);
       if (!mounted) return;
       if (isUserRegistred) {
-        var userId = const Uuid().v4();
+        final userId = FirebaseAuth.instance.currentUser?.uid;
         ETMUser user = ETMUser(
-            id: userId,
+            id: userId!,
             firstName: firstName,
             lastName: lastName,
+            userName: userName,
             email: email,
             phoneCountryCode: phoneCountryCode ?? '',
             phoneNumber: phoneNumber ?? '',
+            phoneCode: phoneCode ?? '',
             isVerified: false,
             isPremium: false,
             role: 'soon',
@@ -100,6 +129,50 @@ class UserProvider extends ChangeNotifier {
       if (context.mounted) {
         return Constants.showInSnackBar(
             value: error.toString(), context: context);
+      }
+    }
+  }
+
+  Future<Map<String, dynamic>> getUserData(
+      {required BuildContext context,
+      required bool mounted,
+      required bool isUserExists}) async {
+    Map<String, dynamic> userData = {};
+
+    if (isUserExists) {
+      try {
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+        final userGetDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .where("id", isEqualTo: userId)
+            .get();
+        if (context.mounted) {
+          if (userGetDoc.docs.isNotEmpty) {
+            userData = userGetDoc.docs.first.data();
+          }
+        }
+      } on FirebaseFirestore catch (error) {
+        if (context.mounted) {
+          Constants.showInSnackBar(value: error.toString(), context: context);
+        }
+      }
+    }
+    return userData;
+  }
+
+  Future<void> editUserName({
+    required userNameUpdateMap,
+    required String userId,
+    required BuildContext context,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .update(userNameUpdateMap);
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(value: error.toString(), context: context);
       }
     }
   }

@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
@@ -54,6 +56,19 @@ class Constants {
       ),
     );
   }
+
+  static Text leadingAndTitleTextInRow(
+      {required String leadingTextKey,
+      required String textValue,
+      double textSize = 16.0}) {
+    return Text.rich(
+        style: TextStyle(fontSize: textSize),
+        TextSpan(children: [
+          TextSpan(text: '$leadingTextKey '),
+          TextSpan(
+              text: textValue, style: TextStyle(fontWeight: FontWeight.bold)),
+        ]));
+  }
 }
 
 class TextFieldWithValidator extends StatelessWidget {
@@ -65,6 +80,7 @@ class TextFieldWithValidator extends StatelessWidget {
     required this.textType,
     this.obscureText = false,
     this.suffixIcon,
+    this.onChange,
   });
 
   final TextEditingController controller;
@@ -73,6 +89,7 @@ class TextFieldWithValidator extends StatelessWidget {
   final TextInputType textType;
   bool obscureText = false;
   Widget? suffixIcon;
+  final String? Function(String?)? onChange;
 
   @override
   Widget build(BuildContext context) {
@@ -95,6 +112,7 @@ class TextFieldWithValidator extends StatelessWidget {
           constraints: BoxConstraints(
               maxWidth: MediaQuery.of(context).size.width / 1.1)),
       validator: validator,
+      onChanged: onChange,
     );
   }
 }
@@ -153,6 +171,69 @@ class TextFieldFlexibel extends StatelessWidget {
           filled: true,
           fillColor: Theme.of(context).colorScheme.primaryContainer,
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(9.0))),
+    );
+  }
+}
+
+class SettingsCardButton extends StatelessWidget {
+  final Function() onTap;
+  final IconData iconData;
+  final String title;
+  const SettingsCardButton({
+    super.key,
+    required this.onTap,
+    required this.iconData,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 0,
+        color: Theme.of(context).colorScheme.primaryContainer,
+        child: ListTile(
+          leading: Icon(iconData),
+          title: Text(
+            title,
+            style: TextStyle(fontSize: 18.0),
+          ),
+          trailing: Icon(Platform.isIOS
+              ? Icons.arrow_forward_ios_rounded
+              : Icons.arrow_forward_outlined),
+        ),
+      ),
+    );
+  }
+}
+
+class CardLeadingAndTrailing extends StatelessWidget {
+  final Function() onTap;
+  final String leading;
+  final String trailing;
+  const CardLeadingAndTrailing(
+      {super.key,
+      required this.onTap,
+      required this.leading,
+      required this.trailing});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        child: ListTile(
+          leading: Text(
+            leading,
+            style: TextStyle(fontSize: 18.0),
+          ),
+          trailing: Text(
+            trailing,
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.0),
+          ),
+        ),
+      ),
     );
   }
 }

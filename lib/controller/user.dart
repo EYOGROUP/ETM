@@ -1,7 +1,10 @@
+enum Gender { male, female, nothing }
+
 class ETMUser {
   final String id;
   final String firstName;
   final String lastName;
+  final String userName;
   final String email;
   final String phoneCountryCode;
   final String phoneNumber;
@@ -10,11 +13,14 @@ class ETMUser {
   final String role;
   final DateTime createdAt;
   final bool notificationsEnabled;
+  final String phoneCode;
+  String? gender;
 
-  const ETMUser({
+  ETMUser({
     required this.id,
     required this.firstName,
     required this.lastName,
+    required this.userName,
     required this.email,
     required this.phoneCountryCode,
     required this.phoneNumber,
@@ -23,6 +29,8 @@ class ETMUser {
     required this.role,
     required this.createdAt,
     required this.notificationsEnabled,
+    required this.phoneCode,
+    this.gender,
   });
 
   Map<String, dynamic> toMap() {
@@ -30,13 +38,16 @@ class ETMUser {
       'id': id,
       'firstName': firstName,
       'lastName': lastName,
+      'userName': userName,
       'email': email,
       'phoneCountryCode': phoneCountryCode,
       'phoneNumber': phoneNumber,
+      'phoneCode': phoneCode,
       'isPremium': isPremium,
       'isVerified': isVerified,
       'createdAt': createdAt,
       'role': role,
+      'gender': gender ?? '',
       'notificationsEnabled': notificationsEnabled,
     };
   }
@@ -57,27 +68,31 @@ class BusinessUser extends ETMUser {
   final List<String> teamMembers;
 
   BusinessUser(
-      this.companyName,
-      this.businessType,
-      this.businessEmail,
-      this.companyPhoneNumber,
-      this.businessAddress,
-      this.businessLicenseNumber,
-      this.employeeCount,
-      this.subscriptionPlan,
-      this.paymentMethod,
-      this.billingAddress,
-      this.taxIdentificationNumber,
-      this.teamMembers,
-      {required super.id,
-      required super.firstName,
-      required super.lastName,
-      required super.email,
-      required super.phoneCountryCode,
-      required super.phoneNumber,
-      required super.isVerified,
-      required super.isPremium,
-      required super.role,
-      required super.createdAt,
-      required super.notificationsEnabled});
+    this.companyName,
+    this.businessType,
+    this.businessEmail,
+    this.companyPhoneNumber,
+    this.businessAddress,
+    this.businessLicenseNumber,
+    this.employeeCount,
+    this.subscriptionPlan,
+    this.paymentMethod,
+    this.billingAddress,
+    this.taxIdentificationNumber,
+    this.teamMembers, {
+    required super.id,
+    required super.firstName,
+    required super.lastName,
+    required super.email,
+    required super.phoneCountryCode,
+    required super.phoneNumber,
+    required super.isVerified,
+    required super.isPremium,
+    required super.role,
+    required super.createdAt,
+    required super.notificationsEnabled,
+    required super.userName,
+    required super.phoneCode,
+    super.gender,
+  });
 }
