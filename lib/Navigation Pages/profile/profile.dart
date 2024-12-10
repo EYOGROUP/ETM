@@ -13,10 +13,15 @@ import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.d
 import 'package:time_management/Navigation%20Pages/profile/infos/info.dart';
 import 'package:time_management/Navigation%20Pages/register_page.dart';
 import 'package:time_management/constants.dart';
+import 'package:time_management/controller/role.dart';
+
 import 'package:time_management/db/mydb.dart';
+import 'package:time_management/provider/role_provider.dart';
+
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/user_provider.dart';
+import 'package:uuid/uuid.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -31,12 +36,15 @@ class _ProfilePageState extends State<ProfilePage> {
   final String assetNamePerson = 'assets/social/person_icon.png';
   bool? isUserLogedInOrExists;
   Map<String, dynamic>? userData;
+  bool isInternetConnectedCheck = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+        isInternetConntected(eTManagement: tm);
         final userProvider = Provider.of<UserProvider>(context, listen: false);
         tm.setOrientation(context);
         await isUserLogin(userProvider: userProvider);
@@ -55,6 +63,12 @@ class _ProfilePageState extends State<ProfilePage> {
         context: context,
         mounted: mounted,
         isUserExists: isUserLogedInOrExists!);
+    setState(() {});
+  }
+
+  isInternetConntected({required TimeManagementPovider eTManagement}) async {
+    isInternetConnectedCheck =
+        await eTManagement.isConnectedToInternet(context: context);
     setState(() {});
   }
 
@@ -124,111 +138,142 @@ class _ProfilePageState extends State<ProfilePage> {
                             },
                           ),
                         } else ...{
-                          userData != null
-                              ? Column(
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      textBaseline: TextBaseline.alphabetic,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
+                          !isInternetConnectedCheck
+                              ? Center(
+                                  child: Text(
+                                    getLabels.noInternetConnection,
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                )
+                              : userData != null
+                                  ? Column(
                                       children: [
-                                        Column(
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          textBaseline: TextBaseline.alphabetic,
                                           crossAxisAlignment:
-                                              CrossAxisAlignment.start,
+                                              CrossAxisAlignment.end,
                                           children: [
-                                            Row(
-                                              textBaseline:
-                                                  TextBaseline.ideographic,
+                                            Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                  '${getLabels.welcome}, ${userData?["userName"]}!',
-                                                  style: TextStyle(
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      fontSize: 18.0),
+                                                Row(
+                                                  textBaseline:
+                                                      TextBaseline.ideographic,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      '${getLabels.welcome}, ${userData?["userName"]}!',
+                                                      style: TextStyle(
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                          fontSize: 18.0),
+                                                    ),
+                                                    Gap(5.0),
+                                                    userData?["isVerified"]
+                                                        ? Tooltip(
+                                                            message: getLabels
+                                                                .verified,
+                                                            child: Icon(
+                                                              size: 20,
+                                                              Icons.verified,
+                                                              color:
+                                                                  Colors.blue,
+                                                            ),
+                                                          )
+                                                        : Tooltip(
+                                                            message: getLabels
+                                                                .notVerified,
+                                                            child: Icon(
+                                                              size: 20,
+                                                              Icons.verified,
+                                                              color: Colors
+                                                                  .blueGrey,
+                                                            ),
+                                                          ),
+                                                  ],
                                                 ),
-                                                Gap(5.0),
-                                                userData?["isVerified"]
-                                                    ? Tooltip(
-                                                        message:
-                                                            getLabels.verified,
-                                                        child: Icon(
-                                                          size: 20,
-                                                          Icons.verified,
-                                                          color: Colors.blue,
-                                                        ),
-                                                      )
-                                                    : Tooltip(
-                                                        message: getLabels
-                                                            .notVerified,
-                                                        child: Icon(
-                                                          size: 20,
-                                                          Icons.verified,
-                                                          color:
-                                                              Colors.blueGrey,
-                                                        ),
-                                                      ),
+                                                Gap(10.0),
+                                                Constants
+                                                    .leadingAndTitleTextInRow(
+                                                        textSize: 14.0,
+                                                        leadingTextKey:
+                                                            getLabels
+                                                                .accountCreated,
+                                                        textValue: DateFormat(
+                                                                getLabels
+                                                                    .dateFormat)
+                                                            .format(userData?[
+                                                                    "createdAt"]
+                                                                .toDate())),
                                               ],
                                             ),
-                                            Gap(10.0),
-                                            Constants.leadingAndTitleTextInRow(
-                                                textSize: 14.0,
-                                                leadingTextKey:
-                                                    getLabels.accountCreated,
-                                                textValue: DateFormat(
-                                                        getLabels.dateFormat)
-                                                    .format(
-                                                        userData?["createdAt"]
-                                                            .toDate())),
+                                            Expanded(
+                                              child: Constants
+                                                  .leadingAndTitleTextInRow(
+                                                      textSize: 13.0,
+                                                      leadingTextKey: getLabels
+                                                          .premiumStatus,
+                                                      textValue:
+                                                          userData?["isPremium"]
+                                                              ? getLabels.active
+                                                              : getLabels
+                                                                  .inactive),
+                                            ),
                                           ],
                                         ),
-                                        Expanded(
-                                          child: Constants
-                                              .leadingAndTitleTextInRow(
-                                                  textSize: 13.0,
-                                                  leadingTextKey:
-                                                      getLabels.premiumStatus,
-                                                  textValue:
-                                                      userData?["isPremium"]
-                                                          ? getLabels.active
-                                                          : getLabels.inactive),
+                                        Gap(20.0),
+                                        SettingsCardButton(
+                                          onTap: () {
+                                            Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                              builder: (context) => InfoPage(
+                                                userDataGet: userData ?? {},
+                                              ),
+                                            ));
+                                          },
+                                          iconData: Icons.person_outline,
+                                          title: getLabels.info,
+                                        ),
+                                        SettingsCardButton(
+                                          onTap: () async {
+                                            print(userData);
+                                            // Role role =
+                                            //     Role(id: const Uuid().v4(), name: {
+                                            //   'en': 'Normal User',
+                                            //   'fr': 'Utilisateur Normal',
+                                            //   'de': 'Normaler Benutzer'
+                                            // }, permissions: [
+                                            //   "log_time", // Ability to log working hours or time entries.
+                                            //   "view_self_reports", // View their own reports (work logs, time entries).
+                                            //   "update_profile", // Ability to update their personal profile details.
+                                            //   "request_leave" // Ability to request leave/absences (if applicable).
+                                            // ]);
+                                            // Provider.of<RoleProvider>(context,
+                                            //         listen: false)
+                                            //     .addNewRole(
+                                            //         context: context,
+                                            //         roleMap: role.roleToMap());
+                                          },
+                                          iconData: Icons.lock_person_outlined,
+                                          title: getLabels.profileSettings,
+                                        ),
+                                        SettingsCardButton(
+                                          onTap: () {},
+                                          iconData:
+                                              Icons.manage_accounts_outlined,
+                                          title: getLabels.account,
                                         ),
                                       ],
+                                    )
+                                  : Expanded(
+                                      child: Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
                                     ),
-                                    Gap(20.0),
-                                    SettingsCardButton(
-                                      onTap: () {
-                                        Navigator.of(context)
-                                            .push(MaterialPageRoute(
-                                          builder: (context) => InfoPage(
-                                            userDataGet: userData ?? {},
-                                          ),
-                                        ));
-                                      },
-                                      iconData: Icons.person_outline,
-                                      title: getLabels.info,
-                                    ),
-                                    SettingsCardButton(
-                                      onTap: () {},
-                                      iconData: Icons.lock_person_outlined,
-                                      title: getLabels.profileSettings,
-                                    ),
-                                    SettingsCardButton(
-                                      onTap: () {},
-                                      iconData: Icons.manage_accounts_outlined,
-                                      title: getLabels.account,
-                                    ),
-                                  ],
-                                )
-                              : Expanded(
-                                  child: Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
                         },
                         Gap(MediaQuery.of(context).size.height * 0.02),
                         ListTile(

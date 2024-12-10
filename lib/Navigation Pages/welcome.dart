@@ -24,7 +24,7 @@ class _WelcomePageState extends State<WelcomePage> {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback(
-      (_) {
+      (_) async {
         final tm = Provider.of<TimeManagementPovider>(context, listen: false);
         tm.setOrientation(context);
       },

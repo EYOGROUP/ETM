@@ -66,6 +66,7 @@ dependencies:
   google_sign_in_ios: ^5.7.8
   flutter_multi_formatter: ^2.13.0
   dropdown_button2: ^2.3.9
+  connectivity_plus: ^6.1.0
 
   
  

@@ -2,17 +2,25 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/user.dart';
+import 'package:time_management/provider/tm_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class UserProvider extends ChangeNotifier {
   Future<bool> isUserLogin({required BuildContext context}) async {
     bool isUserIn = true;
-    await FirebaseAuth.instance.currentUser?.reload();
+    bool isConnectedToInternet =
+        await Provider.of<TimeManagementPovider>(context, listen: false)
+            .isConnectedToInternet(context: context);
+    if (isConnectedToInternet) {
+      await FirebaseAuth.instance.currentUser?.reload();
+    }
     if (context.mounted) {
       final currentUser = FirebaseAuth.instance.currentUser?.isAnonymous;
+
       if (currentUser == null) {
         isUserIn = false;
       }
@@ -148,7 +156,19 @@ class UserProvider extends ChangeNotifier {
             .get();
         if (context.mounted) {
           if (userGetDoc.docs.isNotEmpty) {
-            userData = userGetDoc.docs.first.data();
+            Map<String, dynamic> userDataToMap = userGetDoc.docs.first.data();
+            userData.addAll(userDataToMap);
+            final userRoleGet = await FirebaseFirestore.instance
+                .collection('roles')
+                .where("id", isEqualTo: userDataToMap["role"])
+                .get();
+            if (context.mounted) {
+              if (userRoleGet.docs.isNotEmpty) {
+                Map<String, dynamic> userRole = userRoleGet.docs.first.data();
+                Map<String, dynamic> userRoleAsMap = {"roleData": userRole};
+                userData.addAll(userRoleAsMap);
+              }
+            }
           }
         }
       } on FirebaseFirestore catch (error) {
@@ -199,7 +219,9 @@ class UserProvider extends ChangeNotifier {
   bool isUserAlreadyHasGender(
       {required BuildContext context, required Map<String, dynamic> userData}) {
     bool isUserAlreadyHasGender = true;
-    if (userData["gender"] == null || userData["gender"] == '') {
+    if (userData["gender"] == null ||
+        userData["gender"] == '' ||
+        userData["gender"] == Gender.nothing.toString()) {
       isUserAlreadyHasGender = false;
     }
     return isUserAlreadyHasGender;
@@ -213,5 +235,24 @@ class UserProvider extends ChangeNotifier {
         .collection('users')
         .doc(userId)
         .update(selectedGenderMap);
+  }
+
+  Future<void> editUserPhoneNumber(
+      {required BuildContext context,
+      required String userId,
+      required Map<String, dynamic> phoneNumberMap}) async {
+    try {
+      if (phoneNumberMap.isNotEmpty) {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update(phoneNumberMap);
+      }
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
   }
 }

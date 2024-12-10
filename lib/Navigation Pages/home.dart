@@ -67,7 +67,9 @@ class _StartTimePageState extends State<StartTimePage> {
   RewardedAd? _rewardedAd;
   List<Map<String, dynamic>> activatedCategories = [];
   List<ETMCategory> _categories = [];
+  List<Map<String, dynamic>> _categoriesGet = [];
   Map<String, dynamic>? choosedCategory;
+  bool _isInternetConnected = false;
 
   @override
   void initState() {
@@ -75,10 +77,25 @@ class _StartTimePageState extends State<StartTimePage> {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         _categories = ETMCategory.categories;
+        await checkInternet();
+        await getCategoriesFromProvider();
         await loadRewardedAd();
         await getAllData(isSwitchCategory: false, isInit: true);
       },
     );
+  }
+
+  getCategoriesFromProvider() async {
+    _categoriesGet = await Provider.of<CategoryProvider>(context, listen: false)
+        .getCategories(context: context);
+    setState(() {});
+  }
+
+  Future<void> checkInternet() async {
+    final eTManagement =
+        Provider.of<TimeManagementPovider>(context, listen: false);
+    eTManagement.monitorInternet(context);
+    eTManagement.isConnectedToInternet(context: context);
   }
 
   Future<void> startWork(
@@ -210,12 +227,13 @@ class _StartTimePageState extends State<StartTimePage> {
       {required Map<String, dynamic> categorySet}) async {
     bool isAlreadyActivate = false;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     // if false: Is user as Lokal
     bool isUserExists = await userProvider.isUserLogin(context: context);
     if (!isUserExists) {
       // check if Category is locked
 
-      if (categorySet["isUnlocked"] != 0 || categorySet["isPremium"] != 0) {
+      if (categorySet["isUnlocked"] != 0 && categorySet["isPremium"] != 0) {
         isAlreadyActivate = true;
       } else {
         final categoryProvider =
@@ -235,6 +253,10 @@ class _StartTimePageState extends State<StartTimePage> {
             }
           }
         }
+      }
+    } else {
+      if (categorySet["isPremium"] && categorySet["isUnlocked"]) {
+        isAlreadyActivate = true;
       }
     }
     return isAlreadyActivate;
@@ -1008,7 +1030,10 @@ class _StartTimePageState extends State<StartTimePage> {
     final getLabels = AppLocalizations.of(context)!;
     final categoryProvider = Provider.of<CategoryProvider>(context);
     final timeManagementPovider = Provider.of<TimeManagementPovider>(context);
+
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
     List<ETMCategory> categories = ETMCategory.categories;
+
     return Scaffold(
       key: _scaffoldKey,
       appBar: AppBar(
@@ -1107,88 +1132,184 @@ class _StartTimePageState extends State<StartTimePage> {
                         //     if (!mounted) return;
                         //   },
                         // ),
-                        DropdownButtonFormField2(
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                              filled: true,
-                              fillColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0))),
-                          dropdownStyleData: DropdownStyleData(
-                              useSafeArea: true,
-                              decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(12.0)),
-                              maxHeight:
-                                  MediaQuery.of(context).size.height * 0.35),
+                        (timeManagementPovider.isInternetConnectedGet &&
+                                    categoryProvider
+                                        .isSwitchedToCloudCategories) ||
+                                (!timeManagementPovider
+                                        .isInternetConnectedGet &&
+                                    categoryProvider
+                                        .isSwitchedToLokalCategories)
+                            ? DropdownButtonFormField2(
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                    filled: true,
+                                    fillColor: Theme.of(context)
+                                        .colorScheme
+                                        .primaryContainer,
+                                    border: OutlineInputBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(12.0))),
+                                dropdownStyleData: DropdownStyleData(
+                                    useSafeArea: true,
+                                    decoration: BoxDecoration(
+                                        borderRadius:
+                                            BorderRadius.circular(12.0)),
+                                    maxHeight:
+                                        MediaQuery.of(context).size.height *
+                                            0.35),
 
-                          hint: Text(categoryHint.isEmpty &&
-                                  categoryProvider.selectedCategory.isEmpty
-                              ? getLabels.selectCategory
-                              : categoryHint.isEmpty
-                                  ? categoryProvider.selectedCategory['name'][
-                                      timeManagementPovider
-                                          .getCurrentLocalSystemLanguage()]
-                                  : categoryHint['name'][timeManagementPovider
-                                      .getCurrentLocalSystemLanguage()]),
-                          // value: categoryProvider.selectedCategory.isNotEmpty
-                          //     ? categoryProvider.selectedCategory['id']
-                          //     : categories.first.id,
-                          items: _categories
-                              .map(
-                                (category) => DropdownMenuItem(
-                                    enabled: isSwitchCategoryAvailable
-                                        ? true
-                                        : false,
-                                    value: category.id,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(category.name[timeManagementPovider
-                                            .getCurrentLocalSystemLanguage()]),
-                                        Gap(190),
-                                        Icon(
-                                          categoryProvider.lockedCategories
-                                                      .where((lockedCategory) =>
-                                                          lockedCategory[
-                                                              "id"] ==
-                                                          category.id)
-                                                      .isNotEmpty ||
-                                                  category.isUnlocked
-                                              ? Icons.lock_open_outlined
-                                              : Icons.lock_outline_rounded,
-                                          color: categoryProvider
-                                                      .lockedCategories
-                                                      .where((lockedCategory) =>
-                                                          lockedCategory[
-                                                              "id"] ==
-                                                          category.id)
-                                                      .isNotEmpty ||
-                                                  category.isUnlocked
-                                              ? Constants.green
-                                              : Constants.red,
-                                        ),
-                                      ],
-                                    )),
+                                hint: Text(categoryHint.isEmpty &&
+                                        categoryProvider
+                                            .selectedCategory.isEmpty
+                                    ? getLabels.selectCategory
+                                    : categoryHint.isEmpty
+                                        ? categoryProvider
+                                                .selectedCategory['name'][
+                                            timeManagementPovider
+                                                .getCurrentLocalSystemLanguage()]
+                                        : categoryHint['name'][
+                                            timeManagementPovider
+                                                .getCurrentLocalSystemLanguage()]),
+                                // value: categoryProvider.selectedCategory.isNotEmpty
+                                //     ? categoryProvider.selectedCategory['id']
+                                //     : categories.first.id,
+                                items: _categoriesGet
+                                    .map(
+                                      (category) => DropdownMenuItem(
+                                          enabled: isSwitchCategoryAvailable
+                                              ? true
+                                              : false,
+                                          value: category["id"],
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(category["name"][
+                                                  timeManagementPovider
+                                                      .getCurrentLocalSystemLanguage()]),
+                                              Gap(190),
+                                              categoryProvider
+                                                          .isSwitchedToLokalCategories &&
+                                                      !categoryProvider
+                                                          .isSwitchedToCloudCategories
+                                                  ? Icon(
+                                                      categoryProvider
+                                                                  .lockedCategories
+                                                                  .where((lockedCategory) =>
+                                                                      lockedCategory[
+                                                                          "id"] ==
+                                                                      category[
+                                                                          'id'])
+                                                                  .isNotEmpty ||
+                                                              category[
+                                                                      "isUnlocked"] ==
+                                                                  1
+                                                          ? Icons
+                                                              .lock_open_outlined
+                                                          : Icons
+                                                              .lock_outline_rounded,
+                                                      color: categoryProvider
+                                                                  .lockedCategories
+                                                                  .where((lockedCategory) =>
+                                                                      lockedCategory[
+                                                                          "id"] ==
+                                                                      category[
+                                                                          "id"])
+                                                                  .isNotEmpty ||
+                                                              category[
+                                                                      "isUnlocked"] ==
+                                                                  1
+                                                          ? Constants.green
+                                                          : Constants.red,
+                                                    )
+                                                  : Icon(
+                                                      categoryProvider
+                                                                  .lockedCategories
+                                                                  .where((lockedCategory) =>
+                                                                      lockedCategory[
+                                                                          "id"] ==
+                                                                      category[
+                                                                          'id'])
+                                                                  .isNotEmpty ||
+                                                              category[
+                                                                  "isUnlocked"]
+                                                          ? Icons
+                                                              .lock_open_outlined
+                                                          : Icons
+                                                              .lock_outline_rounded,
+                                                      color: categoryProvider
+                                                                  .lockedCategories
+                                                                  .where((lockedCategory) =>
+                                                                      lockedCategory[
+                                                                          "id"] ==
+                                                                      category[
+                                                                          "id"])
+                                                                  .isNotEmpty ||
+                                                              category[
+                                                                  "isUnlocked"]
+                                                          ? Constants.green
+                                                          : Constants.red,
+                                                    ),
+                                            ],
+                                          )),
+                                    )
+                                    .toList(),
+                                onChanged: (category) async {
+                                  Map<String, dynamic>? categoryToMap;
+                                  bool isUserLogedIn = await userProvider
+                                      .isUserLogin(context: context);
+                                  if (isUserLogedIn) {
+                                    categoryToMap = ETMCategory.categories
+                                        .firstWhere((categoryGet) =>
+                                            categoryGet.id == category)
+                                        .toMap(isLokal: false);
+                                  } else {
+                                    categoryToMap = ETMCategory.categories
+                                        .firstWhere((categoryGet) =>
+                                            categoryGet.id == category)
+                                        .toMap(isLokal: true);
+                                  }
+
+                                  await _showRewardedAd(
+                                      categorySet: categoryToMap);
+
+                                  await getAllData(
+                                      isSwitchCategory: true,
+                                      categorySet: categoryToMap,
+                                      isInit: false);
+                                },
                               )
-                              .toList(),
-                          onChanged: (category) async {
-                            Map<String, dynamic> categoryToMap = ETMCategory
-                                .categories
-                                .firstWhere(
-                                    (categoryGet) => categoryGet.id == category)
-                                .toMap(isLokal: true);
-
-                            await _showRewardedAd(categorySet: categoryToMap);
-
-                            await getAllData(
-                                isSwitchCategory: true,
-                                categorySet: categoryToMap,
-                                isInit: false);
-                          },
-                        ),
+                            : categoryProvider.isSwitchedToCloudCategories
+                                ? Center(
+                                    child: TextButton(
+                                        onPressed: () {
+                                          categoryProvider
+                                              .switchToLokalCategories = true;
+                                          categoryProvider
+                                              .switchToCloudCategories = false;
+                                          getCategoriesFromProvider();
+                                        },
+                                        child: Text(
+                                          textAlign: TextAlign.center,
+                                          getLabels.switchToLocalCategories,
+                                          style: TextStyle(fontSize: 16.0),
+                                        )),
+                                  )
+                                : Center(
+                                    child: TextButton(
+                                        onPressed: () async {
+                                          categoryProvider
+                                              .switchToLokalCategories = false;
+                                          await getCategoriesFromProvider();
+                                          if (!mounted) return;
+                                          categoryProvider
+                                              .switchToCloudCategories = true;
+                                        },
+                                        child: Text(
+                                          textAlign: TextAlign.center,
+                                          getLabels.switchToLocalCategories,
+                                          style: TextStyle(fontSize: 18.0),
+                                        ))),
                         // DropdownMenu(
                         //   hintText: categoryHint.isEmpty &&
                         //           categoryProvider.selectedCategory.isEmpty

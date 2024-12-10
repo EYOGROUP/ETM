@@ -43,6 +43,7 @@ class _PagesControllerState extends State<PagesController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: PageView(
+        physics: NeverScrollableScrollPhysics(),
         controller: _pageController,
         // physics: const NeverScrollableScrollPhysics(),
         children: const [
@@ -52,8 +53,8 @@ class _PagesControllerState extends State<PagesController> {
         ],
       ),
       bottomNavigationBar: CurvedNavigationBar(
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        color: Theme.of(context).colorScheme.primary,
+        backgroundColor: Theme.of(context).colorScheme.primary,
+        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.78),
         items: items,
         index: widget.indexPage ?? 0,
         onTap: (value) {

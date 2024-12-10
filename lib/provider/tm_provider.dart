@@ -1,8 +1,10 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,6 +14,7 @@ import 'dart:io';
 
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:time_management/provider/category_provider.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
@@ -23,6 +26,9 @@ class TimeManagementPovider with ChangeNotifier {
   bool _isInAddingReason = false;
   bool get isInAddingReasonGet => _isInAddingReason;
 
+  bool _isInternetConnected = false;
+  bool get isInternetConnectedGet => _isInternetConnected;
+
   set isInAddingTaskSet(bool isInAdding) {
     _isInAddingTask = isInAdding;
     notifyListeners();
@@ -31,6 +37,65 @@ class TimeManagementPovider with ChangeNotifier {
   set isInAddingReasonSet(bool isInAdding) {
     _isInAddingReason = isInAdding;
     notifyListeners();
+  }
+
+  void monitorInternet(BuildContext context) {
+    Connectivity().onConnectivityChanged.listen(
+      (List<ConnectivityResult> connectivity) async {
+        bool hasInternet = await hasActiveInternet();
+        if (context.mounted) {
+          final getLabels = AppLocalizations.of(context)!;
+          final categoryProvider =
+              Provider.of<CategoryProvider>(context, listen: false);
+          if (connectivity.contains(ConnectivityResult.none) || !hasInternet) {
+            _isInternetConnected = false;
+
+            return Constants.showInSnackBar(
+                value: getLabels.noInternetConnection, context: context);
+          } else {
+            _isInternetConnected = true;
+            categoryProvider.switchToLokalCategories = false;
+
+            return Constants.showInSnackBar(
+                value: getLabels.internetConnectionActive, context: context);
+          }
+        }
+      },
+    );
+
+    notifyListeners();
+  }
+
+// check Internet if it working
+  Future<bool> hasActiveInternet() async {
+    try {
+      final result = await InternetAddress.lookup("google.com");
+      return result.isNotEmpty && result.first.rawAddress.isNotEmpty;
+    } on SocketException catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> isConnectedToInternet({required BuildContext context}) async {
+    final List<ConnectivityResult> connectivityResult =
+        await Connectivity().checkConnectivity();
+
+    bool hasInternet = await hasActiveInternet();
+
+    if (connectivityResult.contains(ConnectivityResult.none) || !hasInternet) {
+      _isInternetConnected = false;
+      return false;
+    } else {
+      if (context.mounted) {
+        final categoryProvider =
+            Provider.of<CategoryProvider>(context, listen: false);
+        categoryProvider.switchToLokalCategories = false;
+      }
+
+      _isInternetConnected = true;
+
+      return true;
+    }
   }
 
   Future<bool> isCategoryAlreadyInit({required TrackingDB db}) async {

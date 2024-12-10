@@ -1,6 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:time_management/controller/category_architecture.dart';
 import 'package:time_management/db/mydb.dart';
+
+import 'package:time_management/provider/user_provider.dart';
 
 class CategoryProvider extends ChangeNotifier {
   bool _isCategoryLocked = false;
@@ -9,6 +13,21 @@ class CategoryProvider extends ChangeNotifier {
   Map<String, dynamic> get selectedCategory => _selectedCategory;
   final List<Map<String, dynamic>> _lockedCategories = [];
   List<Map<String, dynamic>> get lockedCategories => _lockedCategories;
+  bool _isSwitchedToLokalCategories = false;
+  bool get isSwitchedToLokalCategories => _isSwitchedToLokalCategories;
+  bool _isSwitchedToCloudCategories = false;
+  bool get isSwitchedToCloudCategories => _isSwitchedToCloudCategories;
+
+  set switchToLokalCategories(bool switchTo) {
+    _isSwitchedToLokalCategories = switchTo;
+    notifyListeners();
+  }
+
+  set switchToCloudCategories(bool switchTo) {
+    _isSwitchedToCloudCategories = switchTo;
+    notifyListeners();
+  }
+
   set setCategory(Map<String, dynamic> categories) {
     resetSelectedCategory();
     _selectedCategory = categories;
@@ -19,6 +38,35 @@ class CategoryProvider extends ChangeNotifier {
     if (_selectedCategory.isNotEmpty) {
       _selectedCategory.clear();
     }
+  }
+
+  Future<List<Map<String, dynamic>>> getCategories(
+      {required BuildContext context}) async {
+    List<Map<String, dynamic>> getCategoriesList = [];
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    if (_isSwitchedToLokalCategories) {
+      getCategoriesList = ETMCategory.categories
+          .map((category) => category.toMap(isLokal: true))
+          .toList();
+    } else {
+      if (context.mounted) {
+        bool isUserExists = await userProvider.isUserLogin(context: context);
+
+        if (isUserExists) {
+          final getCategories =
+              await FirebaseFirestore.instance.collection("categories").get();
+          if (getCategories.docs.isNotEmpty) {
+            getCategoriesList =
+                getCategories.docs.map((category) => category.data()).toList();
+          }
+        } else {
+          getCategoriesList = ETMCategory.categories
+              .map((category) => category.toMap(isLokal: true))
+              .toList();
+        }
+      }
+    }
+    return getCategoriesList;
   }
 
   Future<List<Map<String, dynamic>>> getAllLokalUserCategories(

@@ -207,6 +207,11 @@
     "accountType":"Kontotyp",
     "accountStatus":"Kontostatus",
     "none":"Keine",
-    "aboutYou":"Über dich"
+    "aboutYou":"Über dich",
+    "enterPhoneNumber": "Bitte geben Sie Ihre Mobiltelefonnummer unten ein. Diese Nummer ist nur für das ETM-Team sichtbar. Wenn Sie die App als Mitarbeiter nutzen, kann auch Ihr Vorgesetzter Zugriff auf diese Nummer haben, z. B. für Terminabsprachen oder Anfragen.",
+    "noInternetConnection":"Keine aktive Internetverbindung.",
+    "internetConnectionActive":"Internetverbindung aktiv!",
+    "switchToLocalCategories":"Wechseln Sie zu den auf Ihrem Gerät gespeicherten Kategorien.",
+    "switchToCloudCategories":"Wechseln Sie zu den mit der Cloud synchronisierten Kategorien."
 
 }

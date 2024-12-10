@@ -4,8 +4,10 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/profile/infos/edit_name.dart';
+import 'package:time_management/Navigation%20Pages/profile/infos/edit_phone.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/user.dart';
+import 'package:time_management/provider/tm_provider.dart';
 import 'package:time_management/provider/user_provider.dart';
 
 class InfoPage extends StatefulWidget {
@@ -185,6 +187,8 @@ class _InfoPageState extends State<InfoPage> {
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final eTMProvider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         title: Text(getLabels.info),
@@ -306,7 +310,21 @@ class _InfoPageState extends State<InfoPage> {
           CardLeadingAndTrailing(
             leading: getLabels.phone,
             trailing: '+${userData["phoneCode"]} ${userData["phoneNumber"]}',
-            onTap: () {},
+            onTap: () async {
+              final userDataGetFromEdit =
+                  await Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => EditPhonePage(
+                  userDataGet: userData,
+                ),
+              ));
+              if (userDataGetFromEdit != null) {
+                if (userData.isNotEmpty) {
+                  setState(() {
+                    userData = userDataGetFromEdit;
+                  });
+                }
+              }
+            },
           ),
           CardLeadingAndTrailing(
             leading: getLabels.email,
@@ -315,7 +333,10 @@ class _InfoPageState extends State<InfoPage> {
           ),
           CardLeadingAndTrailing(
             leading: getLabels.accountType,
-            trailing: getLabels.none,
+            trailing: userData["role"] != null && userData["role"] != ''
+                ? userData["roleData"]["name"]
+                    [eTMProvider.getCurrentLocalSystemLanguage()]
+                : getLabels.none,
             onTap: () {},
           ),
           CardLeadingAndTrailing(

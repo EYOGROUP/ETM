@@ -206,5 +206,12 @@
     "accountType":"Account Type",
     "accountStatus":"Account Status",
     "none":"None",
-    "aboutYou":"About You"
+    "aboutYou":"About You",
+    "enterPhoneNumber":"Please enter your mobile phone number below. This number will only be visible to the ETM Team. If you are using the app as an employee, your supervisor may also have access to this number for communication purposes, such as scheduling or inquiries.",
+    "noInternetConnection":"No active internet connection.",
+    "internetConnectionActive":"Internet connection active!",
+    "switchToLocalCategories":"Switch to categories stored on your device.",
+    "switchToCloudCategories":"Switch to categories synced with the cloud."
+
+    
 }

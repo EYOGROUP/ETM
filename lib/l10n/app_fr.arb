@@ -206,7 +206,13 @@
     "accountType":"Type de compte",
     "accountStatus":"Statut du compte",
     "none":"Aucun",
-    "aboutYou":"À propos de vous"
+    "aboutYou":"À propos de vous",
+    "enterPhoneNumber": "Veuillez entrer votre numéro de téléphone mobile ci-dessous. Ce numéro sera visible uniquement par l'équipe ETM. Si vous utilisez l'application en tant qu'employé, votre superviseur peut également accéder à ce numéro à des fins de communication, telles que la planification ou les demandes.",
+    "noInternetConnection":"Pas de connexion Internet active.",
+    "internetConnectionActive":"Connexion Internet active !",
+    "switchToLocalCategories":"Passez aux catégories enregistrées sur votre appareil",
+    "switchToCloudCategories":"Passez aux catégories synchronisées avec le cloud."
+    
 
 
 }

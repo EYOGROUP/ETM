@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/welcome.dart';
 import 'package:time_management/firebase_options.dart';
 import 'package:time_management/provider/category_provider.dart';
+import 'package:time_management/provider/role_provider.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:time_management/provider/user_provider.dart';
 import 'package:time_management/theme_app.dart';
@@ -22,6 +23,7 @@ void main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
   FlutterNativeSplash.remove();
+
   runApp(const MyApp());
 }
 
@@ -41,6 +43,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => CategoryProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => RoleProvider(),
         ),
       ],
       child: Consumer<TimeManagementPovider>(
