@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
@@ -98,7 +99,11 @@ class _LoginPageState extends State<LoginPage> {
                         child: ElevatedButtonCreated(
                           textWidget:
                               Text(getLabels.continueLabel.toUpperCase()),
-                          onTap: () {},
+                          onTap: () {
+                            FirebaseAuth.instance.signInWithEmailAndPassword(
+                                email: _emailController.text,
+                                password: _passwordController.text);
+                          },
                         ),
                       ),
                       Gap(MediaQuery.of(context).size.height * 0.01),

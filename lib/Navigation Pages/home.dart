@@ -70,6 +70,7 @@ class _StartTimePageState extends State<StartTimePage> {
   List<Map<String, dynamic>> _categoriesGet = [];
   Map<String, dynamic>? choosedCategory;
   bool _isInternetConnected = false;
+  bool isUserExists = false;
 
   @override
   void initState() {
@@ -78,6 +79,7 @@ class _StartTimePageState extends State<StartTimePage> {
       (_) async {
         _categories = ETMCategory.categories;
         await checkInternet();
+        await checkUserIfExist();
         await getCategoriesFromProvider();
         await loadRewardedAd();
         await getAllData(isSwitchCategory: false, isInit: true);
@@ -96,6 +98,11 @@ class _StartTimePageState extends State<StartTimePage> {
         Provider.of<TimeManagementPovider>(context, listen: false);
     eTManagement.monitorInternet(context);
     eTManagement.isConnectedToInternet(context: context);
+  }
+
+  checkUserIfExist() async {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+    isUserExists = await userProvider.isUserLogin(context: context);
   }
 
   Future<void> startWork(
@@ -1028,8 +1035,10 @@ class _StartTimePageState extends State<StartTimePage> {
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
-    final categoryProvider = Provider.of<CategoryProvider>(context);
-    final timeManagementPovider = Provider.of<TimeManagementPovider>(context);
+    final categoryProvider =
+        Provider.of<CategoryProvider>(context, listen: false);
+    final timeManagementPovider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     List<ETMCategory> categories = ETMCategory.categories;
@@ -1136,9 +1145,10 @@ class _StartTimePageState extends State<StartTimePage> {
                                     categoryProvider
                                         .isSwitchedToCloudCategories) ||
                                 (!timeManagementPovider
-                                        .isInternetConnectedGet &&
-                                    categoryProvider
-                                        .isSwitchedToLokalCategories)
+                                            .isInternetConnectedGet &&
+                                        categoryProvider
+                                            .isSwitchedToLokalCategories ||
+                                    !isUserExists)
                             ? DropdownButtonFormField2(
                                 isExpanded: true,
                                 decoration: InputDecoration(
@@ -1189,9 +1199,8 @@ class _StartTimePageState extends State<StartTimePage> {
                                                       .getCurrentLocalSystemLanguage()]),
                                               Gap(190),
                                               categoryProvider
-                                                          .isSwitchedToLokalCategories &&
-                                                      !categoryProvider
-                                                          .isSwitchedToCloudCategories
+                                                          .isSwitchedToLokalCategories ||
+                                                      !isUserExists
                                                   ? Icon(
                                                       categoryProvider
                                                                   .lockedCategories
@@ -1222,34 +1231,37 @@ class _StartTimePageState extends State<StartTimePage> {
                                                           ? Constants.green
                                                           : Constants.red,
                                                     )
-                                                  : Icon(
-                                                      categoryProvider
-                                                                  .lockedCategories
-                                                                  .where((lockedCategory) =>
-                                                                      lockedCategory[
-                                                                          "id"] ==
-                                                                      category[
-                                                                          'id'])
-                                                                  .isNotEmpty ||
-                                                              category[
-                                                                  "isUnlocked"]
-                                                          ? Icons
-                                                              .lock_open_outlined
-                                                          : Icons
-                                                              .lock_outline_rounded,
-                                                      color: categoryProvider
-                                                                  .lockedCategories
-                                                                  .where((lockedCategory) =>
-                                                                      lockedCategory[
-                                                                          "id"] ==
-                                                                      category[
-                                                                          "id"])
-                                                                  .isNotEmpty ||
-                                                              category[
-                                                                  "isUnlocked"]
-                                                          ? Constants.green
-                                                          : Constants.red,
-                                                    ),
+                                                  : categoryProvider
+                                                          .isSwitchedToCloudCategories
+                                                      ? Icon(
+                                                          categoryProvider
+                                                                      .lockedCategories
+                                                                      .where((lockedCategory) =>
+                                                                          lockedCategory[
+                                                                              "id"] ==
+                                                                          category[
+                                                                              'id'])
+                                                                      .isNotEmpty ||
+                                                                  category[
+                                                                      "isUnlocked"]
+                                                              ? Icons
+                                                                  .lock_open_outlined
+                                                              : Icons
+                                                                  .lock_outline_rounded,
+                                                          color: categoryProvider
+                                                                      .lockedCategories
+                                                                      .where((lockedCategory) =>
+                                                                          lockedCategory[
+                                                                              "id"] ==
+                                                                          category[
+                                                                              "id"])
+                                                                      .isNotEmpty ||
+                                                                  category[
+                                                                      "isUnlocked"]
+                                                              ? Constants.green
+                                                              : Constants.red,
+                                                        )
+                                                      : Container(),
                                             ],
                                           )),
                                     )
@@ -1279,15 +1291,17 @@ class _StartTimePageState extends State<StartTimePage> {
                                       isInit: false);
                                 },
                               )
-                            : categoryProvider.isSwitchedToCloudCategories
+                            : (!categoryProvider.isSwitchedToCloudCategories &&
+                                    !timeManagementPovider
+                                        .isInternetConnectedGet)
                                 ? Center(
                                     child: TextButton(
-                                        onPressed: () {
+                                        onPressed: () async {
                                           categoryProvider
                                               .switchToLokalCategories = true;
+                                          await getCategoriesFromProvider();
                                           categoryProvider
                                               .switchToCloudCategories = false;
-                                          getCategoriesFromProvider();
                                         },
                                         child: Text(
                                           textAlign: TextAlign.center,
@@ -1307,8 +1321,8 @@ class _StartTimePageState extends State<StartTimePage> {
                                         },
                                         child: Text(
                                           textAlign: TextAlign.center,
-                                          getLabels.switchToLocalCategories,
-                                          style: TextStyle(fontSize: 18.0),
+                                          getLabels.switchToCloudCategories,
+                                          style: TextStyle(fontSize: 16.0),
                                         ))),
                         // DropdownMenu(
                         //   hintText: categoryHint.isEmpty &&

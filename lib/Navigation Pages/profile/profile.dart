@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:day_night_switcher/day_night_switcher.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -240,6 +241,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                         SettingsCardButton(
                                           onTap: () async {
+                                            FirebaseAuth.instance.signOut();
                                             print(userData);
                                             // Role role =
                                             //     Role(id: const Uuid().v4(), name: {
