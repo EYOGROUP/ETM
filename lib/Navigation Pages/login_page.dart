@@ -190,7 +190,7 @@ class _LoginPageState extends State<LoginPage> {
                         child: Text(
                           getLabels.forgotPassword.toUpperCase(),
                           style: TextStyle(
-                              fontSize: 16.0,
+                              fontSize: 14.0,
                               fontWeight: FontWeight.bold,
                               decoration: TextDecoration.underline),
                         ),
@@ -201,7 +201,7 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           Text(
                             getLabels.noAccount,
-                            style: TextStyle(fontSize: 16.0),
+                            style: TextStyle(fontSize: 14.0),
                           ),
                           TextButton(
                             onPressed: () {
@@ -212,7 +212,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: Text(
                               getLabels.registerNow.toUpperCase(),
                               style: TextStyle(
-                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                                  fontSize: 14.0, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
