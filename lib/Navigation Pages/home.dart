@@ -79,9 +79,13 @@ class _StartTimePageState extends State<StartTimePage> {
       (_) async {
         _categories = ETMCategory.categories;
         await checkInternet();
+        if (!mounted) return;
         await checkUserIfExist();
+        if (!mounted) return;
         await getCategoriesFromProvider();
+        if (!mounted) return;
         await loadRewardedAd();
+        if (!mounted) return;
         await getAllData(isSwitchCategory: false, isInit: true);
       },
     );
@@ -90,13 +94,15 @@ class _StartTimePageState extends State<StartTimePage> {
   getCategoriesFromProvider() async {
     _categoriesGet = await Provider.of<CategoryProvider>(context, listen: false)
         .getCategories(context: context);
+    if (!mounted) return;
     setState(() {});
   }
 
   Future<void> checkInternet() async {
     final eTManagement =
         Provider.of<TimeManagementPovider>(context, listen: false);
-    eTManagement.monitorInternet(context);
+    await eTManagement.monitorInternet(context);
+    if (!mounted) return;
     eTManagement.isConnectedToInternet(context: context);
   }
 
@@ -907,7 +913,9 @@ class _StartTimePageState extends State<StartTimePage> {
   @override
   void dispose() {
     _isDisposed = true;
-    // _rewardedAd?.dispose();
+    _breakReasonController.dispose();
+    _todoController.dispose();
+    _rewardedAd?.dispose();
     _timer?.cancel(); // Cancel the timer if it's running
     super.dispose();
   }
@@ -1037,8 +1045,7 @@ class _StartTimePageState extends State<StartTimePage> {
     final getLabels = AppLocalizations.of(context)!;
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
-    final timeManagementPovider =
-        Provider.of<TimeManagementPovider>(context, listen: false);
+    final timeManagementPovider = Provider.of<TimeManagementPovider>(context);
 
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     List<ETMCategory> categories = ETMCategory.categories;
@@ -1291,9 +1298,7 @@ class _StartTimePageState extends State<StartTimePage> {
                                       isInit: false);
                                 },
                               )
-                            : (!categoryProvider.isSwitchedToCloudCategories &&
-                                    !timeManagementPovider
-                                        .isInternetConnectedGet)
+                            : !timeManagementPovider.isInternetConnectedGet
                                 ? Center(
                                     child: TextButton(
                                         onPressed: () async {

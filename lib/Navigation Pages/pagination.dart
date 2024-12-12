@@ -45,6 +45,7 @@ class _PagesControllerState extends State<PagesController> {
       body: PageView(
         physics: NeverScrollableScrollPhysics(),
         controller: _pageController,
+
         // physics: const NeverScrollableScrollPhysics(),
         children: const [
           StartTimePage(),
@@ -56,7 +57,7 @@ class _PagesControllerState extends State<PagesController> {
         backgroundColor: Theme.of(context).colorScheme.primary,
         color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.78),
         items: items,
-        index: widget.indexPage ?? 0,
+        index: widget.indexPage ?? 2,
         onTap: (value) {
           _pageController.jumpToPage(value);
         },

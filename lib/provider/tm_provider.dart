@@ -39,7 +39,7 @@ class TimeManagementPovider with ChangeNotifier {
     notifyListeners();
   }
 
-  void monitorInternet(BuildContext context) {
+  Future<void> monitorInternet(BuildContext context) async {
     Connectivity().onConnectivityChanged.listen(
       (List<ConnectivityResult> connectivity) async {
         bool hasInternet = await hasActiveInternet();

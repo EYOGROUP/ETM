@@ -211,8 +211,11 @@
     "noInternetConnection":"Pas de connexion Internet active.",
     "internetConnectionActive":"Connexion Internet active !",
     "switchToLocalCategories":"Passez aux catégories enregistrées sur votre appareil",
-    "switchToCloudCategories":"Passez aux catégories synchronisées avec le cloud."
-    
+    "switchToCloudCategories":"Passez aux catégories synchronisées avec le cloud.",
+    "login":"Connexion",
+    "emailDoesNotExist":"Cette adresse e-mail n'existe pas.",
+    "emailEntryCheck": "L'adresse e-mail que vous avez saisie ne semble pas exister. Veuillez vérifier votre saisie et réessayer."
+
 
 
 }

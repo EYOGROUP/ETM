@@ -380,6 +380,10 @@ class LoginRegisterContainer extends StatelessWidget {
         margin: EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
         padding: EdgeInsets.only(left: 25.0, bottom: 8.0, top: 8.0),
         decoration: BoxDecoration(
+            color: Theme.of(context)
+                .colorScheme
+                .primaryContainer
+                .withOpacity(0.78),
             border: Border.all(
                 color: Theme.of(context).colorScheme.primaryContainer,
                 width: 2.0),
@@ -400,10 +404,10 @@ class LoginRegisterContainer extends StatelessWidget {
                     height: 40.0,
                     width: 40.0,
                   ),
-            Gap(MediaQuery.of(context).size.width * 0.06),
+            Gap(MediaQuery.of(context).size.width * 0.04),
             Text(
               containerText,
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18.0),
+              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16.0),
             ),
           ],
         ),

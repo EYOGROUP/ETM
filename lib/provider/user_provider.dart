@@ -255,4 +255,51 @@ class UserProvider extends ChangeNotifier {
       }
     }
   }
+
+  // check if email in Firebase to Login
+  Future<bool> isUserEmailInFirebase(
+      {required BuildContext context, required String emailGet}) async {
+    bool isEmailInFirebase = false;
+    try {
+      final getEmailUserData = await FirebaseFirestore.instance
+          .collection('users')
+          .where("email", isEqualTo: emailGet)
+          .get();
+      if (context.mounted) {
+        if (getEmailUserData.size == 1) {
+          isEmailInFirebase = true;
+        }
+      }
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
+    return isEmailInFirebase;
+  }
+
+// loginUserWithEmailAndPassword
+  Future<void> signInWithEmailAndPassword(
+      {required BuildContext context,
+      required String emailGet,
+      required String passwordGet}) async {
+    if (emailGet != '' && passwordGet != '') {
+      try {
+        UserCredential userCredential = await FirebaseAuth.instance
+            .signInWithEmailAndPassword(email: emailGet, password: passwordGet);
+        if (!context.mounted) return;
+        if (userCredential.user != null) {
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => PagesController(
+              indexPage: 2,
+            ),
+          ));
+        }
+      } on FirebaseAuthException catch (error) {
+        Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
+  }
 }
