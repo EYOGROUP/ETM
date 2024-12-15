@@ -87,73 +87,75 @@ class _EditPhonePageState extends State<EditPhonePage> {
           )
         ],
       ),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Text(
-              getLabels.enterPhoneNumber,
-              style: TextStyle(fontSize: 16.0),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Text(
+                getLabels.enterPhoneNumber,
+                style: TextStyle(fontSize: 16.0),
+              ),
             ),
-          ),
-          Gap(20.0),
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: CountryDropdown(
-                  menuMaxHeight: MediaQuery.of(context).size.height * 0.6,
-                  initialCountryData: _initialCountryData ??
-                      PhoneCodes.getPhoneCountryDataByCountryCode("DE"),
+            Gap(20.0),
+            Row(
+              children: [
+                Expanded(
+                  flex: 3,
+                  child: CountryDropdown(
+                    menuMaxHeight: MediaQuery.of(context).size.height * 0.6,
+                    initialCountryData: _initialCountryData ??
+                        PhoneCodes.getPhoneCountryDataByCountryCode("DE"),
 
-                  // printCountryName: true,
-                  decoration: InputDecoration(
+                    // printCountryName: true,
+                    decoration: InputDecoration(
+                        filled: true,
+                        fillColor: Theme.of(context)
+                            .colorScheme
+                            .primaryContainer
+                            .withOpacity(0.78)),
+                    onCountrySelected: (PhoneCountryData countryData) {
+                      setState(() {
+                        _initialCountryData = countryData;
+                      });
+                    },
+                  ),
+                ),
+                Gap(10.0),
+                Expanded(
+                  flex: 5,
+                  child: TextFormField(
+                    controller: _phoneNumberController,
+                    decoration: InputDecoration(
                       filled: true,
                       fillColor: Theme.of(context)
                           .colorScheme
                           .primaryContainer
-                          .withOpacity(0.78)),
-                  onCountrySelected: (PhoneCountryData countryData) {
-                    setState(() {
-                      _initialCountryData = countryData;
-                    });
-                  },
-                ),
-              ),
-              Gap(10.0),
-              Expanded(
-                flex: 5,
-                child: TextFormField(
-                  controller: _phoneNumberController,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Theme.of(context)
-                        .colorScheme
-                        .primaryContainer
-                        .withOpacity(0.78),
-                    border: OutlineInputBorder(),
-                    hintText: getLabels.phoneNumber,
-                    errorStyle: TextStyle(
-                      color: Colors.red,
+                          .withOpacity(0.78),
+                      border: OutlineInputBorder(),
+                      hintText: getLabels.phoneNumber,
+                      errorStyle: TextStyle(
+                        color: Colors.red,
+                      ),
                     ),
+                    keyboardType: TextInputType.phone,
+                    onChanged: (value) {
+                      isAnotherNumber();
+                      setState(() {});
+                    },
+                    inputFormatters: [
+                      PhoneInputFormatter(
+                        allowEndlessPhone: false,
+                        defaultCountryCode:
+                            _initialCountryData?.countryCode ?? "US",
+                      ),
+                    ],
                   ),
-                  keyboardType: TextInputType.phone,
-                  onChanged: (value) {
-                    isAnotherNumber();
-                    setState(() {});
-                  },
-                  inputFormatters: [
-                    PhoneInputFormatter(
-                      allowEndlessPhone: false,
-                      defaultCountryCode:
-                          _initialCountryData?.countryCode ?? "US",
-                    ),
-                  ],
-                ),
-              )
-            ],
-          ),
-        ],
+                )
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -89,59 +89,61 @@ class _EditNamePageState extends State<EditNamePage> {
             )
           ],
         ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Gap(20.0),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Text(
-                getLabels.enterNewName,
-                style: TextStyle(fontSize: 16.0),
-              ),
-            ),
-            Gap(20.0),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                SizedBox(
-                  height: 80,
-                  width: MediaQuery.of(context).size.width / 2.3,
-                  child: TextFieldWithValidator(
-                      controller: _firstNameController!,
-                      getLabels: getLabels.firstName,
-                      onChange: (p0) {
-                        isNameChanged();
-                        setState(() {});
-                      },
-                      validator: (firstName) {
-                        return firstName!.isNotEmpty
-                            ? null
-                            : getLabels.fieldMustNotBeEmpty;
-                      },
-                      textType: TextInputType.name),
+        body: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Gap(20.0),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Text(
+                  getLabels.enterNewName,
+                  style: TextStyle(fontSize: 16.0),
                 ),
-                Gap(20.0),
-                SizedBox(
-                  height: 80,
-                  width: MediaQuery.of(context).size.width / 2.2,
-                  child: TextFieldWithValidator(
-                      onChange: (p0) {
-                        isNameChanged();
-                        setState(() {});
-                      },
-                      controller: _lastNameController!,
-                      getLabels: getLabels.firstName,
-                      validator: (lastName) {
-                        return lastName!.isNotEmpty
-                            ? null
-                            : getLabels.fieldMustNotBeEmpty;
-                      },
-                      textType: TextInputType.name),
-                )
-              ],
-            )
-          ],
+              ),
+              Gap(20.0),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    height: 80,
+                    width: MediaQuery.of(context).size.width / 2.3,
+                    child: TextFieldWithValidator(
+                        controller: _firstNameController!,
+                        getLabels: getLabels.firstName,
+                        onChange: (p0) {
+                          isNameChanged();
+                          setState(() {});
+                        },
+                        validator: (firstName) {
+                          return firstName!.isNotEmpty
+                              ? null
+                              : getLabels.fieldMustNotBeEmpty;
+                        },
+                        textType: TextInputType.name),
+                  ),
+                  Gap(20.0),
+                  SizedBox(
+                    height: 80,
+                    width: MediaQuery.of(context).size.width / 2.2,
+                    child: TextFieldWithValidator(
+                        onChange: (p0) {
+                          isNameChanged();
+                          setState(() {});
+                        },
+                        controller: _lastNameController!,
+                        getLabels: getLabels.firstName,
+                        validator: (lastName) {
+                          return lastName!.isNotEmpty
+                              ? null
+                              : getLabels.fieldMustNotBeEmpty;
+                        },
+                        textType: TextInputType.name),
+                  )
+                ],
+              )
+            ],
+          ),
         ),
       ),
     );

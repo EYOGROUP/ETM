@@ -46,91 +46,95 @@ class _InfoPageState extends State<InfoPage> {
           Theme.of(context).colorScheme.primaryContainer.withOpacity(0.78),
       useSafeArea: true,
       context: context,
-      builder: (context) => Form(
-        key: _formKey,
-        child: Container(
-          padding: EdgeInsets.all(15.0),
-          decoration: BoxDecoration(
-              borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(12.0),
-                  topRight: Radius.circular(12.0))),
-          child: StatefulBuilder(
-            builder: (context, setState) => Row(
-              textBaseline: TextBaseline.ideographic,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                SizedBox(
-                  width: MediaQuery.of(context).size.width / 1.7,
-                  height: 70.0,
-                  child: TextFieldWithValidator(
-                      suffixIcon: IconButton(
-                          onPressed: () {
-                            _userNameController?.clear();
-                            setState(() {});
-                          },
-                          icon: Icon(Icons.clear)),
-                      controller: _userNameController!,
-                      maxLength: limitChar,
-                      getLabels: getLabels.userName,
-                      onChange: (userName) {
-                        setState(() {
-                          char = userName!.length;
-                        });
-                        userProvider
-                            .isUserNameAlreadyUser(
-                                userNameChoosed: userName!, context: context)
-                            .then(
-                          (isUserNameExists) {
-                            if (isUserNameExists) {
-                              setState(() {
-                                isUserNameAlreadyExists = isUserNameExists;
-                              });
-                            } else {
-                              setState(() {
-                                isUserNameAlreadyExists = isUserNameExists;
-                              });
-                            }
-                          },
-                        );
-                      },
-                      validator: (userName) {
-                        if (userName == null || userName.isEmpty) {
-                          return getLabels.fieldMustNotBeEmpty;
-                        } else {
-                          if (userData["userName"] != userName) {
-                            if (isUserNameAlreadyExists) {
-                              return "username exists";
-                            }
-                          }
-                        }
-                        return null;
-                      },
-                      textType: TextInputType.name),
-                ),
-                Gap(MediaQuery.of(context).size.width * 0.01),
-                Row(
-                  textBaseline: TextBaseline.alphabetic,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Gap(MediaQuery.of(context).size.width * 0.01),
-                    Text(
-                      '$char/$limitChar',
-                      style: TextStyle(fontSize: 16.0),
-                    ),
-                    Gap(MediaQuery.of(context).size.width * 0.01),
-                    TextButton(
-                        onPressed: () {
-                          if (_formKey.currentState!.validate()) {
-                            editUserName(userProvider: userProvider);
-                          }
+      builder: (context) => SingleChildScrollView(
+        padding:
+            EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        child: Form(
+          key: _formKey,
+          child: Container(
+            padding: EdgeInsets.all(20.0),
+            decoration: BoxDecoration(
+                borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(12.0),
+                    topRight: Radius.circular(12.0))),
+            child: StatefulBuilder(
+              builder: (context, setState) => Row(
+                textBaseline: TextBaseline.ideographic,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    width: MediaQuery.of(context).size.width / 1.7,
+                    height: 70.0,
+                    child: TextFieldWithValidator(
+                        suffixIcon: IconButton(
+                            onPressed: () {
+                              _userNameController?.clear();
+                              setState(() {});
+                            },
+                            icon: Icon(Icons.clear)),
+                        controller: _userNameController!,
+                        maxLength: limitChar,
+                        getLabels: getLabels.userName,
+                        onChange: (userName) {
+                          setState(() {
+                            char = userName!.length;
+                          });
+                          userProvider
+                              .isUserNameAlreadyUser(
+                                  userNameChoosed: userName!, context: context)
+                              .then(
+                            (isUserNameExists) {
+                              if (isUserNameExists) {
+                                setState(() {
+                                  isUserNameAlreadyExists = isUserNameExists;
+                                });
+                              } else {
+                                setState(() {
+                                  isUserNameAlreadyExists = isUserNameExists;
+                                });
+                              }
+                            },
+                          );
                         },
-                        child: Text(
-                          getLabels.send,
-                          style: TextStyle(fontSize: 16.0),
-                        ))
-                  ],
-                ),
-              ],
+                        validator: (userName) {
+                          if (userName == null || userName.isEmpty) {
+                            return getLabels.fieldMustNotBeEmpty;
+                          } else {
+                            if (userData["userName"] != userName) {
+                              if (isUserNameAlreadyExists) {
+                                return "username exists";
+                              }
+                            }
+                          }
+                          return null;
+                        },
+                        textType: TextInputType.name),
+                  ),
+                  Gap(MediaQuery.of(context).size.width * 0.01),
+                  Row(
+                    textBaseline: TextBaseline.alphabetic,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Gap(MediaQuery.of(context).size.width * 0.01),
+                      Text(
+                        '$char/$limitChar',
+                        style: TextStyle(fontSize: 16.0),
+                      ),
+                      Gap(MediaQuery.of(context).size.width * 0.01),
+                      TextButton(
+                          onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                              editUserName(userProvider: userProvider);
+                            }
+                          },
+                          child: Text(
+                            getLabels.send,
+                            style: TextStyle(fontSize: 16.0),
+                          ))
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -193,166 +197,168 @@ class _InfoPageState extends State<InfoPage> {
       appBar: AppBar(
         title: Text(getLabels.info),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            getLabels.aboutYou,
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
-          ),
-          Gap(5.0),
-          CardLeadingAndTrailing(
-            leading: getLabels.name,
-            trailing: "${userData["firstName"]} ${userData["lastName"]}",
-            onTap: () async {
-              var userDataGet =
-                  await Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => EditNamePage(
-                  userData: userData,
-                ),
-              ));
-              if (!mounted) return;
-              if (userDataGet != null) {
-                if (userDataGet.isNotEmpty) {
-                  setState(() {
-                    userData = userDataGet;
-                  });
+      body: SingleChildScrollView(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              getLabels.aboutYou,
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16.0),
+            ),
+            Gap(5.0),
+            CardLeadingAndTrailing(
+              leading: getLabels.name,
+              trailing: "${userData["firstName"]} ${userData["lastName"]}",
+              onTap: () async {
+                var userDataGet =
+                    await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => EditNamePage(
+                    userData: userData,
+                  ),
+                ));
+                if (!mounted) return;
+                if (userDataGet != null) {
+                  if (userDataGet.isNotEmpty) {
+                    setState(() {
+                      userData = userDataGet;
+                    });
+                  }
                 }
-              }
-            },
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.userName,
-            trailing: userData["userName"],
-            onTap: () {
-              showEditUsername(
-                  getLabels: getLabels, userProvider: userProvider);
-            },
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.gender,
-            trailing: userData["gender"] != null && userData["gender"] != ""
-                ? getGenderString(
-                    gender: userData["gender"], getLabels: getLabels)
-                : getLabels.none,
-            onTap: () {
-              if (userProvider.isUserAlreadyHasGender(
-                  context: context, userData: userData)) {
-                return;
-              }
-              showModalBottomSheet(
-                context: context,
-                builder: (context) => SingleChildScrollView(
-                  padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).viewInsets.bottom),
-                  child: Container(
-                    padding: EdgeInsets.all(30.0),
-                    child: Column(
-                      children: [
-                        DropdownButtonFormField2(
-                          dropdownStyleData: DropdownStyleData(
-                              direction: DropdownDirection.left),
-                          decoration: InputDecoration(
-                              border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12.0))),
-                          hint: Text(getLabels.selectGender),
-                          items: genders.map(
-                            (gender) {
-                              String? genderShow;
-                              if (gender == Gender.male) {
-                                genderShow = getLabels.male;
-                              } else if (gender == Gender.female) {
-                                genderShow = getLabels.female;
-                              } else {
-                                genderShow = getLabels.noDisplay;
-                              }
-                              return DropdownMenuItem(
-                                  value: gender, child: Text(genderShow));
+              },
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.userName,
+              trailing: userData["userName"],
+              onTap: () {
+                showEditUsername(
+                    getLabels: getLabels, userProvider: userProvider);
+              },
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.gender,
+              trailing: userData["gender"] != null && userData["gender"] != ""
+                  ? getGenderString(
+                      gender: userData["gender"], getLabels: getLabels)
+                  : getLabels.none,
+              onTap: () {
+                if (userProvider.isUserAlreadyHasGender(
+                    context: context, userData: userData)) {
+                  return;
+                }
+                showModalBottomSheet(
+                  context: context,
+                  builder: (context) => SingleChildScrollView(
+                    padding: EdgeInsets.only(
+                        bottom: MediaQuery.of(context).viewInsets.bottom),
+                    child: Container(
+                      padding: EdgeInsets.all(30.0),
+                      child: Column(
+                        children: [
+                          DropdownButtonFormField2(
+                            dropdownStyleData: DropdownStyleData(
+                                direction: DropdownDirection.left),
+                            decoration: InputDecoration(
+                                border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12.0))),
+                            hint: Text(getLabels.selectGender),
+                            items: genders.map(
+                              (gender) {
+                                String? genderShow;
+                                if (gender == Gender.male) {
+                                  genderShow = getLabels.male;
+                                } else if (gender == Gender.female) {
+                                  genderShow = getLabels.female;
+                                } else {
+                                  genderShow = getLabels.noDisplay;
+                                }
+                                return DropdownMenuItem(
+                                    value: gender, child: Text(genderShow));
+                              },
+                            ).toList(),
+                            onChanged: (gender) {
+                              setState(() {
+                                selectedGender = gender.toString();
+                              });
                             },
-                          ).toList(),
-                          onChanged: (gender) {
-                            setState(() {
-                              selectedGender = gender.toString();
-                            });
-                          },
-                        ),
-                        Gap(40.0),
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 10.0),
-                          child: Row(
-                            children: [
-                              Expanded(
-                                child: ElevatedButtonCreated(
-                                    onTap: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                    textWidget: Text(getLabels.cancel)),
-                              ),
-                              Gap(20.0),
-                              Expanded(
-                                child: ElevatedButtonCreated(
-                                    onTap: () {
-                                      editUserGender(
-                                          userProvider: userProvider);
-                                    },
-                                    textWidget: Text(getLabels.confirm)),
-                              ),
-                            ],
                           ),
-                        )
-                      ],
+                          Gap(40.0),
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 10.0),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: ElevatedButtonCreated(
+                                      onTap: () {
+                                        Navigator.of(context).pop();
+                                      },
+                                      textWidget: Text(getLabels.cancel)),
+                                ),
+                                Gap(20.0),
+                                Expanded(
+                                  child: ElevatedButtonCreated(
+                                      onTap: () {
+                                        editUserGender(
+                                            userProvider: userProvider);
+                                      },
+                                      textWidget: Text(getLabels.confirm)),
+                                ),
+                              ],
+                            ),
+                          )
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              );
-            },
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.phone,
-            trailing: '+${userData["phoneCode"]} ${userData["phoneNumber"]}',
-            onTap: () async {
-              final userDataGetFromEdit =
-                  await Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => EditPhonePage(
-                  userDataGet: userData,
-                ),
-              ));
-              if (userDataGetFromEdit != null) {
-                if (userData.isNotEmpty) {
-                  setState(() {
-                    userData = userDataGetFromEdit;
-                  });
+                );
+              },
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.phone,
+              trailing: '+${userData["phoneCode"]} ${userData["phoneNumber"]}',
+              onTap: () async {
+                final userDataGetFromEdit =
+                    await Navigator.of(context).push(MaterialPageRoute(
+                  builder: (context) => EditPhonePage(
+                    userDataGet: userData,
+                  ),
+                ));
+                if (userDataGetFromEdit != null) {
+                  if (userData.isNotEmpty) {
+                    setState(() {
+                      userData = userDataGetFromEdit;
+                    });
+                  }
                 }
-              }
-            },
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.email,
-            trailing: userData["email"],
-            onTap: () {},
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.accountType,
-            trailing: userData["role"] != null && userData["role"] != ''
-                ? userData["roleData"]["name"]
-                    [eTMProvider.getCurrentLocalSystemLanguage()]
-                : getLabels.none,
-            onTap: () {},
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.accountStatus,
-            trailing: userData["isVerified"]
-                ? getLabels.verified
-                : getLabels.notVerified,
-            onTap: () {},
-          ),
-          CardLeadingAndTrailing(
-            leading: getLabels.premiumStatus,
-            trailing:
-                userData["isPremium"] ? getLabels.active : getLabels.inactive,
-            onTap: () {},
-          ),
-        ],
+              },
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.email,
+              trailing: userData["email"],
+              onTap: () {},
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.accountType,
+              trailing: userData["role"] != null && userData["role"] != ''
+                  ? userData["roleData"]["name"]
+                      [eTMProvider.getCurrentLocalSystemLanguage()]
+                  : getLabels.none,
+              onTap: () {},
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.accountStatus,
+              trailing: userData["isVerified"]
+                  ? getLabels.verified
+                  : getLabels.notVerified,
+              onTap: () {},
+            ),
+            CardLeadingAndTrailing(
+              leading: getLabels.premiumStatus,
+              trailing:
+                  userData["isPremium"] ? getLabels.active : getLabels.inactive,
+              onTap: () {},
+            ),
+          ],
+        ),
       ),
     );
   }

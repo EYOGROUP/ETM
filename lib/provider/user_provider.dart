@@ -105,6 +105,16 @@ class UserProvider extends ChangeNotifier {
       if (!mounted) return;
       if (isUserRegistred) {
         final userId = FirebaseAuth.instance.currentUser?.uid;
+
+        final normalUserRoleGet = await FirebaseFirestore.instance
+            .collection('roles')
+            .where('name.en', isEqualTo: 'Normal User')
+            .get();
+        if (!mounted) return;
+        String normalUserRoleId = '';
+        if (normalUserRoleGet.docs.isNotEmpty) {
+          normalUserRoleId = normalUserRoleGet.docs.first.data()['id'];
+        }
         ETMUser user = ETMUser(
             id: userId!,
             firstName: firstName,
@@ -116,7 +126,7 @@ class UserProvider extends ChangeNotifier {
             phoneCode: phoneCode ?? '',
             isVerified: false,
             isPremium: false,
-            role: 'soon',
+            role: normalUserRoleId,
             createdAt: DateTime.now(),
             notificationsEnabled: false);
         await FirebaseFirestore.instance

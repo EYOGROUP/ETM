@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:day_night_switcher/day_night_switcher.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -243,6 +244,7 @@ class _ProfilePageState extends State<ProfilePage> {
                                           onTap: () async {
                                             FirebaseAuth.instance.signOut();
                                             print(userData);
+
                                             // Role role =
                                             //     Role(id: const Uuid().v4(), name: {
                                             //   'en': 'Normal User',
