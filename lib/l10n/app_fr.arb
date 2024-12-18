@@ -214,8 +214,13 @@
     "switchToCloudCategories":"Passez aux catégories synchronisées avec le cloud.",
     "login":"Connexion",
     "emailDoesNotExist":"Cette adresse e-mail n'existe pas.",
-    "emailEntryCheck": "L'adresse e-mail que vous avez saisie ne semble pas exister. Veuillez vérifier votre saisie et réessayer."
-
+    "emailEntryCheck": "L'adresse e-mail que vous avez saisie ne semble pas exister. Veuillez vérifier votre saisie et réessayer.",
+    "notificationPreferences":"Préférences de notifications",
+    "verificationSettings":"Paramètres de vérification",
+    "paymentSettings":"Paramètres de paiement",
+    "pushNotifications":"Notifications push",
+    "emailNotifications":"Notifications par e-mail",
+    "inAppNotifications":"Notifications dans l'application"
 
 
 }

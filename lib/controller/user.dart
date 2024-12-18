@@ -12,8 +12,11 @@ class ETMUser {
   final bool isVerified;
   final String role;
   final DateTime createdAt;
-  final bool notificationsEnabled;
+
   final String phoneCode;
+  final bool isPushNotificationsActive;
+  final bool isInAppNotificationsActive;
+  final bool isEmailNotificationsActive;
   String? gender;
 
   ETMUser({
@@ -28,8 +31,10 @@ class ETMUser {
     required this.isPremium,
     required this.role,
     required this.createdAt,
-    required this.notificationsEnabled,
     required this.phoneCode,
+    required this.isPushNotificationsActive,
+    required this.isInAppNotificationsActive,
+    required this.isEmailNotificationsActive,
     this.gender,
   });
 
@@ -48,7 +53,9 @@ class ETMUser {
       'createdAt': createdAt,
       'role': role,
       'gender': gender ?? '',
-      'notificationsEnabled': notificationsEnabled,
+      'isInAppNotificationsActive': isInAppNotificationsActive,
+      'isEmailNotificationsActive': isEmailNotificationsActive,
+      'isPushNotificationsActive': isPushNotificationsActive,
     };
   }
 }
@@ -90,9 +97,11 @@ class BusinessUser extends ETMUser {
     required super.isPremium,
     required super.role,
     required super.createdAt,
-    required super.notificationsEnabled,
     required super.userName,
     required super.phoneCode,
     super.gender,
+    required super.isInAppNotificationsActive,
+    required super.isPushNotificationsActive,
+    required super.isEmailNotificationsActive,
   });
 }

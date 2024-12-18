@@ -115,6 +115,7 @@ class UserProvider extends ChangeNotifier {
         if (normalUserRoleGet.docs.isNotEmpty) {
           normalUserRoleId = normalUserRoleGet.docs.first.data()['id'];
         }
+        //TODO make localisation request
         ETMUser user = ETMUser(
             id: userId!,
             firstName: firstName,
@@ -128,7 +129,9 @@ class UserProvider extends ChangeNotifier {
             isPremium: false,
             role: normalUserRoleId,
             createdAt: DateTime.now(),
-            notificationsEnabled: false);
+            isEmailNotificationsActive: true,
+            isInAppNotificationsActive: true,
+            isPushNotificationsActive: false);
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userId)
@@ -311,5 +314,35 @@ class UserProvider extends ChangeNotifier {
             value: error.message.toString(), context: context);
       }
     }
+  }
+
+  // Update Notifications in Firebase
+  Future<void> updateNotificationsUser(
+      {required BuildContext context,
+      required Map<String, dynamic> updatedData,
+      required String userId}) async {
+    if (updatedData.isNotEmpty) {
+      try {
+        await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .update(updatedData);
+      } on FirebaseException catch (error) {
+        if (context.mounted) {
+          Constants.showInSnackBar(
+              value: error.message.toString(), context: context);
+        }
+      }
+    }
+  }
+
+  // check if User Email Verified
+  Future<bool> isEmailVerified({required BuildContext context}) async {
+    bool isEmailVerifiedCheck = false;
+    await FirebaseAuth.instance.currentUser?.reload();
+    if (context.mounted) {
+      isEmailVerifiedCheck = FirebaseAuth.instance.currentUser!.emailVerified;
+    }
+    return isEmailVerifiedCheck;
   }
 }

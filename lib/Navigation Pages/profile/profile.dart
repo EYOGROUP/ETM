@@ -13,17 +13,15 @@ import 'package:time_management/Navigation%20Pages/contact_us.dart';
 import 'package:time_management/Navigation%20Pages/login_page.dart';
 import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.dart';
 import 'package:time_management/Navigation%20Pages/profile/infos/info.dart';
+import 'package:time_management/Navigation%20Pages/profile/privacy_settings/Navigation/privacy_settings.dart';
 import 'package:time_management/Navigation%20Pages/register_page.dart';
 import 'package:time_management/constants.dart';
-import 'package:time_management/controller/role.dart';
 
 import 'package:time_management/db/mydb.dart';
-import 'package:time_management/provider/role_provider.dart';
 
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/user_provider.dart';
-import 'package:uuid/uuid.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -242,7 +240,21 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                         SettingsCardButton(
                                           onTap: () async {
-                                            FirebaseAuth.instance.signOut();
+                                            Map<String, dynamic> userDataGet =
+                                                await Navigator.of(context)
+                                                    .push(MaterialPageRoute(
+                                              builder: (context) =>
+                                                  PrivacySettingsUser(
+                                                userDataGet: userData ?? {},
+                                              ),
+                                            ));
+                                            if (!mounted) return;
+                                            if (userDataGet.isNotEmpty) {
+                                              setState(() {
+                                                userData = userDataGet;
+                                              });
+                                            }
+                                            // FirebaseAuth.instance.signOut();
                                             print(userData);
 
                                             // Role role =

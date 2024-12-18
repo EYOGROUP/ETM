@@ -214,8 +214,12 @@
     "switchToCloudCategories":"Switch to categories synced with the cloud.",
     "login":"Login",
     "emailDoesNotExist":"That email address doesn't exist.",
-    "emailEntryCheck": "The email address you've entered doesn't appear to exist. Please check your entry and try again."
+    "emailEntryCheck": "The email address you've entered doesn't appear to exist. Please check your entry and try again.",
+    "notificationPreferences":"Notification Preferences",
+    "verificationSettings":"Verification Settings",
+    "paymentSettings":"Payment Settings",
+    "pushNotifications":"Push Notifications",
+    "emailNotifications":"Email Notifications",
+    "inAppNotifications":"In-App Notifications"
 
-
-    
 }
