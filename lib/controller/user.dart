@@ -18,6 +18,8 @@ class ETMUser {
   final bool isInAppNotificationsActive;
   final bool isEmailNotificationsActive;
   String? gender;
+  String? billingEmailAddress;
+  String? payPalEmailAddress;
 
   ETMUser({
     required this.id,
@@ -35,7 +37,9 @@ class ETMUser {
     required this.isPushNotificationsActive,
     required this.isInAppNotificationsActive,
     required this.isEmailNotificationsActive,
+    this.billingEmailAddress,
     this.gender,
+    this.payPalEmailAddress,
   });
 
   Map<String, dynamic> toMap() {
@@ -53,6 +57,8 @@ class ETMUser {
       'createdAt': createdAt,
       'role': role,
       'gender': gender ?? '',
+      "billingEmailAddress": billingEmailAddress,
+      "payPalEmailAddress": payPalEmailAddress,
       'isInAppNotificationsActive': isInAppNotificationsActive,
       'isEmailNotificationsActive': isEmailNotificationsActive,
       'isPushNotificationsActive': isPushNotificationsActive,

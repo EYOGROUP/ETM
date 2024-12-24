@@ -7,7 +7,7 @@ import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/user.dart';
 import 'package:time_management/provider/tm_provider.dart';
-import 'package:uuid/uuid.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class UserProvider extends ChangeNotifier {
   Future<bool> isUserLogin({required BuildContext context}) async {
@@ -117,21 +117,23 @@ class UserProvider extends ChangeNotifier {
         }
         //TODO make localisation request
         ETMUser user = ETMUser(
-            id: userId!,
-            firstName: firstName,
-            lastName: lastName,
-            userName: userName,
-            email: email,
-            phoneCountryCode: phoneCountryCode ?? '',
-            phoneNumber: phoneNumber ?? '',
-            phoneCode: phoneCode ?? '',
-            isVerified: false,
-            isPremium: false,
-            role: normalUserRoleId,
-            createdAt: DateTime.now(),
-            isEmailNotificationsActive: true,
-            isInAppNotificationsActive: true,
-            isPushNotificationsActive: false);
+          id: userId!,
+          firstName: firstName,
+          lastName: lastName,
+          userName: userName,
+          email: email,
+          phoneCountryCode: phoneCountryCode ?? '',
+          phoneNumber: phoneNumber ?? '',
+          phoneCode: phoneCode ?? '',
+          isVerified: false,
+          isPremium: false,
+          role: normalUserRoleId,
+          createdAt: DateTime.now(),
+          isEmailNotificationsActive: true,
+          isInAppNotificationsActive: true,
+          isPushNotificationsActive: false,
+          billingEmailAddress: email,
+        );
         await FirebaseFirestore.instance
             .collection('users')
             .doc(userId)
@@ -344,5 +346,129 @@ class UserProvider extends ChangeNotifier {
       isEmailVerifiedCheck = FirebaseAuth.instance.currentUser!.emailVerified;
     }
     return isEmailVerifiedCheck;
+  }
+
+  // send Email for Verification
+  Future<void> sendUserVerificationEmail(
+      {required BuildContext context}) async {
+    try {
+      await FirebaseAuth.instance.currentUser?.sendEmailVerification();
+      await FirebaseAuth.instance.currentUser?.reload();
+    } on FirebaseAuthException catch (error) {
+      if (context.mounted) {
+        return Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
+  }
+
+  // Save Email Paypal in Firebase
+  Future<void> savePayPalInFirebase({
+    required BuildContext context,
+    required Map<String, dynamic> userData,
+    required Map<String, dynamic> payPalEmailAddress,
+  }) async {
+    await FirebaseFirestore.instance
+        .collection('users')
+        .doc(userData["id"])
+        .update(payPalEmailAddress);
+  }
+
+//  delete PayPal Email From Address
+  Future<void> deleteUserPayPalEmail({
+    required BuildContext context,
+    required Map<String, dynamic> userData,
+    required Map<String, dynamic> payPalEmailDelete,
+  }) async {
+    try {
+      await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userData["id"])
+          .update(payPalEmailDelete);
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        return Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
+  }
+
+  // logout User
+  Future<void> logoutUser({required BuildContext context}) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      if (!context.mounted) return;
+      bool isUserLoginCheck = await isUserLogin(context: context);
+      if (!context.mounted) return;
+      if (!isUserLoginCheck) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => PagesController(
+              indexPage: 2,
+            ),
+          ),
+          (route) => false,
+        );
+      }
+    } on FirebaseAuthException catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
+  }
+
+  // change User password
+
+  //Check the CurrentPassword
+  Future<bool> isNoProblemWithEmailOrPassword(
+      {required BuildContext context,
+      required String email,
+      required String password,
+      required User user}) async {
+    bool? isCurrentPasswordCorrect;
+
+    try {
+      AuthCredential credential =
+          EmailAuthProvider.credential(email: email, password: password);
+      await user.reauthenticateWithCredential(credential);
+      isCurrentPasswordCorrect = true;
+    } on FirebaseAuthException catch (error) {
+      isCurrentPasswordCorrect = false;
+      if (context.mounted) {
+        if (error.code == "wrong-password") {
+          Constants.showInSnackBar(
+              value: "Error: Wrong password provided.", context: context);
+        } else if (error.code == "invalid-credential") {
+          Constants.showInSnackBar(
+              value:
+                  "Error: The credential is invalid. Double-check the password.",
+              context: context);
+        }
+      }
+    }
+    return isCurrentPasswordCorrect;
+  }
+
+// Change Password
+  Future<void> changePassword(
+      {required BuildContext context,
+      required String newPassword,
+      required String email,
+      required currentPassword,
+      required AppLocalizations labels}) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    bool isCurrentPasswordCorrect = await isNoProblemWithEmailOrPassword(
+        user: user!, context: context, email: email, password: currentPassword);
+    if (!context.mounted) return;
+    if (!isCurrentPasswordCorrect) return;
+    if (currentPassword == newPassword) {
+      return Constants.showInSnackBar(
+          value: labels.passwordCannotBeSame, context: context);
+    }
+
+    await user.updatePassword(newPassword);
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
   }
 }

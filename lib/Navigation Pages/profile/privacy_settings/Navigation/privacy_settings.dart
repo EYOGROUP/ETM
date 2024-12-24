@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:time_management/Navigation%20Pages/profile/privacy_settings/notification_settings.dart';
+import 'package:time_management/Navigation%20Pages/profile/privacy_settings/payment_settings_user.dart';
 import 'package:time_management/Navigation%20Pages/profile/privacy_settings/verification_settings.dart';
 import 'package:time_management/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -69,7 +70,13 @@ class _PrivacySettingsUserState extends State<PrivacySettingsUser> {
           SettingsCardButton(
             iconData: Icons.payments_outlined,
             title: getLabels.paymentSettings,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (context) => PaymentSettingsUser(
+                  userDataGet: userData ?? {},
+                ),
+              ));
+            },
           ),
         ],
       ),

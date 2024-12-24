@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 enum InfosApp {
   privacyPolicy,
@@ -57,12 +58,53 @@ class Constants {
     );
   }
 
+  static Future<Widget?> showDialogConfirmation(
+      {required BuildContext context,
+      required Function() onConfirm,
+      required String title,
+      required String message}) async {
+    final getLabels = AppLocalizations.of(context)!;
+    return showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Center(
+          child: Text(title),
+        ),
+        content: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: <Widget>[
+            Expanded(
+              child: Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            )
+          ],
+        ),
+        actions: [
+          TextButton(
+              child: Text(getLabels.cancel),
+              onPressed: () {
+                Navigator.of(context).pop();
+              }),
+          TextButton(onPressed: onConfirm, child: Text(getLabels.confirm))
+        ],
+      ),
+    );
+  }
+
   static Text leadingAndTitleTextInRow(
       {required String leadingTextKey,
       required String textValue,
+      Color? textColor,
       double textSize = 16.0}) {
     return Text.rich(
-        style: TextStyle(fontSize: textSize),
+        style: TextStyle(fontSize: textSize, color: textColor),
         TextSpan(children: [
           TextSpan(text: '$leadingTextKey '),
           TextSpan(
@@ -81,6 +123,7 @@ class TextFieldWithValidator extends StatelessWidget {
       this.obscureText = false,
       this.suffixIcon,
       this.onChange,
+      this.autovalidateMode,
       this.maxLength});
 
   final TextEditingController controller;
@@ -91,6 +134,7 @@ class TextFieldWithValidator extends StatelessWidget {
   bool obscureText = false;
   Widget? suffixIcon;
   final String? Function(String?)? onChange;
+  AutovalidateMode? autovalidateMode;
 
   @override
   Widget build(BuildContext context) {
@@ -99,7 +143,7 @@ class TextFieldWithValidator extends StatelessWidget {
       controller: controller,
       keyboardType: textType,
       maxLength: maxLength,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
+      autovalidateMode: autovalidateMode ?? AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
           counter: Text(''),
           suffixIcon: suffixIcon,
@@ -121,14 +165,16 @@ class TextFieldWithValidator extends StatelessWidget {
 }
 
 class ElevatedButtonCreated extends StatelessWidget {
-  const ElevatedButtonCreated({
+  ElevatedButtonCreated({
     super.key,
     required this.onTap,
     required this.textWidget,
+    this.removeBackgroundColor = false,
   });
 
   final Widget textWidget;
   final Function()? onTap;
+  bool removeBackgroundColor;
 
   @override
   Widget build(BuildContext context) {
@@ -139,10 +185,16 @@ class ElevatedButtonCreated extends StatelessWidget {
               MediaQuery.of(context).size.width * 0.88,
               MediaQuery.of(context).size.height * 0.055,
             )),
+            side: removeBackgroundColor
+                ? WidgetStatePropertyAll(BorderSide(
+                    color: Theme.of(context).colorScheme.primaryContainer,
+                    width: 1.0))
+                : null,
             shape: WidgetStatePropertyAll(RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12.0))),
-            backgroundColor: WidgetStatePropertyAll(
-                Theme.of(context).colorScheme.primaryContainer)),
+            backgroundColor: WidgetStatePropertyAll(removeBackgroundColor
+                ? null
+                : Theme.of(context).colorScheme.primaryContainer)),
         onPressed: onTap,
         child: textWidget);
   }

@@ -67,6 +67,7 @@ dependencies:
   flutter_multi_formatter: ^2.13.0
   dropdown_button2: ^2.3.9
   connectivity_plus: ^6.1.0
+  credit_card_type_detector: ^3.0.0
 
   
  

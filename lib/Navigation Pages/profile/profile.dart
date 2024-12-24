@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:day_night_switcher/day_night_switcher.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
@@ -12,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/contact_us.dart';
 import 'package:time_management/Navigation%20Pages/login_page.dart';
 import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.dart';
+import 'package:time_management/Navigation%20Pages/profile/account/account_user.dart';
 import 'package:time_management/Navigation%20Pages/profile/infos/info.dart';
 import 'package:time_management/Navigation%20Pages/profile/privacy_settings/Navigation/privacy_settings.dart';
 import 'package:time_management/Navigation%20Pages/register_page.dart';
@@ -82,7 +82,7 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
-          title: Text(getLabels.infos),
+          title: Text(getLabels.profileSettings),
           centerTitle: true,
         ),
         body: LayoutBuilder(
@@ -278,7 +278,14 @@ class _ProfilePageState extends State<ProfilePage> {
                                           title: getLabels.profileSettings,
                                         ),
                                         SettingsCardButton(
-                                          onTap: () {},
+                                          onTap: () {
+                                            Navigator.of(context)
+                                                .push(MaterialPageRoute(
+                                              builder: (context) => UserAccount(
+                                                userDataGet: userData ?? {},
+                                              ),
+                                            ));
+                                          },
                                           iconData:
                                               Icons.manage_accounts_outlined,
                                           title: getLabels.account,

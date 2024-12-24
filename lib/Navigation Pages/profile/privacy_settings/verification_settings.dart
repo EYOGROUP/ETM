@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
+import 'package:time_management/Navigation%20Pages/profile/privacy_settings/verification_email.dart';
 import 'package:time_management/provider/user_provider.dart';
 
 class VerificationSettingsUser extends StatefulWidget {
@@ -102,9 +103,18 @@ class _VerificationSettingsUserState extends State<VerificationSettingsUser> {
                           Icons.check_circle_outline,
                           color: Theme.of(context).colorScheme.primary,
                         )
-                      : Icon(
-                          Icons.error_outline,
-                          color: Theme.of(context).colorScheme.error,
+                      : GestureDetector(
+                          onTap: () async {
+                            await Navigator.of(context).push(MaterialPageRoute(
+                              builder: (context) => VerificationEmailUser(),
+                            ));
+                            if (!mounted) return;
+                            getIfEmailVerified();
+                          },
+                          child: Icon(
+                            Icons.error_outline,
+                            color: Theme.of(context).colorScheme.error,
+                          ),
                         )
                   : Text(
                       point,
