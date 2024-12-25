@@ -471,4 +471,33 @@ class UserProvider extends ChangeNotifier {
     if (!context.mounted) return;
     Navigator.of(context).pop();
   }
+
+  // delete account
+  Future<void> deleteUserAccount({
+    required BuildContext context,
+    required AppLocalizations labels,
+  }) async {
+    await Constants.showDialogConfirmation(
+        context: context,
+        onConfirm: () async {
+          try {
+            await FirebaseAuth.instance.currentUser?.delete();
+            if (!context.mounted) return;
+            Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => PagesController(
+                  indexPage: 2,
+                ),
+              ),
+              (route) => false,
+            );
+          } on FirebaseAuthException catch (error) {
+            if (context.mounted) {
+              Constants.showInSnackBar(value: error.code, context: context);
+            }
+          }
+        },
+        title: labels.delete,
+        message: labels.deleteAccountConfirmation);
+  }
 }

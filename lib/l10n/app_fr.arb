@@ -251,5 +251,7 @@
     "updatePassword": "Mettre à jour le mot de passe",
     "changePassword": "Changer le mot de passe",
     "resetPassword": "Réinitialiser le mot de passe",
-    "passwordCannotBeSame": "Votre nouveau mot de passe ne peut pas être identique à l'actuel."
+    "passwordCannotBeSame": "Votre nouveau mot de passe ne peut pas être identique à l'actuel.",
+    "delete": "SUPPRIMER",
+    "deleteAccountConfirmation": "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible."
 }

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/welcome.dart';
 import 'package:time_management/firebase_options.dart';
 import 'package:time_management/provider/category_provider.dart';
+import 'package:time_management/provider/support_provider.dart';
 import 'package:time_management/provider/role_provider.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:time_management/provider/user_provider.dart';
@@ -46,6 +47,9 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(
           create: (context) => RoleProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => SupportProvider(),
         ),
       ],
       child: Consumer<TimeManagementPovider>(

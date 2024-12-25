@@ -304,7 +304,8 @@ class _ProfilePageState extends State<ProfilePage> {
                           trailing: InkWell(
                             onTap: () =>
                                 Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => const ContactUs(),
+                              builder: (context) =>
+                                  ContactUs(userDataGet: userData ?? {}),
                             )),
                             child: Icon(Platform.isIOS
                                 ? Icons.arrow_forward_ios_rounded

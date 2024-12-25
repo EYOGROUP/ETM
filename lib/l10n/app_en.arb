@@ -251,6 +251,8 @@
     "updatePassword": "Update Password",
     "changePassword": "Change Password",
     "resetPassword": "Reset Password",
-    "passwordCannotBeSame": "Your new password cannot be the same as the current password."
+    "passwordCannotBeSame": "Your new password cannot be the same as the current password.",
+    "delete": "DELETE",
+    "deleteAccountConfirmation": "Are you sure you want to delete your account? This action cannot be undone."
 
 }
