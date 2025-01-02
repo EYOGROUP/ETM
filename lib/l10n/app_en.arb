@@ -249,10 +249,16 @@
     "newPassword": "New Password",
     "confirmNewPassword": "Confirm New Password",
     "updatePassword": "Update Password",
-    "changePassword": "Change Password",
     "resetPassword": "Reset Password",
     "passwordCannotBeSame": "Your new password cannot be the same as the current password.",
-    "delete": "DELETE",
-    "deleteAccountConfirmation": "Are you sure you want to delete your account? This action cannot be undone."
-
+    "deleteAccountConfirmation": "Are you sure you want to delete your account? This action cannot be undone.",
+    "resetPasswordInstruction": "Please enter the email address linked to your account, and we'll send you instructions to reset your password.",
+    "checkYourMail": "Check your mail",
+    "passwordRecoveryInstructions": "We have sent password recovery instructions to your email.",
+    "emailNotReceived": "Did not receive the email? Check your spam filter, or try again with another email.",
+    "sendInstructions": "Send Instructions",
+    "didNotReceiveCode": "Didn't receive the code?",
+    "resend": "Resend",
+    "createNewPassword": "Create a new password",
+    "passwordDifferentTip": "Your new password should not be the same as any previously used passwords."
 }

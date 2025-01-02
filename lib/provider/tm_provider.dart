@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ import 'dart:io';
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/category_provider.dart';
+import 'package:time_management/provider/user_provider.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
@@ -460,15 +462,40 @@ class TimeManagementPovider with ChangeNotifier {
   }
 
   Future<bool> isAllBreaksClosed(
-      {required Map<String, dynamic> workDay}) async {
+      {required Map<String, dynamic> workDay,
+      required BuildContext context,
+      required bool isUserExist}) async {
     bool isAllBreaksClosed = true;
-    TrackingDB db = TrackingDB();
-    final getBreaks = await db.readData(
-        sql:
-            "select * from break_sessions where workSessionId = '${workDay['id']}'");
-    List<Map<String, dynamic>> formatBreaksToList = getBreaks
-        .map((breakData) => Map<String, dynamic>.from(breakData))
-        .toList();
+    List<Map<String, dynamic>> formatBreaksToList = [];
+
+    if (isUserExist) {
+      final checkIfBreakSessionsExist = await FirebaseFirestore.instance
+          .collection("breakSessions")
+          .where("workSessionId", isEqualTo: workDay['id'])
+          .limit(1)
+          .get();
+      if (context.mounted) {
+        if (checkIfBreakSessionsExist.size > 0) {
+          final getAllWorkBreaks = await FirebaseFirestore.instance
+              .collection("breakSessions")
+              .where("workSessionId", isEqualTo: workDay['id'])
+              .get();
+          if (context.mounted) {
+            formatBreaksToList = getAllWorkBreaks.docs
+                .map((breakSession) => breakSession.data())
+                .toList();
+          }
+        }
+      }
+    } else {
+      TrackingDB db = TrackingDB();
+      final getBreaks = await db.readData(
+          sql:
+              "select * from break_sessions where workSessionId = '${workDay['id']}'");
+      formatBreaksToList = getBreaks
+          .map((breakData) => Map<String, dynamic>.from(breakData))
+          .toList();
+    }
 
     for (Map<String, dynamic> breakData in formatBreaksToList) {
       if (breakData['endTime'] == '') {

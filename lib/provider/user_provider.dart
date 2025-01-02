@@ -1,9 +1,16 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:email_otp/email_otp.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
+import 'package:time_management/Navigation%20Pages/profile/account/check_email.dart';
+import 'package:time_management/Navigation%20Pages/profile/account/create_new_password.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/user.dart';
 import 'package:time_management/provider/tm_provider.dart';
@@ -499,5 +506,220 @@ class UserProvider extends ChangeNotifier {
         },
         title: labels.delete,
         message: labels.deleteAccountConfirmation);
+  }
+
+  dynamic otpConfing() {
+    EmailOTP();
+    EmailOTP.config(
+        expiry: 60000,
+        appName: "ETM",
+        appEmail: "noreply@eyogroup.com",
+        otpLength: 5,
+        emailTheme: EmailTheme.v7,
+        otpType: OTPType.numeric);
+    String template = '''
+
+<head>
+   <center><h1 style="color: #333;">{{appName}}</h1> </center>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+    .email-container {
+      max-width: 600px;
+      margin: 30px auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .header {
+      font-size: 20px;
+      color: #3b5998;
+      margin-bottom: 20px;
+    }
+    .otp {
+      font-size: 36px;
+      font-weight: bold;
+      color: #28a745;
+      margin: 20px 0;
+    }
+    .content {
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .footer {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #666666;
+    }
+    .footer a {
+      color: #3b5998;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="email-container">
+    <center><div class="header">Email Verification</div></center>
+    <div class="content">
+      <p>Dear User,</p>
+      <p>Your One-Time Password (Code) is:</p>
+      <center><div class="otp">{{otp}}</div></center>
+      <p>Please use this code to complete your login process. Do not share this code with anyone.</p>
+    </div>
+    <center><div class="footer">
+      © <a href="https://www.eyogroup.com">www.eyogroup.com</a>. All rights reserved.
+    </div></center>
+  </div>
+</body>
+
+''';
+    EmailOTP.setTemplate(template: template);
+
+    EmailOTP.setSMTP(
+        emailPort: EmailPort.port465,
+        secureType: SecureType.ssl,
+        host: "mail.eyogroup.com",
+        username: "support@eyogroup.com",
+        password: "789456123eyogroup+");
+  } // send User password reset per Email
+
+  Future<void> sendUserEmailPasswordReset(
+      {required BuildContext context,
+      required String emailGet,
+      GlobalKey<FormState>? formKey,
+      required Map<String, dynamic> userDataGet,
+      bool isInit = true}) async {
+    try {
+      otpConfing();
+      bool? res;
+
+      if (userDataGet.isNotEmpty) {
+        res = await EmailOTP.sendOTP(email: emailGet);
+      } else {
+        if (formKey!.currentState!.validate()) {
+          await FirebaseAuth.instance.sendPasswordResetEmail(email: emailGet);
+        }
+      }
+      if (isInit) {
+        if (res != null && res) {
+          if (!context.mounted) return;
+          Navigator.of(context).push(MaterialPageRoute(
+            builder: (context) => CheckEmailAfteCodeSended(
+              emailGet: emailGet,
+              userDataGet: userDataGet,
+            ),
+          ));
+        }
+      }
+    } on FirebaseAuthException catch (error) {
+      if (context.mounted) {
+        if (error.code == "auth/user-not-found") {
+          Constants.showInSnackBar(value: 'user-not-found', context: context);
+        }
+      }
+    }
+  }
+
+  // check if OTP Code valid
+  bool isCodeConfirmationValid() {
+    return EmailOTP.isOtpExpired();
+  }
+// confirm OTP Confirmation Code
+
+  void valideCodeConfirmation(
+      {required BuildContext context,
+      required String codeGet,
+      required Map<String, dynamic> userData}) {
+    bool isOtpExpired = isCodeConfirmationValid();
+
+    if (!isOtpExpired) {
+      bool isCodeValide = EmailOTP.verifyOTP(otp: codeGet);
+      if (isCodeValide) {
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => CreateNewPasswordUser(userDataGet: userData),
+        ));
+      }
+    } else {
+      return Constants.showInSnackBar(
+          value: "Code Invalid or Expired. try again", context: context);
+    }
+  }
+
+  // reset new Password
+  Future<void> resetUserPassword(
+      {required BuildContext context, required String newpassword}) async {
+    try {
+      bool isUserLogIn = await isUserLogin(context: context);
+      User? user = FirebaseAuth.instance.currentUser;
+      if (!context.mounted) return;
+      print(isUserLogIn);
+      if (user == null) {
+        print("No user is logged in.");
+        return;
+      }
+      if (isUserLogIn) {
+        await user.updatePassword(newpassword);
+      } else {
+        //TODO logi not sign In
+        final dynamic result = await FirebaseAuth.instance
+            .checkActionCode('the_link_from_the_email');
+        if (result != null) {}
+      }
+    } on FirebaseAuthException catch (error) {
+      print(error);
+      if (context.mounted) {
+        Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    }
+  }
+
+  initDeep() async {
+    late StreamSubscription _linkSubscription;
+    final appLinks = AppLinks();
+    // Subscribe to uriLinkStream to handle initial and subsequent links
+    print(await appLinks.getInitialLink());
+    _linkSubscription = appLinks.uriLinkStream.listen((Uri uri) {
+      print("Received URI: $uri");
+
+      // Add your navigation logic based on the URI received
+      if (uri.path == '/etm/reset-password') {
+        // Navigate to the reset password screen if the link is valid
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(
+        //       builder: (context) => ResetPasswordScreen(uri: uri)),
+        // );
+      } else {
+        // Handle other URI paths or show error messages
+        print('Link does not match expected pattern');
+      }
+    });
+
+    // Also handle the first link on app launch
+    await initDeepLinks();
+  }
+
+  Future<void> initDeepLinks() async {
+    final appLinks = AppLinks();
+    final Uri? uri = Uri.base;
+    print(uri);
+    Uri? initialLink = await appLinks.getInitialLink();
+    if (initialLink != null) {
+      print("Initial link: $initialLink");
+      // Navigate based on the initial deep link
+      if (initialLink.path == '/etm/reset-password') {
+        print('he');
+        // Navigator.push(
+        //   context,
+        //   MaterialPageRoute(builder: (context) => ResetPasswordScreen(uri: initialLink)),
+        // );
+      }
+    }
   }
 }

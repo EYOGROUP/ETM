@@ -20,6 +20,7 @@ class ETMUser {
   String? gender;
   String? billingEmailAddress;
   String? payPalEmailAddress;
+  final List<String>? lockedCategories;
 
   ETMUser({
     required this.id,
@@ -37,6 +38,7 @@ class ETMUser {
     required this.isPushNotificationsActive,
     required this.isInAppNotificationsActive,
     required this.isEmailNotificationsActive,
+    this.lockedCategories,
     this.billingEmailAddress,
     this.gender,
     this.payPalEmailAddress,
@@ -62,6 +64,7 @@ class ETMUser {
       'isInAppNotificationsActive': isInAppNotificationsActive,
       'isEmailNotificationsActive': isEmailNotificationsActive,
       'isPushNotificationsActive': isPushNotificationsActive,
+      "lockedCategories": lockedCategories,
     };
   }
 }
@@ -109,5 +112,6 @@ class BusinessUser extends ETMUser {
     required super.isInAppNotificationsActive,
     required super.isPushNotificationsActive,
     required super.isEmailNotificationsActive,
+    super.lockedCategories,
   });
 }

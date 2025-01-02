@@ -3,6 +3,7 @@ class WorkSession {
   final DateTime startTime;
   DateTime? endTime;
   final String categoryId;
+  final String? userId;
   int? durationMinutes;
   int? breakTimeMinutes;
   String? taskDescription;
@@ -11,6 +12,7 @@ class WorkSession {
   WorkSession(
       {required this.id,
       required this.startTime,
+      this.userId,
       this.endTime,
       this.durationMinutes = 0,
       this.breakTimeMinutes = 0,
@@ -29,6 +31,21 @@ class WorkSession {
       'categoryId': categoryId,
       "taskDescription": taskDescription,
       'isCompleted': isCompleted ? 1 : 0,
+    };
+  }
+
+  Map<String, dynamic> cloudToMap() {
+    return {
+      'id': id,
+      'startTime': startTime,
+      'endTime': endTime ?? '',
+      "durationMinutes": durationMinutes ?? 0,
+      "breakTimeMinutes": breakTimeMinutes ?? 0,
+      "createdAt": createdAt,
+      'categoryId': categoryId,
+      "taskDescription": taskDescription,
+      'isCompleted': isCompleted,
+      "userId": userId,
     };
   }
 }

@@ -124,17 +124,19 @@ class TextFieldWithValidator extends StatelessWidget {
       this.suffixIcon,
       this.onChange,
       this.autovalidateMode,
-      this.maxLength});
+      this.maxLength,
+      this.isFieldEnabled});
 
   final TextEditingController controller;
   final String getLabels;
   final String? Function(String?)? validator;
   final TextInputType textType;
-  int? maxLength;
+  final int? maxLength;
   bool obscureText = false;
-  Widget? suffixIcon;
+  final Widget? suffixIcon;
   final String? Function(String?)? onChange;
-  AutovalidateMode? autovalidateMode;
+  final AutovalidateMode? autovalidateMode;
+  final bool? isFieldEnabled;
 
   @override
   Widget build(BuildContext context) {
@@ -143,6 +145,7 @@ class TextFieldWithValidator extends StatelessWidget {
       controller: controller,
       keyboardType: textType,
       maxLength: maxLength,
+      enabled: isFieldEnabled,
       autovalidateMode: autovalidateMode ?? AutovalidateMode.onUserInteraction,
       decoration: InputDecoration(
           counter: Text(''),

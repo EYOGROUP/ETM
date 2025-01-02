@@ -250,8 +250,16 @@
     "newPassword": "Neues Passwort",
     "confirmNewPassword": "Neues Passwort bestätigen",
     "updatePassword": "Passwort aktualisieren",
-    "changePassword": "Passwort ändern",
     "resetPassword": "Passwort zurücksetzen",
-    "passwordCannotBeSame": "Ihr neues Passwort darf nicht mit dem aktuellen Passwort identisch sein."
-
+    "passwordCannotBeSame": "Ihr neues Passwort darf nicht mit dem aktuellen Passwort identisch sein.",
+    "deleteAccountConfirmation": "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
+    "resetPasswordInstruction": "Bitte geben Sie die E-Mail-Adresse ein, die mit Ihrem Konto verknüpft ist. Wir senden Ihnen Anweisungen zum Zurücksetzen Ihres Passworts.",
+    "checkYourMail": "Überprüfen Sie Ihre E-Mails",
+    "passwordRecoveryInstructions": "Wir haben Anweisungen zur Passwortwiederherstellung an Ihre E-Mail gesendet.",
+    "emailNotReceived": "Haben Sie die E-Mail nicht erhalten? Überprüfen Sie Ihren Spam-Filter oder versuchen Sie es erneut mit einer anderen E-Mail-Adresse.",
+    "sendInstructions": "Anweisungen senden",
+    "didNotReceiveCode": "Code nicht erhalten?",
+    "resend": "Erneut senden",
+    "createNewPassword": "Neues Passwort erstellen",
+    "passwordDifferentTip": "Ihr neues Passwort darf nicht mit zuvor verwendeten Passwörtern identisch sein."
 }

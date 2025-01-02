@@ -1,5 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/controller/category_architecture.dart';
 import 'package:time_management/db/mydb.dart';
@@ -69,37 +72,48 @@ class CategoryProvider extends ChangeNotifier {
     return getCategoriesList;
   }
 
-  Future<List<Map<String, dynamic>>> getAllLokalUserCategories(
-      {required bool mounted}) async {
-    List<Map<String, dynamic>> categories = [];
-    TrackingDB db = TrackingDB();
-    bool isTableCategories = await db.doesTableExist("categories");
-    if (mounted) {
-      if (isTableCategories) {
-        final getCategories =
-            await db.readData(sql: "select * from categories");
-        if (mounted) {
-          categories = getCategories
-              .map((category) => Map<String, dynamic>.from(category))
-              .toList();
-        }
-      }
-    }
-    return categories;
-  }
+  // Future<List<Map<String, dynamic>>> getAllLokalUserCategories(
+  //     {required bool mounted}) async {
+  //   List<Map<String, dynamic>> categories = [];
+  //   TrackingDB db = TrackingDB();
+  //   bool isTableCategories = await db.doesTableExist("categories");
+  //   if (mounted) {
+  //     if (isTableCategories) {
+  //       final getCategories =
+  //           await db.readData(sql: "select * from categories");
+  //       if (mounted) {
+  //         categories = getCategories
+  //             .map((category) => Map<String, dynamic>.from(category))
+  //             .toList();
+  //       }
+  //     }
+  //   }
+  //   return categories;
+  // }
 
   // close Category
-  Future<void> closeCategoryForNotPremiumUserAfterUseIt() async {
-    Map<String, dynamic> closeCategory = {"isUnlocked": 0};
+  Future<void> closeCategoryForNotPremiumUserAfterUseIt(
+      {required bool isUserExit}) async {
+    Map<String, dynamic> closeCategory = {};
     if (_selectedCategory.isNotEmpty) {
       String categoryId = _selectedCategory["id"];
-
-      TrackingDB db = TrackingDB();
-      await db.updateData(
-          tableName: "categories",
-          data: closeCategory,
-          id: categoryId,
-          columnId: "id");
+      if (isUserExit) {
+        final userId = FirebaseAuth.instance.currentUser?.uid;
+        closeCategory["lockedCategories"] =
+            FieldValue.arrayRemove([categoryId]);
+        FirebaseFirestore.instance
+            .collection("users")
+            .doc(userId)
+            .update(closeCategory);
+      } else {
+        closeCategory["isUnlocked"] = false;
+        TrackingDB db = TrackingDB();
+        await db.updateData(
+            tableName: "categories",
+            data: closeCategory,
+            id: categoryId,
+            columnId: "id");
+      }
     }
   }
 
@@ -116,11 +130,12 @@ class CategoryProvider extends ChangeNotifier {
   // check if category inserted
   Future<bool> isCategoryLokalInserted(
       {required bool mounted,
+      required BuildContext context,
       required Map<String, dynamic> categorySet}) async {
     bool isInserted = false;
-    final getCategories = await getAllLokalUserCategories(mounted: mounted);
+    final getCategoriesList = await getCategories(context: context);
     if (mounted) {
-      bool categoryGet = getCategories
+      bool categoryGet = getCategoriesList
           .where((category) => category["id"] == categorySet["id"])
           .isNotEmpty;
       if (categoryGet) {
@@ -147,17 +162,18 @@ class CategoryProvider extends ChangeNotifier {
   // check if category locked or Free
   Future<void> isCategoryLocked(
       {required bool mounted,
+      required BuildContext context,
       required Map<String, dynamic> categorySet}) async {
     if (categorySet.isNotEmpty && categorySet["isUnlocked"]) {
       _isCategoryLocked = true;
     } else {
       bool isCategoryInserted = await isCategoryLokalInserted(
-          mounted: mounted, categorySet: categorySet);
+          context: context, mounted: mounted, categorySet: categorySet);
       if (mounted) {
         if (isCategoryInserted) {
           Map<String, dynamic> getCategory = await getLokalCategory(
               categoryId: categorySet["id"], mounted: mounted);
-          if (getCategory["isUnlocked"] == 1) {
+          if (getCategory["isUnlocked"]) {
             _isCategoryLocked = true;
           }
         }
@@ -167,15 +183,46 @@ class CategoryProvider extends ChangeNotifier {
   }
 
   // check if category locked or Free
-  Future<void> getLockedCategories({
-    required bool mounted,
-  }) async {
+  Future<void> getLockedCategories(
+      {required bool mounted,
+      required BuildContext context,
+      bool? isUserExist}) async {
     _lockedCategories.clear();
-    List<Map<String, dynamic>> getCategories =
-        await getAllLokalUserCategories(mounted: mounted);
+    // List<Map<String, dynamic>> getCategories =
+    //     await getAllLokalUserCategories(mounted: mounted);
+    List<Map<String, dynamic>> getCategoriesList =
+        await getCategories(context: context);
+    List<Map<String, dynamic>> switchCategory = [];
+    for (Map<String, dynamic> category in getCategoriesList) {
+      if (category["isUnlocked"] == 0 || category["isUnlocked"] == 1) {
+        ETMCategory categoryDate = ETMCategory(
+            id: category['id'],
+            unlockExpiry: category['unlockExpiry'],
+            name: category['name'],
+            icon: '',
+            isPremium: category["isPremium"] == 0 ? false : true,
+            isUnlocked: category["isUnlocked"] == 0 ? false : true,
+            description: category['description']);
+        switchCategory.add(categoryDate.toMap(isLokal: false));
+      } else {
+        switchCategory.add(category);
+      }
+    }
+    List<String> lockedUserCategory = [];
+    if (isUserExist!) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      final userData = await FirebaseFirestore.instance
+          .collection("users")
+          .doc(userId)
+          .get();
+      if (!mounted) return;
+      Map<String, dynamic>? userDataAsMap = userData.data();
+      lockedUserCategory = List.from(userDataAsMap?["lockedCategories"]);
+    }
 
-    for (Map<String, dynamic> getCategory in getCategories) {
-      if (getCategory["isUnlocked"] == 1) {
+    for (Map<String, dynamic> getCategory in switchCategory) {
+      if (getCategory["isPremium"] ||
+          lockedUserCategory.contains(getCategory['id'])) {
         _lockedCategories.add(getCategory);
       }
     }
@@ -189,30 +236,47 @@ class CategoryProvider extends ChangeNotifier {
       required bool mounted}) async {
     // Code to activate category
 
-    TrackingDB db = TrackingDB();
-    bool isCategoryLokalInsertedGet = await isCategoryLokalInserted(
-        mounted: mounted, categorySet: categorySet);
-    if (!mounted) return;
-    if (isCategoryLokalInsertedGet) {
-      Map<String, dynamic> isUnlocked = {"isUnlocked": 1};
-      await db.updateData(
-          tableName: 'categories',
-          data: isUnlocked,
-          columnId: "id",
-          id: categorySet["id"]);
+    bool isUserExists = await Provider.of<UserProvider>(context, listen: false)
+        .isUserLogin(context: context);
+    if (isUserExists) {
+      Map<String, dynamic> lockedCategory = {
+        "lockedCategories": FieldValue.arrayUnion([categorySet['id']])
+      };
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(userId)
+          .update(lockedCategory);
     } else {
-      ETMCategory category = ETMCategory(
-          unlockExpiry: DateTime.now().add(Duration(days: 1)),
-          icon: "icon",
-          id: categorySet["id"],
-          isUnlocked: true,
-          isPremium: true,
-          name: {});
-      await db.insertData(
-          tableName: "categories", data: category.toMapToLokal());
-      if (!mounted) return;
-      getLockedCategories(mounted: mounted);
+      TrackingDB db = TrackingDB();
+      if (!context.mounted) return;
+      bool isCategoryLokalInsertedGet = await isCategoryLokalInserted(
+          context: context, mounted: mounted, categorySet: categorySet);
+      if (!context.mounted) return;
+
+      if (isCategoryLokalInsertedGet) {
+        Map<String, dynamic> isUnlocked = {"isUnlocked": 1};
+        await db.updateData(
+            tableName: 'categories',
+            data: isUnlocked,
+            columnId: "id",
+            id: categorySet["id"]);
+      } else {
+        ETMCategory category = ETMCategory(
+            unlockExpiry: DateTime.now().add(Duration(days: 1)),
+            icon: "icon",
+            id: categorySet["id"],
+            isUnlocked: true,
+            isPremium: true,
+            name: {});
+        await db.insertData(
+            tableName: "categories", data: category.toMapToLokal());
+        if (!context.mounted) return;
+      }
     }
+    if (!context.mounted) return;
+    getLockedCategories(
+        mounted: mounted, context: context, isUserExist: isUserExists);
   }
 
   insertCategoryLokal(
@@ -221,7 +285,7 @@ class CategoryProvider extends ChangeNotifier {
       required bool mounted}) async {
     TrackingDB db = TrackingDB();
     bool isCategoryLokalInsertedGet = await isCategoryLokalInserted(
-        mounted: mounted, categorySet: categorySet);
+        context: context, mounted: mounted, categorySet: categorySet);
     if (!mounted) return;
     if (!isCategoryLokalInsertedGet) {
       ETMCategory category = ETMCategory(
@@ -232,8 +296,11 @@ class CategoryProvider extends ChangeNotifier {
           name: {});
       await db.insertData(
           tableName: "categories", data: category.toMapToLokal());
-      if (!mounted) return;
-      getLockedCategories(mounted: mounted);
+      if (!context.mounted) return;
+      getLockedCategories(
+        mounted: mounted,
+        context: context,
+      );
     }
   }
 }
