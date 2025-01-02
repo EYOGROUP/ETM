@@ -6,17 +6,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-
 import 'package:shared_preferences/shared_preferences.dart';
-
 import 'package:time_management/constants.dart';
-
 import 'dart:io';
-
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/category_provider.dart';
-import 'package:time_management/provider/user_provider.dart';
 
 class TimeManagementPovider with ChangeNotifier {
   bool _isDark = false;
@@ -498,7 +493,14 @@ class TimeManagementPovider with ChangeNotifier {
     }
 
     for (Map<String, dynamic> breakData in formatBreaksToList) {
-      if (breakData['endTime'] == '') {
+      bool isCompletedBreak = false;
+      if (breakData['isCompleted'] == 0 || !breakData['isCompleted']) {
+        isCompletedBreak = false;
+      } else {
+        isCompletedBreak = true;
+      }
+      if ((breakData['endTime'] == '' || breakData['endTime'] == null) &&
+          !isCompletedBreak) {
         isAllBreaksClosed = false;
       }
     }

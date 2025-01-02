@@ -57,6 +57,7 @@ class BreakSession {
   DateTime? endTime;
   int? durationMinutes;
   String? reason;
+  final bool? isCompleted;
   final DateTime createdAt;
   BreakSession({
     required this.id,
@@ -66,6 +67,7 @@ class BreakSession {
     this.durationMinutes,
     this.reason,
     required this.createdAt,
+    this.isCompleted = false,
   });
   Map<String, dynamic> lokalToMap() {
     return {
@@ -76,6 +78,20 @@ class BreakSession {
       "durationMinutes": durationMinutes ?? 0,
       "reason": reason ?? '',
       "createdAt": createdAt.toString(),
+      'isCompleted': isCompleted! ? 1 : 0,
+    };
+  }
+
+  Map<String, dynamic> cloudToMap() {
+    return {
+      'id': id,
+      'workSessionId': workSessionId,
+      'startTime': startTime,
+      'endTime': endTime,
+      "durationMinutes": durationMinutes ?? 0,
+      "reason": reason,
+      "createdAt": createdAt,
+      'isCompleted': isCompleted!,
     };
   }
 }
