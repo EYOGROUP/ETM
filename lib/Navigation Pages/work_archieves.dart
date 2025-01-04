@@ -8,6 +8,7 @@ import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:time_management/Navigation%20Pages/work_details.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/provider/tm_provider.dart';
+import 'package:time_management/provider/user_provider.dart';
 
 class WorkArchieves extends StatefulWidget {
   const WorkArchieves({super.key});
@@ -23,6 +24,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
   int workedTime = 0;
   bool isInhours = false;
   bool isWorkFinished = false;
+  bool? isUserExist;
   final RefreshController _refreshController = RefreshController();
   @override
   void initState() {
@@ -44,38 +46,48 @@ class _WorkArchievesState extends State<WorkArchieves> {
   getAllData() async {
     _dates.clear();
     _dates.add(DateTime.now());
-    await getNumberOfWorkedHours();
-    await isWorkFinishedCheck();
-    await getNumberOfBreaks();
+    final tmProvider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
+    isUserExist = await Provider.of<UserProvider>(context, listen: false)
+        .isUserLogin(context: context);
+    if (!mounted) return;
+
+    await getNumberOfWorkedHours(tmProvider: tmProvider);
+
+    await isWorkFinishedCheck(
+        isUserExist: isUserExist!, tmProvider: tmProvider);
+    await getNumberOfBreaks(tmProvider: tmProvider);
     if (!mounted) return;
     final tm = Provider.of<TimeManagementPovider>(context, listen: false);
     tm.setOrientation(context);
   }
 
-  Future<void> isWorkFinishedCheck() async {
-    final tmProvider =
-        Provider.of<TimeManagementPovider>(context, listen: false);
-    isWorkFinished = await tmProvider.isWorkFiniheshed(date: _dates.first);
+  Future<void> isWorkFinishedCheck(
+      {required bool isUserExist,
+      required TimeManagementPovider tmProvider}) async {
+    isWorkFinished = await tmProvider.isWorkFiniheshed(
+        date: _dates.first, context: context, isUserExist: isUserExist);
     setState(() {});
   }
 
-  Future<void> getNumberOfBreaks() async {
-    final tmProvider =
-        Provider.of<TimeManagementPovider>(context, listen: false);
-
+  Future<void> getNumberOfBreaks(
+      {required TimeManagementPovider tmProvider}) async {
     int getData = await tmProvider.getNumberOfBreaks(
-        date: _dates.last, mounted: mounted, context: context);
+        isUserExist: isUserExist!,
+        date: _dates.last,
+        mounted: mounted,
+        context: context);
     setState(() {
       numberOfBreaks = getData;
     });
   }
 
-  Future<void> getNumberOfWorkedHours() async {
-    final tmProvider =
-        Provider.of<TimeManagementPovider>(context, listen: false);
-
+  Future<void> getNumberOfWorkedHours(
+      {required TimeManagementPovider tmProvider}) async {
     Map<String, dynamic> getData =
         await tmProvider.getHoursOrMinutesWorkedForToday(
+      context: context,
+      isUserExist: isUserExist!,
       choosedDate: _dates.last,
     );
     if (getData.isNotEmpty) {
@@ -102,6 +114,8 @@ class _WorkArchievesState extends State<WorkArchieves> {
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
+    final tmProvider =
+        Provider.of<TimeManagementPovider>(context, listen: false);
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: false,
@@ -135,9 +149,10 @@ class _WorkArchievesState extends State<WorkArchieves> {
                     setState(() {
                       _dates = value;
                     });
-                    await getNumberOfBreaks();
-                    await getNumberOfWorkedHours();
-                    await isWorkFinishedCheck();
+                    await getNumberOfBreaks(tmProvider: tmProvider);
+                    await getNumberOfWorkedHours(tmProvider: tmProvider);
+                    await isWorkFinishedCheck(
+                        isUserExist: isUserExist!, tmProvider: tmProvider);
                   },
                 ),
                 Gap(MediaQuery.of(context).size.height * 0.02),

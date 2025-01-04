@@ -4,8 +4,8 @@ class ETMCategory {
   final String id; // Unique identifier for the category
   final Map<String, dynamic> name; // Name of the category (e.g., "Fitness")
   final Map<String, dynamic>? description; // Short description (optional)
-  final bool isPremium; // Indicates if the category requires a premium account
-  final bool
+  bool isPremium; // Indicates if the category requires a premium account
+  bool?
       isUnlocked; // Tracks if the category is unlocked (e.g., via ad or premium)
   final DateTime?
       unlockExpiry; // Expiry timestamp if unlocked temporarily (e.g., via ad)
@@ -31,7 +31,7 @@ class ETMCategory {
           : isPremium,
       "unlockExpiry": isLokal ? unlockExpiry.toString() : unlockExpiry,
       "isUnlocked": isLokal
-          ? isUnlocked
+          ? isUnlocked!
               ? 1
               : 0
           : isUnlocked,
@@ -43,7 +43,7 @@ class ETMCategory {
     return {
       "id": id,
       "unlockExpiry": unlockExpiry.toString(),
-      "isUnlocked": isUnlocked ? 1 : 0,
+      "isUnlocked": isUnlocked! ? 1 : 0,
       "isPremium": isPremium ? 1 : 0
     };
   }

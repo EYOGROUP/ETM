@@ -261,5 +261,7 @@
     "didNotReceiveCode": "Code nicht erhalten?",
     "resend": "Erneut senden",
     "createNewPassword": "Neues Passwort erstellen",
-    "passwordDifferentTip": "Ihr neues Passwort darf nicht mit zuvor verwendeten Passwörtern identisch sein."
+    "passwordDifferentTip": "Ihr neues Passwort darf nicht mit zuvor verwendeten Passwörtern identisch sein.",
+    "syncDataWithCloud": "Daten mit der Cloud synchronisieren",
+    "syncDataWarning": "Es befinden sich lokale Daten auf Ihrem Gerät. Die Synchronisierung mit der Cloud lädt Ihre lokalen Daten auf Ihr Cloud-Konto hoch, aber alle vorhandenen Daten auf Ihrem Gerät werden gelöscht. Möchten Sie wirklich fortfahren?"
 }

@@ -260,5 +260,7 @@
     "didNotReceiveCode": "Vous n'avez pas reçu le code ?",
     "resend": "Renvoyer",
     "createNewPassword": "Créer un nouveau mot de passe",
-    "passwordDifferentTip": "Votre nouveau mot de passe ne doit pas être identique à ceux déjà utilisés."
+    "passwordDifferentTip": "Votre nouveau mot de passe ne doit pas être identique à ceux déjà utilisés.",
+    "syncDataWithCloud": "Synchroniser les données avec le cloud",
+    "syncDataWarning": "Des données locales existent sur votre appareil. La synchronisation avec le cloud téléchargera vos données locales sur votre compte cloud, mais toutes les données existantes sur votre appareil seront supprimées. Êtes-vous sûr de vouloir continuer ?"
 }

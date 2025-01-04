@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:time_management/controller/category_architecture.dart';
 import 'package:time_management/provider/tm_provider.dart';
+import 'package:time_management/provider/user_provider.dart';
 
 class WorkDetails extends StatefulWidget {
   final DateTime workDate;
@@ -35,7 +36,7 @@ class _WorkDetailsState extends State<WorkDetails> {
   final RefreshController _refreshController = RefreshController();
   String netWorkTimeLabel = '';
   String grossWorkTimeLabel = '';
-
+  bool? isUserExist;
   @override
   void initState() {
     super.initState();
@@ -48,9 +49,11 @@ class _WorkDetailsState extends State<WorkDetails> {
     );
   }
 
-  Future<void> getAllCategoriesBreaks({required String workSessionId}) async {
+  Future<void> getAllCategoriesBreaks({String? workSessionId}) async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
         .getBreaksFromSpecificDate(
+            isUserExist: isUserExist!,
+            allWorks: worksData,
             breakSessionTime: widget.workDate,
             mounted: mounted,
             workSessionId: workSessionId);
@@ -60,10 +63,6 @@ class _WorkDetailsState extends State<WorkDetails> {
   }
 
   Future<void> getBreaks({required int workSessionsId}) async {
-    // breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
-    //     .getBreaksFromSpecificDateAndId(
-    //         workSessionsId: workSessionsId, mounted: mounted);
-    // if (!mounted) return;
     getTotalOfBreakDuration(breaks: breaks!);
   }
 
@@ -71,16 +70,19 @@ class _WorkDetailsState extends State<WorkDetails> {
     setState(() {
       isLoadingData = true;
     });
-
+    isUserExist = await Provider.of<UserProvider>(context, listen: false)
+        .isUserLogin(context: context);
+    if (!mounted) return;
     worksData = await Provider.of<TimeManagementPovider>(context, listen: false)
         .getWorkDataFromSpecificDate(
+            isUserExist: isUserExist!,
             date: widget.workDate,
             mounted: mounted,
             categoryId: _selectedCategoryForFilter?.id);
 
     if (!mounted) return;
     if (worksData != null && worksData!.isNotEmpty) {
-      await getAllCategoriesBreaks(workSessionId: worksData?.first["id"]);
+      await getAllCategoriesBreaks();
       // await getBreaks(workSessionsId: worksData?.first["id"]);
       if (!mounted) return;
       getGrossWork(worksData: worksData!);
@@ -199,25 +201,6 @@ class _WorkDetailsState extends State<WorkDetails> {
   }
 
   showBottomFilter({required AppLocalizations labels}) async {
-    // List<Map<String, dynamic>> categories = [
-    //   {
-    //     "id": 0,
-    //     "name": labels.allCategories,
-    //   },
-    // ];
-    // final getCategories =
-    //     await Provider.of<TimeManagementPovider>(context, listen: false)
-    //         .getCategories(context: context, mounted: mounted);
-    // if (!mounted) return;
-    // if (getCategories.isNotEmpty) {
-    //   for (Map<String, dynamic> category in getCategories) {
-    //     categories.add(category);
-    //   }
-    // }
-    // if (_selectedCategoryForFilter == null ||
-    //     _selectedCategoryForFilter!.isEmpty) {
-    //   _selectedCategoryForFilter = categories.first;
-    // }
     List<ETMCategory> categories = ETMCategory.categories;
     final eTMPovider =
         Provider.of<TimeManagementPovider>(context, listen: false);
@@ -462,19 +445,23 @@ class _WorkDetailsState extends State<WorkDetails> {
                             horizontal:
                                 MediaQuery.of(context).size.width * 0.04,
                             vertical: 5),
-                        child: RowLeadingAndTitle(
-                          leading: isInHoursGross
-                              ? getLabels.youWorkedHours
-                              : getLabels.youWorkedInMinuteGross,
-                          title: grossWorkTimeLabel,
+                        child: Row(
+                          children: [
+                            Text(
+                              isInHoursGross
+                                  ? getLabels.youWorkedHours
+                                  : getLabels.youWorkedInMinuteGross,
+                              style: TextStyle(fontSize: 16.0),
+                            ),
+                            Spacer(),
+                            Text(
+                              grossWorkTimeLabel,
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            )
+                          ],
                         ),
                       ),
-                      // LeadingAndTitle(
-                      //   leading: isInHoursGross
-                      //       ? getLabels.youWorkedHours
-                      //       : getLabels.youWorkedInMinuteGross,
-                      //   title: grossWorkTimeLabel,
-                      // ),
                       if (_selectedCategoryForFilter != null) ...{
                         if (worksData?.last['taskDescription'] != '') ...[
                           Gap(MediaQuery.of(context).size.height * 0.01),
@@ -508,7 +495,6 @@ class _WorkDetailsState extends State<WorkDetails> {
                           ),
                         ]
                       },
-
                       Gap(MediaQuery.of(context).size.height * 0.01),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -652,20 +638,35 @@ class _WorkDetailsState extends State<WorkDetails> {
                         Gap(MediaQuery.of(context).size.height * 0.23),
                       },
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15.0, vertical: 5),
+                        padding: EdgeInsets.symmetric(
+                            horizontal:
+                                MediaQuery.of(context).size.width * 0.04,
+                            vertical: 5),
                         child: RowLeadingAndTitle(
                             leading: getLabels.totalBreakDurationMin,
                             title: totalBreakDuration.toString()),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 15.0, vertical: 5),
-                        child: RowLeadingAndTitle(
-                            leading: isInHoursNet
-                                ? getLabels.youWorkedNetHours
-                                : getLabels.youWorkedInMinuteNet,
-                            title: netWorkTimeLabel),
+                        padding: EdgeInsets.symmetric(
+                            horizontal:
+                                MediaQuery.of(context).size.width * 0.04,
+                            vertical: 5),
+                        child: Row(
+                          children: [
+                            Text(
+                              isInHoursNet
+                                  ? getLabels.youWorkedNetHours
+                                  : getLabels.youWorkedInMinuteNet,
+                              style: TextStyle(fontSize: 16.0),
+                            ),
+                            Spacer(),
+                            Text(
+                              netWorkTimeLabel,
+                              style: TextStyle(
+                                  fontSize: 16.0, fontWeight: FontWeight.bold),
+                            )
+                          ],
+                        ),
                       ),
                       if (_selectedCategoryForFilter != null)
                         TextButton(

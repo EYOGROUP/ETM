@@ -78,7 +78,6 @@ class BreakSession {
       "durationMinutes": durationMinutes ?? 0,
       "reason": reason ?? '',
       "createdAt": createdAt.toString(),
-      'isCompleted': isCompleted! ? 1 : 0,
     };
   }
 

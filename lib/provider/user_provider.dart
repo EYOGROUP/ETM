@@ -13,6 +13,7 @@ import 'package:time_management/Navigation%20Pages/profile/account/check_email.d
 import 'package:time_management/Navigation%20Pages/profile/account/create_new_password.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/user.dart';
+import 'package:time_management/db/mydb.dart';
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
@@ -305,6 +306,7 @@ class UserProvider extends ChangeNotifier {
   Future<void> signInWithEmailAndPassword(
       {required BuildContext context,
       required String emailGet,
+      required AppLocalizations labels,
       required String passwordGet}) async {
     if (emailGet != '' && passwordGet != '') {
       try {
@@ -312,6 +314,12 @@ class UserProvider extends ChangeNotifier {
             .signInWithEmailAndPassword(email: emailGet, password: passwordGet);
         if (!context.mounted) return;
         if (userCredential.user != null) {
+          final TimeManagementPovider eTMProvider =
+              Provider.of<TimeManagementPovider>(context, listen: false);
+          TrackingDB db = TrackingDB();
+          await eTMProvider.requestForSyncToCloud(
+              context: context, isUserExist: true, labels: labels, db: db);
+          if (!context.mounted) return;
           Navigator.of(context).push(MaterialPageRoute(
             builder: (context) => PagesController(
               indexPage: 2,

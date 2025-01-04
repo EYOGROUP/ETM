@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/controller/category_architecture.dart';
@@ -69,6 +70,7 @@ class CategoryProvider extends ChangeNotifier {
         }
       }
     }
+
     return getCategoriesList;
   }
 
@@ -133,7 +135,10 @@ class CategoryProvider extends ChangeNotifier {
       required BuildContext context,
       required Map<String, dynamic> categorySet}) async {
     bool isInserted = false;
-    final getCategoriesList = await getCategories(context: context);
+
+    List<Map<String, dynamic>> getCategoriesList =
+        await getCategories(context: context);
+
     if (mounted) {
       bool categoryGet = getCategoriesList
           .where((category) => category["id"] == categorySet["id"])
@@ -192,21 +197,25 @@ class CategoryProvider extends ChangeNotifier {
     //     await getAllLokalUserCategories(mounted: mounted);
     List<Map<String, dynamic>> getCategoriesList =
         await getCategories(context: context);
+
     List<Map<String, dynamic>> switchCategory = [];
     for (Map<String, dynamic> category in getCategoriesList) {
       if (category["isUnlocked"] == 0 || category["isUnlocked"] == 1) {
+        DateTime? unlockExpiryCategory = DateFormat("yyyy-MM-dd HH:mm:ss")
+            .tryParse(category['unlockExpiry']);
         ETMCategory categoryDate = ETMCategory(
             id: category['id'],
-            unlockExpiry: category['unlockExpiry'],
+            unlockExpiry: unlockExpiryCategory,
             name: category['name'],
             icon: '',
             isPremium: category["isPremium"] == 0 ? false : true,
             isUnlocked: category["isUnlocked"] == 0 ? false : true,
             description: category['description']);
         switchCategory.add(categoryDate.toMap(isLokal: false));
-      } else {
-        switchCategory.add(category);
       }
+      //  else {
+      //   switchCategory.add(category);
+      // }
     }
     List<String> lockedUserCategory = [];
     if (isUserExist!) {
@@ -221,7 +230,7 @@ class CategoryProvider extends ChangeNotifier {
     }
 
     for (Map<String, dynamic> getCategory in switchCategory) {
-      if (getCategory["isPremium"] ||
+      if (getCategory["isUnlocked"] ||
           lockedUserCategory.contains(getCategory['id'])) {
         _lockedCategories.add(getCategory);
       }
@@ -238,6 +247,7 @@ class CategoryProvider extends ChangeNotifier {
 
     bool isUserExists = await Provider.of<UserProvider>(context, listen: false)
         .isUserLogin(context: context);
+    if (!context.mounted) return;
     if (isUserExists) {
       Map<String, dynamic> lockedCategory = {
         "lockedCategories": FieldValue.arrayUnion([categorySet['id']])
@@ -247,20 +257,24 @@ class CategoryProvider extends ChangeNotifier {
           .collection('users')
           .doc(userId)
           .update(lockedCategory);
+      if (!context.mounted) return;
     } else {
       TrackingDB db = TrackingDB();
       if (!context.mounted) return;
       bool isCategoryLokalInsertedGet = await isCategoryLokalInserted(
           context: context, mounted: mounted, categorySet: categorySet);
       if (!context.mounted) return;
-
+      ETMCategory categoryGet = ETMCategory.categories
+          .where((categoryGet) => categoryGet.id == categorySet["id"])
+          .first;
       if (isCategoryLokalInsertedGet) {
-        Map<String, dynamic> isUnlocked = {"isUnlocked": 1};
+        Map<String, dynamic> isUnlocked = {"isUnlocked": 1, "isPremium": 1};
         await db.updateData(
             tableName: 'categories',
             data: isUnlocked,
             columnId: "id",
             id: categorySet["id"]);
+        if (!context.mounted) return;
       } else {
         ETMCategory category = ETMCategory(
             unlockExpiry: DateTime.now().add(Duration(days: 1)),
@@ -268,10 +282,17 @@ class CategoryProvider extends ChangeNotifier {
             id: categorySet["id"],
             isUnlocked: true,
             isPremium: true,
-            name: {});
+            name: categoryGet.name);
         await db.insertData(
             tableName: "categories", data: category.toMapToLokal());
         if (!context.mounted) return;
+      }
+      bool isCategoreyInLocked = _lockedCategories
+          .where((lockedCategory) => lockedCategory['id'] == categorySet["id"])
+          .isNotEmpty;
+      if (!isCategoreyInLocked) {
+        categoryGet.isUnlocked = true;
+        _lockedCategories.add(categoryGet.toMap(isLokal: true));
       }
     }
     if (!context.mounted) return;
