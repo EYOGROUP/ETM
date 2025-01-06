@@ -183,7 +183,8 @@ class _WorkDetailsState extends State<WorkDetails> {
               });
               final tm =
                   Provider.of<TimeManagementPovider>(context, listen: false);
-              await tm.deleteWork(id: id);
+              await tm.deleteWork(
+                  id: id, isUserExist: isUserExist!, mounted: mounted);
               if (!context.mounted) return;
               Navigator.of(context).pop(true);
               setState(() {
@@ -672,7 +673,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                         TextButton(
                             style: const ButtonStyle(
                                 padding: WidgetStatePropertyAll(
-                                    EdgeInsets.only(bottom: 8.0))),
+                                    EdgeInsets.only(bottom: 22.0))),
                             onPressed: () {
                               deleteWork(
                                   id: worksData?.first["id"],

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:intl/intl.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:time_management/constants.dart';
@@ -30,8 +31,9 @@ class TimeManagementPovider with ChangeNotifier {
   bool _isInternetConnected = false;
   bool get isInternetConnectedGet => _isInternetConnected;
 
-  bool _isLokalDataInCloudSync = false;
-  bool get isLokalDataInCloudSync => _isLokalDataInCloudSync;
+  bool? isLokalDataInCloudSync;
+
+  double _progressSyncToCloud = 0;
 
   set isInAddingTaskSet(bool isInAdding) {
     _isInAddingTask = isInAdding;
@@ -491,19 +493,18 @@ class TimeManagementPovider with ChangeNotifier {
         getWorksData = await db.readData(
             sql:
                 'select * from work_sessions where substr(startTime,1,10)="$formatDate"');
-        worksDataGet.clear();
-
-        if (getWorksData.isNotEmpty) {
-          List<Map<String, dynamic>> getWorksDataTransfer =
-              List.from(getWorksData);
-          List<Map<String, dynamic>> worksDataConvert = getWorksDataTransfer
-              .map((workData) => Map<String, dynamic>.from(workData))
-              .toList();
-          worksData = worksDataConvert;
-        }
+        // worksDataGet.clear();
+      }
+      if (getWorksData.isNotEmpty) {
+        List<Map<String, dynamic>> getWorksDataTransfer =
+            List.from(getWorksData);
+        List<Map<String, dynamic>> worksDataConvert = getWorksDataTransfer
+            .map((workData) => Map<String, dynamic>.from(workData))
+            .toList();
+        worksData = worksDataConvert;
       }
     }
-    print(worksData);
+
     if (mounted) {
       for (Map<String, dynamic> workData in worksData) {
         String? startWorkTimeConvert;
@@ -574,7 +575,6 @@ class TimeManagementPovider with ChangeNotifier {
       String? workSessionId}) async {
     List<Map<String, dynamic>> breaks = [];
     if (isUserExist) {
-      print("object");
       if (workSessionId != null) {
         final getBreakSession = await FirebaseFirestore.instance
             .collection("breakSessions")
@@ -585,10 +585,7 @@ class TimeManagementPovider with ChangeNotifier {
               .map((workUserSession) => workUserSession.data())
               .toList();
         }
-        print(allWorks?.length);
       } else {
-        print("object");
-        print(allWorks);
         for (Map<String, dynamic> work in allWorks!) {
           final getBreakWorkSession = await FirebaseFirestore.instance
               .collection("breakSessions")
@@ -712,9 +709,37 @@ class TimeManagementPovider with ChangeNotifier {
     return isAllBreaksClosed;
   }
 
-  Future<void> deleteWork({required String id}) async {
-    TrackingDB db = TrackingDB();
-    await db.deleteData(sql: "delete from work_sessions where id ='$id'");
+  Future<void> deleteWork(
+      {required String id,
+      required bool isUserExist,
+      required bool mounted}) async {
+    //delete work if UserExist
+    if (isUserExist) {
+      final breakSessions = await FirebaseFirestore.instance
+          .collection("breakSessions")
+          .where("workSessionId", isEqualTo: id)
+          .get();
+      if (!mounted) return;
+      if (breakSessions.size > 0) {
+        List<Map<String, dynamic>> breakSessionsAsList = breakSessions.docs
+            .map((breakSession) => breakSession.data())
+            .toList();
+        for (Map<String, dynamic> breakSession in breakSessionsAsList) {
+          await FirebaseFirestore.instance
+              .collection("breakSessions")
+              .doc(breakSession["id"])
+              .delete();
+          if (!mounted) return;
+        }
+      }
+      await FirebaseFirestore.instance
+          .collection("workSessions")
+          .doc(id)
+          .delete();
+    } else {
+      TrackingDB db = TrackingDB();
+      await db.deleteData(sql: "delete from work_sessions where id ='$id'");
+    }
   }
 
   bool isPortrait(BuildContext context) {
@@ -774,13 +799,18 @@ class TimeManagementPovider with ChangeNotifier {
     required BuildContext context,
     required TrackingDB db,
   }) async {
-    _isLokalDataInCloudSync = true;
+    isLokalDataInCloudSync = true;
 
     final List<Map<String, dynamic>> getWorkSessions = await db.readData(
         sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+
     if (context.mounted) {
-      for (int i = 0; i < getWorkSessions.length - 1; i++) {
-        var workSessionNewId = const Uuid().v4();
+      int completedItems = 0;
+      for (int i = 0; i <= getWorkSessions.length - 1; i++) {
+        completedItems = i + 1;
+        _progressSyncToCloud = (completedItems / getWorkSessions.length) * 100;
+        context.loaderOverlay
+            .progress("Loading ${_progressSyncToCloud.toInt()}%");
         DateTime? startWorkTime = DateFormat("yyyy-MM-dd HH:mm:ss")
             .tryParse(getWorkSessions[i]['startTime']);
         DateTime? endWorkTime = DateFormat("yyyy-MM-dd HH:mm:ss")
@@ -789,9 +819,11 @@ class TimeManagementPovider with ChangeNotifier {
             getWorkSessions[i]['isCompleted'] == 1 ? true : false;
         String taskDescription = getWorkSessions[i]["taskDescription"];
         final userId = FirebaseAuth.instance.currentUser?.uid;
+
         int durationMinutes = getWorkSessions[i]["durationMinutes"];
+        String workSessionId = getWorkSessions[i]["id"];
         WorkSession workSession = WorkSession(
-            id: workSessionNewId,
+            id: workSessionId,
             startTime: startWorkTime!,
             createdAt: startWorkTime,
             categoryId: getWorkSessions[i]["categoryId"],
@@ -802,12 +834,13 @@ class TimeManagementPovider with ChangeNotifier {
             durationMinutes: durationMinutes);
         await FirebaseFirestore.instance
             .collection('workSessions')
-            .doc(workSessionNewId)
+            .doc(workSessionId)
             .set(workSession.cloudToMap());
+
         if (!context.mounted) return;
         final List<Map<String, dynamic>> breakSessions = await db.readData(
                 sql:
-                    'select * from work_sessions where workSessionId ="${getWorkSessions[i]["id"]}" ')
+                    'select * from break_sessions where workSessionId ="$workSessionId" ')
             as List<Map<String, dynamic>>;
         if (context.mounted) {
           if (breakSessions.isNotEmpty) {
@@ -821,7 +854,7 @@ class TimeManagementPovider with ChangeNotifier {
               int durationBreakMinutes = breakSession["durationMinutes"];
               BreakSession breakSessionInit = BreakSession(
                   id: breakSessionNewId,
-                  workSessionId: workSessionNewId,
+                  workSessionId: workSessionId,
                   startTime: startBreakTime!,
                   createdAt: startBreakTime,
                   endTime: endBreakTime,
@@ -837,13 +870,14 @@ class TimeManagementPovider with ChangeNotifier {
           }
           // delete Lokal Data
           await db.deleteData(
-              sql:
-                  'DELETE FROM work_sessions WHERE id ="${getWorkSessions[i]["id"]}"');
+              sql: 'DELETE FROM work_sessions WHERE id ="$workSessionId"');
           if (!context.mounted) return;
         }
+
+        if (!context.mounted) return;
       }
     }
-    _isLokalDataInCloudSync = false;
+    isLokalDataInCloudSync = false;
     notifyListeners();
   }
 
@@ -855,13 +889,18 @@ class TimeManagementPovider with ChangeNotifier {
       required TrackingDB db}) async {
     bool isWorkSessionsInLokalExists =
         await isLokalDataExists(context: context, isUserExist: isUserExist);
-    print(isWorkSessionsInLokalExists);
+
     if (!context.mounted) return;
     if (isWorkSessionsInLokalExists) {
       await Constants.showDialogConfirmation(
           context: context,
-          onConfirm: () {
-            syncDataToCloud(context: context, db: db);
+          onConfirm: () async {
+            Navigator.of(context).pop();
+            context.loaderOverlay
+                .show(progress: "Loading ${_progressSyncToCloud.toInt()}%");
+            await syncDataToCloud(context: context, db: db);
+            if (!context.mounted) return;
+            notifyListeners();
           },
           title: labels.syncDataWithCloud,
           message: labels.syncDataWarning);

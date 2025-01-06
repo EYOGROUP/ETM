@@ -22,7 +22,6 @@ class _WelcomePageState extends State<WelcomePage> {
   @override
   void initState() {
     super.initState();
-
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         final tm = Provider.of<TimeManagementPovider>(context, listen: false);
@@ -30,22 +29,6 @@ class _WelcomePageState extends State<WelcomePage> {
       },
     );
   }
-
-  // initCategoryInFirebase() async {
-  //   setState(() {
-  //     isSending = true;
-  //   });
-  //   List<ETMCategory> etmCategories = ETMCategory.categories;
-  //   for (int i = 0; i < etmCategories.length; i++) {
-  //     await FirebaseFirestore.instance
-  //         .collection('categories')
-  //         .doc(etmCategories[i].id)
-  //         .set(etmCategories[i].toMap(isLokal: false));
-  //   }
-  //   setState(() {
-  //     isSending = false;
-  //   });
-  // }
 
   @override
   Widget build(BuildContext context) {

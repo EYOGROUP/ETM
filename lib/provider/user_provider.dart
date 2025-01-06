@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import 'package:flutter/material.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:loader_overlay/loader_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
 import 'package:time_management/Navigation%20Pages/profile/account/check_email.dart';
@@ -320,15 +321,29 @@ class UserProvider extends ChangeNotifier {
           await eTMProvider.requestForSyncToCloud(
               context: context, isUserExist: true, labels: labels, db: db);
           if (!context.mounted) return;
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (context) => PagesController(
-              indexPage: 2,
-            ),
-          ));
+
+          if (context.loaderOverlay.visible &&
+              eTMProvider.isLokalDataInCloudSync == null &&
+              eTMProvider.isLokalDataInCloudSync!) {
+            return;
+          }
+          await Future.delayed(Duration(milliseconds: 500));
+          if (!context.mounted) return;
+          context.loaderOverlay.hide();
+
+          await Navigator.of(context).pushAndRemoveUntil(
+              MaterialPageRoute(
+                builder: (context) => PagesController(
+                  indexPage: 2,
+                ),
+              ),
+              (route) => route.isFirst);
         }
       } on FirebaseAuthException catch (error) {
-        Constants.showInSnackBar(
-            value: error.message.toString(), context: context);
+        if (context.mounted) {
+          Constants.showInSnackBar(
+              value: error.message.toString(), context: context);
+        }
       }
     }
   }
@@ -416,13 +431,13 @@ class UserProvider extends ChangeNotifier {
       bool isUserLoginCheck = await isUserLogin(context: context);
       if (!context.mounted) return;
       if (!isUserLoginCheck) {
-        Navigator.of(context).pushAndRemoveUntil(
+        await Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
             builder: (context) => PagesController(
               indexPage: 2,
             ),
           ),
-          (route) => false,
+          (route) => route.isFirst,
         );
       }
     } on FirebaseAuthException catch (error) {

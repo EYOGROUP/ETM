@@ -48,6 +48,7 @@ class CategoryProvider extends ChangeNotifier {
       {required BuildContext context}) async {
     List<Map<String, dynamic>> getCategoriesList = [];
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     if (_isSwitchedToLokalCategories) {
       getCategoriesList = ETMCategory.categories
           .map((category) => category.toMap(isLokal: true))
@@ -108,7 +109,7 @@ class CategoryProvider extends ChangeNotifier {
             .doc(userId)
             .update(closeCategory);
       } else {
-        closeCategory["isUnlocked"] = false;
+        closeCategory["isUnlocked"] = 0;
         TrackingDB db = TrackingDB();
         await db.updateData(
             tableName: "categories",
@@ -235,8 +236,25 @@ class CategoryProvider extends ChangeNotifier {
         _lockedCategories.add(getCategory);
       }
     }
-
+    print(_lockedCategories);
     notifyListeners();
+  }
+
+  Future<bool> isLokalCategoryInDBSaved(
+      {required TrackingDB db,
+      required String categoryId,
+      required BuildContext context}) async {
+    bool checkIfCategoryInDB = false;
+    final getCategories = await db.readData(
+        sql: "select * from categories where id='$categoryId'");
+    if (context.mounted) {
+      if (getCategories.isNotEmpty) {
+        checkIfCategoryInDB = true;
+      } else {
+        checkIfCategoryInDB = false;
+      }
+    }
+    return checkIfCategoryInDB;
   }
 
   Future<void> unlockCategory(
@@ -264,10 +282,14 @@ class CategoryProvider extends ChangeNotifier {
       bool isCategoryLokalInsertedGet = await isCategoryLokalInserted(
           context: context, mounted: mounted, categorySet: categorySet);
       if (!context.mounted) return;
+      bool isLokalCategoryInDBSavedChecked = await isLokalCategoryInDBSaved(
+          context: context, db: db, categoryId: categorySet["id"]);
+
+      if (!context.mounted) return;
       ETMCategory categoryGet = ETMCategory.categories
           .where((categoryGet) => categoryGet.id == categorySet["id"])
           .first;
-      if (isCategoryLokalInsertedGet) {
+      if (isCategoryLokalInsertedGet && isLokalCategoryInDBSavedChecked) {
         Map<String, dynamic> isUnlocked = {"isUnlocked": 1, "isPremium": 1};
         await db.updateData(
             tableName: 'categories',

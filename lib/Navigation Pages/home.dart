@@ -191,10 +191,10 @@ class _StartTimePageState extends State<StartTimePage> {
           startTime: workStartTime!,
           createdAt: workStartTime!,
           taskDescription: _todoController.text,
-          isCompleted: false,
           id: workSessionId,
           userId: userId,
         );
+        print(categoryId);
 // TODO check if work over nexday
         await insertStartWorkToCloudOrLokalDb(workSession: workSession);
         if (!mounted) return;
@@ -407,39 +407,6 @@ class _StartTimePageState extends State<StartTimePage> {
         isAlreadyActivate = true;
       }
     }
-
-    // // if false: Is user as Lokal
-    // bool isUserExists = await userProvider.isUserLogin(context: context);
-    // if (!isUserExists) {
-    //   // check if Category is locked
-
-    //   if (categorySet["isUnlocked"] != 0 || categorySet["isPremium"] != 0) {
-    //     isAlreadyActivate = true;
-    //   } else {
-    //     final categoryProvider =
-    //         Provider.of<CategoryProvider>(context, listen: false);
-
-    //     List<Map<String, dynamic>> categoriesList =
-    //         await categoryProvider.getCategories(context: context);
-
-    //     if (categoriesList.isNotEmpty) {
-    //       List<Map<String, dynamic>> categeryGet = categoriesList
-    //           .where((category) => category["id"] == categorySet['id'])
-    //           .toList();
-
-    //       if (categeryGet.isNotEmpty) {
-    //         if (categeryGet[0]["isUnlocked"]) {
-    //           isAlreadyActivate = true;
-    //         }
-    //       }
-    //     }
-    //   }
-    // } else {
-    //   if (categorySet["isPremium"] || categorySet["isUnlocked"]) {
-    //     print(categorySet);
-    //     isAlreadyActivate = true;
-    //   }
-    // }
     return isAlreadyActivate;
   }
 
@@ -1382,14 +1349,22 @@ class _StartTimePageState extends State<StartTimePage> {
                   children: [
                     TextButton(
                         onPressed: () async {
-                          // TrackingDB db = TrackingDB();
-                          // final data = await db.readData(
-                          //     sql: "select * FROM categories");
-                          // print(data);
-                          List<Map<String, dynamic>> getCategoriesList =
-                              await categoryProvider.getCategories(
-                                  context: context);
-                          print(activatedCategories);
+                          // ETMCategory c = ETMCategory.categories
+                          //     .where(
+                          //       (element) =>
+                          //           element.id ==
+                          //           "ee5abcec-b5de-4349-b344-370368c42c52",
+                          //     )
+                          //     .first;
+                          // c.isUnlocked = false;
+                          TrackingDB db = TrackingDB();
+                          final data = await db.readData(
+                              sql: "select * FROM categories");
+                          print(data);
+                          // List<Map<String, dynamic>> getCategoriesList =
+                          //     await categoryProvider.getCategories(
+                          //         context: context);
+                          // print(activatedCategories);
                           // print(categoryProvider.selectedCategory["id"]);
                           // bool categoryGet = getCategoriesList
                           //     .where((category) =>
