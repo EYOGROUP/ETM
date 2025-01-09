@@ -1234,6 +1234,7 @@ class _StartTimePageState extends State<StartTimePage> {
         startLoadingAnimation();
         Map<String, dynamic> getWorksDay = getWorksDayList.first;
         String workSessionId = getWorksDay["id"];
+
         List<Map<String, dynamic>> breakSessions = [];
         if (isUserExists) {
           final checkBreakSession = await FirebaseFirestore.instance
@@ -1241,6 +1242,7 @@ class _StartTimePageState extends State<StartTimePage> {
               .limit(1)
               .get();
           if (mounted) {
+            print(checkBreakSession);
             if (checkBreakSession.size > 0) {
               final getAllBreaksDependOnWorkSession = await FirebaseFirestore
                   .instance
@@ -1271,6 +1273,8 @@ class _StartTimePageState extends State<StartTimePage> {
         }
         startLoadingAnimation(); // End the loading animation
       }
+    } else {
+      isInitFinished = true;
     }
   }
 
