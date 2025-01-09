@@ -114,9 +114,7 @@ class TimeManagementPovider with ChangeNotifier {
       if (insertNewBreak.isEmpty) {
         isAlreadyIn = false;
       }
-    } catch (e) {
-      print(e.toString());
-    }
+    } catch (e) {}
     return isAlreadyIn;
   }
 
@@ -251,20 +249,23 @@ class TimeManagementPovider with ChangeNotifier {
     if (isUserExist) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       DateTime? dateFilter = DateFormat("yyyy-MM-dd").tryParse(date.toString());
-      final getUserWorkSession = await FirebaseFirestore.instance
+      final getUserWorkSessions = await FirebaseFirestore.instance
           .collection('workSessions')
           .where('userId', isEqualTo: userId)
           .get();
       if (context.mounted) {
-        worksDay = getUserWorkSession.docs
-            .where(
-              (userWorkSession) =>
-                  DateFormat("yyyy-MM-dd").tryParse(
-                      userWorkSession.data()["endTime"].toDate().toString()) ==
-                  dateFilter,
-            )
-            .map((workSession) => workSession.data())
-            .toList();
+        final mapWorkSessions =
+            getUserWorkSessions.docs.map((workSession) => workSession.data());
+        for (Map<String, dynamic> getWorkSession in mapWorkSessions) {
+          if (getWorkSession['isCompleted'] &&
+              getWorkSession["endTime"] != '') {
+            if (DateFormat("yyyy-MM-dd")
+                .tryParse(getWorkSession["endTime"].toDate().toString())!
+                .isAtSameMomentAs(dateFilter!)) {
+              worksDay.add(getWorkSession);
+            }
+          }
+        }
       }
     } else {
       TrackingDB db = TrackingDB();
@@ -304,7 +305,7 @@ class TimeManagementPovider with ChangeNotifier {
               .get();
           if (context.mounted) {
             if (getWorkBreaks.docs.isNotEmpty) {
-              numberOfBreaks = getWorkBreaks.size;
+              numberOfBreaks += getWorkBreaks.size;
             }
           }
         } else {
@@ -346,12 +347,13 @@ class TimeManagementPovider with ChangeNotifier {
             return data;
           }
         } else {
-          if (workDay['isCompleted'] == 0 && workDay['endTime'] == '') {
+          if (workDay['isCompleted'] == 0) {
             return data;
           }
         }
         String? startWorkTime;
         String? endWorkTime;
+        print(workDay['startTime'] is Timestamp);
         if (isUserExist) {
           startWorkTime = workDay['startTime'].toDate().toString();
           endWorkTime = workDay['endTime'].toDate().toString();
@@ -378,30 +380,40 @@ class TimeManagementPovider with ChangeNotifier {
       {required DateTime date,
       required BuildContext context,
       required bool isUserExist}) async {
-    bool isWorkFiniheshed = true;
+    bool isWorkFiniheshed = false;
     List<Map<String, dynamic>> workSessions = [];
-
+    bool isWorkSessionsAllClosed = true;
     if (context.mounted) {
       if (isUserExist) {
         final userId = FirebaseAuth.instance.currentUser?.uid;
         DateTime? dateFilter =
             DateFormat("yyyy-MM-dd").tryParse(date.toString());
-        final getUserWorkSession = await FirebaseFirestore.instance
+        final getUserWorkSessions = await FirebaseFirestore.instance
             .collection('workSessions')
             .where('userId', isEqualTo: userId)
             .get();
+
         if (context.mounted) {
-          workSessions = getUserWorkSession.docs
-              .where(
-                (userWorkSession) =>
-                    DateFormat("yyyy-MM-dd").tryParse(userWorkSession
-                        .data()["endTime"]
-                        .toDate()
-                        .toString()) ==
-                    dateFilter,
-              )
-              .map((workSession) => workSession.data())
-              .toList();
+          final mapWorkSessions =
+              getUserWorkSessions.docs.map((workSession) => workSession.data());
+          for (Map<String, dynamic> getWorkSession in mapWorkSessions) {
+            if (getWorkSession['isCompleted'] &&
+                getWorkSession["endTime"] != '') {
+              if (DateFormat("yyyy-MM-dd")
+                  .tryParse(getWorkSession["endTime"].toDate().toString())!
+                  .isAtSameMomentAs(dateFilter!)) {
+                workSessions.add(getWorkSession);
+              }
+            }
+            if (DateFormat("yyyy-MM-dd")
+                .tryParse(getWorkSession["startTime"].toDate().toString())!
+                .isAtSameMomentAs(dateFilter!)) {
+              if (getWorkSession["endTime"] == '' &&
+                  !getWorkSession['isCompleted']) {
+                isWorkSessionsAllClosed = false;
+              }
+            }
+          }
         }
       } else {
         TrackingDB db = TrackingDB();
@@ -433,6 +445,11 @@ class TimeManagementPovider with ChangeNotifier {
       } else {
         isWorkFiniheshed = false;
       }
+    }
+    if (isWorkSessionsAllClosed && isWorkFiniheshed) {
+      isWorkFiniheshed = true;
+    } else {
+      isWorkFiniheshed = false;
     }
 
     return isWorkFiniheshed;

@@ -263,5 +263,10 @@
     "createNewPassword": "Neues Passwort erstellen",
     "passwordDifferentTip": "Ihr neues Passwort darf nicht mit zuvor verwendeten Passwörtern identisch sein.",
     "syncDataWithCloud": "Daten mit der Cloud synchronisieren",
-    "syncDataWarning": "Es befinden sich lokale Daten auf Ihrem Gerät. Die Synchronisierung mit der Cloud lädt Ihre lokalen Daten auf Ihr Cloud-Konto hoch, aber alle vorhandenen Daten auf Ihrem Gerät werden gelöscht. Möchten Sie wirklich fortfahren?"
+    "syncDataWarning": "Es befinden sich lokale Daten auf Ihrem Gerät. Die Synchronisierung mit der Cloud lädt Ihre lokalen Daten auf Ihr Cloud-Konto hoch, aber alle vorhandenen Daten auf Ihrem Gerät werden gelöscht. Möchten Sie wirklich fortfahren?",
+    "pullDownToRefresh": "Zum Aktualisieren nach unten ziehen.",
+    "releaseToRefresh": "Zum Aktualisieren loslassen.",
+    "refreshingData": "Daten werden aktualisiert...",
+    "refreshCompleted": "Aktualisierung abgeschlossen!",
+    "refreshFailed": "Aktualisierung fehlgeschlagen. Ziehen Sie nach unten, um es erneut zu versuchen."
 }

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'package:gap/gap.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 enum InfosApp {
   privacyPolicy,
@@ -110,6 +111,35 @@ class Constants {
           TextSpan(
               text: textValue, style: TextStyle(fontWeight: FontWeight.bold)),
         ]));
+  }
+
+  static Widget smartRefresherHeader({required AppLocalizations getLabels}) {
+    return CustomHeader(
+      builder: (context, mode) {
+        Widget? body;
+        switch (mode) {
+          case RefreshStatus.idle:
+            body = Text(getLabels.pullDownToRefresh);
+          case RefreshStatus.canRefresh:
+            body = Text(getLabels.releaseToRefresh);
+          case RefreshStatus.refreshing:
+            body = Text(getLabels.refreshingData);
+          case RefreshStatus.completed:
+            body = Text(getLabels.refreshCompleted);
+          case RefreshStatus.failed:
+            body = Text(getLabels.refreshFailed);
+          default:
+            body = Text("");
+        }
+
+        return SizedBox(
+          height: 60.0,
+          child: Center(
+            child: body,
+          ),
+        );
+      },
+    );
   }
 }
 

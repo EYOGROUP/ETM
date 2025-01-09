@@ -262,6 +262,11 @@
     "createNewPassword": "Create a new password",
     "passwordDifferentTip": "Your new password should not be the same as any previously used passwords.",
     "syncDataWithCloud": "Sync Data with Cloud",
-    "syncDataWarning": "Local data exists on your device. Syncing with the cloud will upload your local data to your cloud account, but all existing data on your device will be deleted. Are you sure you want to proceed?"
+    "syncDataWarning": "Local data exists on your device. Syncing with the cloud will upload your local data to your cloud account, but all existing data on your device will be deleted. Are you sure you want to proceed?",
+    "pullDownToRefresh": "Pull down to refresh.",
+    "releaseToRefresh": "Release to refresh.",
+    "refreshingData": "Refreshing data...",
+    "refreshCompleted": "Refresh completed!",
+    "refreshFailed": "Refresh failed. Pull down to try again."
   
 }

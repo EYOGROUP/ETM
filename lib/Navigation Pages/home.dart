@@ -81,6 +81,7 @@ class _StartTimePageState extends State<StartTimePage> {
     WidgetsBinding.instance.addPostFrameCallback(
       (_) async {
         _categories = ETMCategory.categories;
+
         await checkInternet();
         if (!mounted) return;
         await checkUserIfExist();
@@ -96,8 +97,11 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   getCategoriesFromProvider() async {
-    _categoriesGet = await Provider.of<CategoryProvider>(context, listen: false)
-        .getCategories(context: context);
+    final categories = Provider.of<CategoryProvider>(context, listen: false);
+
+    await categories.initPremiumCategory(mounted: mounted);
+    if (!mounted) return;
+    _categoriesGet = await categories.getCategories(context: context);
     if (!mounted) return;
     setState(() {});
   }
@@ -194,7 +198,7 @@ class _StartTimePageState extends State<StartTimePage> {
           id: workSessionId,
           userId: userId,
         );
-        print(categoryId);
+
 // TODO check if work over nexday
         await insertStartWorkToCloudOrLokalDb(workSession: workSession);
         if (!mounted) return;
@@ -416,7 +420,7 @@ class _StartTimePageState extends State<StartTimePage> {
         Provider.of<CategoryProvider>(context, listen: false);
     bool isCategoryAlreadyActivated =
         await isAlreadyCategoryActivated(categorySet: categorySet);
-    print(isCategoryAlreadyActivated);
+
     if (!mounted) return;
 
     if (isCategoryAlreadyActivated) {
@@ -442,7 +446,6 @@ class _StartTimePageState extends State<StartTimePage> {
           if (!mounted) return;
           await categoryProvider.getLockedCategories(
               mounted: mounted, context: context, isUserExist: isUserExists);
-          // getCategoriesFromProvider(categoryProvider: categoryProvider, isInit: false);
         },
       );
 
@@ -472,6 +475,7 @@ class _StartTimePageState extends State<StartTimePage> {
         isUserExist: isUserExists, mounted: mounted, context: context);
     if (!mounted) return;
     activatedCategories = categoryProvider.lockedCategories;
+    print(activatedCategories);
     isAlreadyStartedWorkCheck = await isAlreadyStartedWorkDay();
 
     if (!mounted) return;
@@ -507,11 +511,11 @@ class _StartTimePageState extends State<StartTimePage> {
     await getNumberOfBreaks(
         isSwitchCategory: isSwitchCategory,
         categorySelected: categoryProvider.selectedCategory);
-    // await getHoursOrMinutesWorkedForToday(
-    //     categoryIdSet: categoryProvider.selectedCategory.isNotEmpty
-    //         ? categoryProvider.selectedCategory["id"]
-    //         : categorySet?['id']);
-    // await checkIfWorkAndBreakForTodayNotFinished();
+    await getHoursOrMinutesWorkedForToday(
+        categoryIdSet: categoryProvider.selectedCategory.isNotEmpty
+            ? categoryProvider.selectedCategory["id"]
+            : categorySet?['id']);
+    await checkIfWorkAndBreakForTodayNotFinished();
 
     if (!mounted) return;
 
@@ -641,15 +645,41 @@ class _StartTimePageState extends State<StartTimePage> {
     final getLabels = AppLocalizations.of(context)!;
     TrackingDB db = TrackingDB();
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    List<Map<String, dynamic>> workSession = await db.readData(
-            sql:
-                'select * from work_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
-        as List<Map<String, dynamic>>;
-    if (workSession.isNotEmpty) {
+    List<Map<String, dynamic>> workSessions = [];
+    if (isUserExists) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      DateTime? dateFilter =
+          DateFormat("yyyy-MM-dd").tryParse(dateToday.toString());
+
+      final getUserWorkSession = await FirebaseFirestore.instance
+          .collection('workSessions')
+          .where('userId', isEqualTo: userId)
+          .where("isCompleted", isEqualTo: false)
+          .get();
+      if (context.mounted) {
+        workSessions = getUserWorkSession.docs
+            .where(
+              (userWorkSession) =>
+                  DateFormat("yyyy-MM-dd").tryParse(userWorkSession
+                      .data()["startTime"]
+                      .toDate()
+                      .toString()) ==
+                  dateFilter,
+            )
+            .map((workSession) => workSession.data())
+            .toList();
+      }
+    } else {
+      workSessions = await db.readData(
+              sql:
+                  'select * from work_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
+          as List<Map<String, dynamic>>;
+    }
+    if (workSessions.isNotEmpty) {
       bool isBreak =
-          await isBreakTooken(getWorkDayData: workSession.first, db: db);
-      bool isClosedBreak =
-          await isAlreadyClosedBreak(getDayWorkData: workSession.first, db: db);
+          await isBreakTooken(getWorkDayData: workSessions.first, db: db);
+      bool isClosedBreak = await isAlreadyClosedBreak(
+          getDayWorkData: workSessions.first, db: db);
       if (isBreak && !isClosedBreak) {
         setState(() {
           _isBreak = true;
@@ -675,29 +705,6 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> worksessions = [];
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
-    // List<Map<String, dynamic>> notClosedWorkData = await getNotClosedWorkData();
-
-    // if (notClosedWorkData.isNotEmpty) {
-    //   if (categoryProvider.selectedCategory.isNotEmpty) {
-    //     String categoryId = categoryProvider.selectedCategory["id"];
-    //     works = await db.readData(
-    //             sql:
-    //                 'select * from work_sessions where categoryId="$categoryId"')
-    //         as List<Map<String, dynamic>>;
-    //   } else if (categoryProvider.selectedCategory.isEmpty) {
-    //     String categoryId = categoryIdGet ?? notClosedWorkData[0]['categoryId'];
-    //     works = await db.readData(
-    //             sql:
-    //                 'select * from work_sessions where categoryId="$categoryId"')
-    //         as List<Map<String, dynamic>>;
-    //   }
-    // } else if (categoryProvider.selectedCategory.isNotEmpty) {
-    //   String categoryId = categoryProvider.selectedCategory["id"];
-
-    //   works = await db.readData(
-    //           sql: 'select * from work_sessions where categoryId="$categoryId"')
-    //       as List<Map<String, dynamic>>;
-    // }
     if (categoryProvider.selectedCategory.isNotEmpty) {
       if (isUserExists) {
         final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -706,9 +713,7 @@ class _StartTimePageState extends State<StartTimePage> {
             .where('userId', isEqualTo: userId)
             .where("categoryId", isEqualTo: categoryIdGet)
             .get();
-        // final getDateFilter = getWorksessions.docs.where((workSession) =>
-        //     DateFormat('yyyy-MM-dd').format(workSession['startTime']) ==
-        //     DateFormat('yyyy-MM-dd').format(DateTime.now()));
+
         worksessions = getWorksessions.docs.map((work) => work.data()).toList();
       } else {
         String categoryId = categoryProvider.selectedCategory["id"];
@@ -743,29 +748,53 @@ class _StartTimePageState extends State<StartTimePage> {
           if (isUserExists) {
             if (!work["isCompleted"]) {
               isCompledUpdate = false;
+            } else {
+              isCompledUpdate = true;
             }
-          }
-          if (work["isCompleted"] == 0) {
-            isCompledUpdate = false;
           } else {
-            isCompledUpdate = true;
+            if (work["isCompleted"] == 0) {
+              isCompledUpdate = false;
+            } else {
+              isCompledUpdate = true;
+            }
           }
           work.update("isCompleted", (value) => isCompledUpdate);
           workDay.add(work);
         }
-
-        //  else {
-        //   workDay.add(work);
-        // }
       }
-      //  else {
-      //   works = await db.readData(sql: 'select * from work_sessions')
-      //       as List<Map<String, dynamic>>;
-      // }
     }
 
     return workDay;
   }
+
+  // Future<List<Map<String, dynamic>>> getWorkSessionsFromTodayTillFinished(
+  //     {required String categoryId}) async {
+  //   List<Map<String, dynamic>> getWorkSessions = [];
+
+  //   DateTime? startDateNow =
+  //       DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(DateTime.now().toString());
+  //   if (isUserExists) {
+  //     final userId = FirebaseAuth.instance.currentUser?.uid;
+  //     final getWorksessions = await FirebaseFirestore.instance
+  //         .collection("workSessions")
+  //         .where("userId", isEqualTo: userId)
+  //         .where("categoryId", isEqualTo: categoryId)
+  //         .get();
+  //     if (mounted) {
+  //       List<Map<String, dynamic>> mappingWorkSessions = getWorksessions.docs
+  //           .map((workSession) => workSession.data())
+  //           .toList();
+  //       List<Map<String, dynamic>> getWorkSessionsStartedFromToday =
+  //           mappingWorkSessions
+  //               .where((workSession) =>
+  //                   DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(
+  //                       workSession["startTime"].toDate().toString()) ==
+  //                   startDateNow)
+  //               .toList();
+  //     }
+  //   }
+  //   return getWorkSessions;
+  // }
 
   Future<void> completedWork({required AppLocalizations getLabels}) async {
     final categoryProvider =
@@ -792,7 +821,7 @@ class _StartTimePageState extends State<StartTimePage> {
         //check if all breaks closed
         bool isAllBreaksClosed = await breakProvider.isAllBreaksClosed(
             workDay: workDay, context: context, isUserExist: isUserExists);
-        print(isAllBreaksClosed);
+
         if (!mounted) return;
         if (!isAllBreaksClosed) {
           return Constants.showInSnackBar(
@@ -865,18 +894,28 @@ class _StartTimePageState extends State<StartTimePage> {
   getHoursOrMinutesWorkedForToday({String? categoryIdSet}) async {
     List<Map<String, dynamic>> worksDay =
         await getDataSameDateLikeToday(categoryIdGet: categoryIdSet);
+
     for (Map<String, dynamic> workDay in worksDay) {
-      if (workDay.isEmpty || workDay['isCompleted']) {
+      if (workDay.isEmpty || !workDay['isCompleted']) {
         return;
       }
     }
 
     startLoadingAnimation();
     for (Map<String, dynamic> workDay in worksDay) {
+      String? startWorkTime;
+      String? endWorkTime;
+      if (isUserExists) {
+        startWorkTime = workDay['startTime'];
+        endWorkTime = workDay['endTime'];
+      } else {
+        startWorkTime = workDay['startTime'];
+        endWorkTime = workDay['endTime'];
+      }
       DateTime? start =
-          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['startTime']);
+          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(startWorkTime!);
       DateTime? endTime =
-          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(workDay['endTime']);
+          DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(endWorkTime!);
       int hours = endTime!.difference(start!).inHours;
       if (hours > 0) {
         setState(() {
@@ -1186,13 +1225,13 @@ class _StartTimePageState extends State<StartTimePage> {
       required Map<String, dynamic> categorySelected}) async {
     numberOfBreaks = 0;
 
-    startLoadingAnimation();
+    if (categorySelected.isNotEmpty) {
+      String categoryId = categorySelected["id"];
 
-    try {
-      if (categorySelected.isNotEmpty) {
-        String categoryId = categorySelected["id"];
-        List<Map<String, dynamic>> getWorksDayList =
-            await getDataSameDateLikeToday(categoryIdGet: categoryId);
+      List<Map<String, dynamic>> getWorksDayList =
+          await getDataSameDateLikeToday(categoryIdGet: categoryId);
+      if (getWorksDayList.isNotEmpty) {
+        startLoadingAnimation();
         Map<String, dynamic> getWorksDay = getWorksDayList.first;
         String workSessionId = getWorksDay["id"];
         List<Map<String, dynamic>> breakSessions = [];
@@ -1223,24 +1262,15 @@ class _StartTimePageState extends State<StartTimePage> {
               as List<Map<String, dynamic>>;
         }
 
-        if (mounted && !_isDisposed || isSwitchCategory) {
+        if (mounted && breakSessions.isNotEmpty) {
           setState(() {
             numberOfBreaks = breakSessions.length;
             isInitFinished = true;
             _isDisposed = true;
           });
-
-          startLoadingAnimation(); // End the loading animation
         }
+        startLoadingAnimation(); // End the loading animation
       }
-    } catch (error) {
-      if (mounted) {
-        Constants.showInSnackBar(value: error.toString(), context: context);
-      }
-    } finally {
-      setState(() {
-        isInitFinished = true;
-      });
     }
   }
 
@@ -1361,6 +1391,10 @@ class _StartTimePageState extends State<StartTimePage> {
                           final data = await db.readData(
                               sql: "select * FROM categories");
                           print(data);
+                          // final data = await db.deleteData(
+                          //     sql:
+                          //         "delete FROM categories where id='6dd44514-2116-4425-973b-91555472592a'");
+                          // print(data);
                           // List<Map<String, dynamic>> getCategoriesList =
                           //     await categoryProvider.getCategories(
                           //         context: context);
@@ -1550,10 +1584,10 @@ class _StartTimePageState extends State<StartTimePage> {
                                   await _showRewardedAd(
                                       categorySet: categoryToMap);
 
-                                  // await getAllData(
-                                  //     isSwitchCategory: true,
-                                  //     categorySet: categoryToMap,
-                                  //     isInit: false);
+                                  await getAllData(
+                                      isSwitchCategory: true,
+                                      categorySet: categoryToMap,
+                                      isInit: false);
                                 },
                               )
                             : !timeManagementPovider.isInternetConnectedGet
@@ -1635,19 +1669,20 @@ class _StartTimePageState extends State<StartTimePage> {
                                 await startWork(
                                     timeManagementPovider:
                                         timeManagementPovider);
-                                // await getAllData(
-                                //     isSwitchCategory: false,
-                                //     isInit: false,
-                                //     categorySet:
-                                //         categoryProvider.selectedCategory);
-                                await getWorkTime(
-                                  isSelectedCategory: isSwitchCategoryAvailable,
-                                  isAlreadyStarted: isAlreadyStartedWorkCheck,
-                                  category: categoryProvider
-                                          .selectedCategory.isNotEmpty
-                                      ? categoryProvider.selectedCategory
-                                      : categoryHint,
-                                );
+
+                                await getAllData(
+                                    isSwitchCategory: false,
+                                    isInit: false,
+                                    categorySet:
+                                        categoryProvider.selectedCategory);
+                                // await getWorkTime(
+                                //   isSelectedCategory: isSwitchCategoryAvailable,
+                                //   isAlreadyStarted: isAlreadyStartedWorkCheck,
+                                //   category: categoryProvider
+                                //           .selectedCategory.isNotEmpty
+                                //       ? categoryProvider.selectedCategory
+                                //       : categoryHint,
+                                // );
                                 isSwitchCategoryAvailablity(
                                     isAlreadyStartWork:
                                         isAlreadyStartedWorkCheck);

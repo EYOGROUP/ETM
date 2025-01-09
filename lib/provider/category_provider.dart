@@ -100,6 +100,7 @@ class CategoryProvider extends ChangeNotifier {
     Map<String, dynamic> closeCategory = {};
     if (_selectedCategory.isNotEmpty) {
       String categoryId = _selectedCategory["id"];
+
       if (isUserExit) {
         final userId = FirebaseAuth.instance.currentUser?.uid;
         closeCategory["lockedCategories"] =
@@ -109,15 +110,33 @@ class CategoryProvider extends ChangeNotifier {
             .doc(userId)
             .update(closeCategory);
       } else {
-        closeCategory["isUnlocked"] = 0;
-        TrackingDB db = TrackingDB();
-        await db.updateData(
-            tableName: "categories",
-            data: closeCategory,
-            id: categoryId,
-            columnId: "id");
+        ETMCategory category = ETMCategory.categories
+            .where(
+              (category) => category.isPremium,
+            )
+            .first;
+        if (categoryId != category.id) {
+          closeCategory["isUnlocked"] = 0;
+          TrackingDB db = TrackingDB();
+          _lockedCategories.removeWhere(
+            (lockedCategory) => lockedCategory['id'] == categoryId,
+          );
+          ETMCategory category = ETMCategory.categories
+              .where(
+                (category) => category.id == categoryId,
+              )
+              .first;
+          category.isUnlocked = false;
+
+          await db.updateData(
+              tableName: "categories",
+              data: closeCategory,
+              id: categoryId,
+              columnId: "id");
+        }
       }
     }
+    notifyListeners();
   }
 
   // Activate a Category
@@ -213,10 +232,9 @@ class CategoryProvider extends ChangeNotifier {
             isUnlocked: category["isUnlocked"] == 0 ? false : true,
             description: category['description']);
         switchCategory.add(categoryDate.toMap(isLokal: false));
+      } else {
+        switchCategory.add(category);
       }
-      //  else {
-      //   switchCategory.add(category);
-      // }
     }
     List<String> lockedUserCategory = [];
     if (isUserExist!) {
@@ -236,7 +254,7 @@ class CategoryProvider extends ChangeNotifier {
         _lockedCategories.add(getCategory);
       }
     }
-    print(_lockedCategories);
+
     notifyListeners();
   }
 
@@ -254,7 +272,32 @@ class CategoryProvider extends ChangeNotifier {
         checkIfCategoryInDB = false;
       }
     }
+
     return checkIfCategoryInDB;
+  }
+
+  // init premium category in DB
+  Future<void> initPremiumCategory({required bool mounted}) async {
+    String workCategoryId = "6dd44514-2116-4425-973b-91555472592a";
+    TrackingDB db = TrackingDB();
+    final getCategoriesDB = await db.readData(
+        sql: "select * FROM categories where id='$workCategoryId'");
+    if (!mounted) return;
+    if (getCategoriesDB.isNotEmpty) {
+      return;
+    }
+    ETMCategory initWorkCategory = ETMCategory.categories
+        .where((category) => category.id == workCategoryId)
+        .first;
+    bool isCategoreyInLocked = _lockedCategories
+        .where((lockedCategory) => lockedCategory['id'] == initWorkCategory.id)
+        .isNotEmpty;
+    if (!isCategoreyInLocked) {
+      _lockedCategories.add(initWorkCategory.toMap(isLokal: true));
+    }
+    print("he:$_lockedCategories");
+    await db.insertData(
+        tableName: "categories", data: initWorkCategory.toMapToLokal());
   }
 
   Future<void> unlockCategory(

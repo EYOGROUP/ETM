@@ -680,9 +680,8 @@ class UserProvider extends ChangeNotifier {
       bool isUserLogIn = await isUserLogin(context: context);
       User? user = FirebaseAuth.instance.currentUser;
       if (!context.mounted) return;
-      print(isUserLogIn);
+
       if (user == null) {
-        print("No user is logged in.");
         return;
       }
       if (isUserLogIn) {
@@ -694,7 +693,6 @@ class UserProvider extends ChangeNotifier {
         if (result != null) {}
       }
     } on FirebaseAuthException catch (error) {
-      print(error);
       if (context.mounted) {
         Constants.showInSnackBar(
             value: error.message.toString(), context: context);
@@ -706,10 +704,8 @@ class UserProvider extends ChangeNotifier {
     late StreamSubscription _linkSubscription;
     final appLinks = AppLinks();
     // Subscribe to uriLinkStream to handle initial and subsequent links
-    print(await appLinks.getInitialLink());
-    _linkSubscription = appLinks.uriLinkStream.listen((Uri uri) {
-      print("Received URI: $uri");
 
+    _linkSubscription = appLinks.uriLinkStream.listen((Uri uri) {
       // Add your navigation logic based on the URI received
       if (uri.path == '/etm/reset-password') {
         // Navigate to the reset password screen if the link is valid
@@ -720,7 +716,6 @@ class UserProvider extends ChangeNotifier {
         // );
       } else {
         // Handle other URI paths or show error messages
-        print('Link does not match expected pattern');
       }
     });
 
@@ -731,13 +726,11 @@ class UserProvider extends ChangeNotifier {
   Future<void> initDeepLinks() async {
     final appLinks = AppLinks();
     final Uri? uri = Uri.base;
-    print(uri);
+
     Uri? initialLink = await appLinks.getInitialLink();
     if (initialLink != null) {
-      print("Initial link: $initialLink");
       // Navigate based on the initial deep link
       if (initialLink.path == '/etm/reset-password') {
-        print('he');
         // Navigator.push(
         //   context,
         //   MaterialPageRoute(builder: (context) => ResetPasswordScreen(uri: initialLink)),

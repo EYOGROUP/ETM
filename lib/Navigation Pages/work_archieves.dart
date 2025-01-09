@@ -1,4 +1,5 @@
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -44,22 +45,25 @@ class _WorkArchievesState extends State<WorkArchieves> {
   }
 
   getAllData() async {
-    _dates.clear();
-    _dates.add(DateTime.now());
     final tmProvider =
         Provider.of<TimeManagementPovider>(context, listen: false);
+    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
+    tm.setOrientation(context);
+    _dates.clear();
+    _dates.add(DateTime.now());
     isUserExist = await Provider.of<UserProvider>(context, listen: false)
         .isUserLogin(context: context);
     if (!mounted) return;
 
-    await getNumberOfWorkedHours(tmProvider: tmProvider);
-
     await isWorkFinishedCheck(
         isUserExist: isUserExist!, tmProvider: tmProvider);
-    await getNumberOfBreaks(tmProvider: tmProvider);
     if (!mounted) return;
-    final tm = Provider.of<TimeManagementPovider>(context, listen: false);
-    tm.setOrientation(context);
+    // if (isWorkFinished) {
+    await getNumberOfWorkedHours(tmProvider: tmProvider);
+
+    await getNumberOfBreaks(tmProvider: tmProvider);
+    // }
+    if (!mounted) return;
   }
 
   Future<void> isWorkFinishedCheck(
@@ -125,6 +129,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
       body: SmartRefresher(
         controller: _refreshController,
         onRefresh: _onRefresh,
+        header: Constants.smartRefresherHeader(getLabels: getLabels),
         child: SingleChildScrollView(
           child: Padding(
             padding: EdgeInsets.symmetric(

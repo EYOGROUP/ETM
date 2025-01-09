@@ -8,6 +8,7 @@ class WorkSession {
   int? breakTimeMinutes;
   String? taskDescription;
   final DateTime createdAt;
+  bool? isSplit;
   bool isCompleted;
   WorkSession(
       {required this.id,
@@ -19,6 +20,7 @@ class WorkSession {
       this.taskDescription = '',
       required this.createdAt,
       required this.categoryId,
+      this.isSplit,
       this.isCompleted = false});
   Map<String, dynamic> lokalToMap() {
     return {
@@ -31,6 +33,7 @@ class WorkSession {
       'categoryId': categoryId,
       "taskDescription": taskDescription,
       'isCompleted': isCompleted ? 1 : 0,
+      'isSplit': isCompleted ? 1 : 0,
     };
   }
 
@@ -46,6 +49,7 @@ class WorkSession {
       "taskDescription": taskDescription,
       'isCompleted': isCompleted,
       "userId": userId,
+      "isSplit": isSplit
     };
   }
 }
