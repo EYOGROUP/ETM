@@ -34,6 +34,7 @@ class TrackingDB {
        createdAt TEXT NOT NULL,
         isCompleted INTEGER NOT NULL,
         categoryId TEXT NOT NULL,
+        isSplit INTEGER NOT NULL,
         FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
       );
     ''');
@@ -41,7 +42,7 @@ class TrackingDB {
           // 3. Copy data from the old work_sessions table to the new one (only the necessary columns)
           await db.execute('''
       INSERT INTO work_sessions_new (id, startTime, endTime, isCompleted, categoryId)
-      SELECT id, startTime, endTime, isCompleted, categoryId FROM work_sessions;
+      SELECT id, startTime, endTime, isCompleted,isSplit, categoryId FROM work_sessions;
     ''');
 
           // 4. Drop the old work_sessions table
@@ -72,7 +73,7 @@ class TrackingDB {
 
     const workSessionTable =
         ''' CREATE TABLE work_sessions (id TEXT PRIMARY KEY , startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,
-      breakTimeMinutes INTEGER DEFAULT 0, taskDescription TEXT, createdAt TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId TEXT NOT NULL, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
+      breakTimeMinutes INTEGER DEFAULT 0, taskDescription TEXT, createdAt TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId TEXT NOT NULL,isSplit INTEGER NOT NULL, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
     const breakSessionTable =
         ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,workSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
     if (version == 1) {

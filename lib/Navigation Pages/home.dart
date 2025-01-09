@@ -1242,7 +1242,6 @@ class _StartTimePageState extends State<StartTimePage> {
               .limit(1)
               .get();
           if (mounted) {
-            print(checkBreakSession);
             if (checkBreakSession.size > 0) {
               final getAllBreaksDependOnWorkSession = await FirebaseFirestore
                   .instance
