@@ -378,7 +378,7 @@ class _WorkDetailsState extends State<WorkDetails> {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          getLabels.workDetails,
+          getLabels.sessionDetails,
         ),
         automaticallyImplyLeading: false,
         leading: InkWell(
@@ -431,16 +431,16 @@ class _WorkDetailsState extends State<WorkDetails> {
                     ),
                     if (worksData!.isNotEmpty) ...{
                       Text(
-                        getLabels.workTime,
+                        getLabels.trackedTime,
                         style: const TextStyle(
                             fontWeight: FontWeight.bold, fontSize: 22.0),
                       ),
                       LeadingAndTitle(
-                        leading: getLabels.startWork,
+                        leading: getLabels.sessionStartedAt,
                         title: worksData?.first['startTime'],
                       ),
                       LeadingAndTitle(
-                        leading: getLabels.workEndedAt,
+                        leading: getLabels.sessionEndedAt,
                         title: worksData?.last['endTime'],
                       ),
                       Padding(
@@ -452,8 +452,8 @@ class _WorkDetailsState extends State<WorkDetails> {
                           children: [
                             Text(
                               isInHoursGross
-                                  ? getLabels.youWorkedHours
-                                  : getLabels.youWorkedInMinuteGross,
+                                  ? getLabels.trackedHoursGross
+                                  : getLabels.trackedMinutesGross,
                               style: TextStyle(fontSize: 16.0),
                             ),
                             Spacer(),
@@ -658,8 +658,8 @@ class _WorkDetailsState extends State<WorkDetails> {
                           children: [
                             Text(
                               isInHoursNet
-                                  ? getLabels.youWorkedNetHours
-                                  : getLabels.youWorkedInMinuteNet,
+                                  ? getLabels.trackedHoursNet
+                                  : getLabels.trackedMinutesNet,
                               style: TextStyle(fontSize: 16.0),
                             ),
                             Spacer(),
@@ -680,11 +680,12 @@ class _WorkDetailsState extends State<WorkDetails> {
                               deleteWork(
                                   id: worksData?.first["id"],
                                   title: getLabels.areYouSure,
-                                  description: getLabels.deleteWorkConfirmation,
+                                  description:
+                                      getLabels.confirmDeleteTrackedSession,
                                   cancelText: getLabels.cancel,
                                   confirmText: getLabels.confirm);
                             },
-                            child: Text(getLabels.deleteWorkDay)),
+                            child: Text(getLabels.deleteTrackedSession)),
                     } else ...{
                       SizedBox(
                           height: MediaQuery.of(context).size.height * 0.7,

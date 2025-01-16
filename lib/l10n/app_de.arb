@@ -1,8 +1,38 @@
 {
   "welcomeTo": "Willkommen bei",
   "subtitleWelcomePage": "Erfassen Sie Ihre Zeit lokal, keine Anmeldung erforderlich.",
+  "startTracking": "Verfolgung starten",
+  "todayYouTracked": "Heute haben Sie  {times} {timesLabel} verfolgt.",
+  "@todayYouTracked": {
+    "placeholders": {
+      "times": {
+        "type": "int",
+        "format": "decimalPattern",
+        "example": "123"
+      },
+       "timesLabel": {
+        "type": "String"
+       }
+  }
+  },
+  "stopTracking":"Verfolgung beenden",
+  "trackedTime": "Verfolgte Zeit",
+  "sessionFinishNow": "Die Sitzung wird jetzt beendet.",
+  "trackingStartNow": "Die Verfolgung beginnt jetzt!",
+  "startBeforeBreak": "Starten Sie Ihre Sitzung, bevor Sie eine Pause machen.",
+  "noMoreBreaks": "Sie haben Ihre Sitzung beendet, heute sind keine weiteren Pausen verfügbar!",
+  "sessionAlreadyFinished": "Ihre Sitzung ist für heute bereits beendet.",
+  "sessionStartedAt": "Sitzung gestartet um:",
+  "sessionEndedAt": "Sitzung beendet um:",
+  "trackedHoursGross": "Sie haben in Stunden verfolgt (Brutto):",
+  "trackedMinutesGross": "Sie haben in Minuten verfolgt (Brutto):",
+  "trackedHoursNet": "Sie haben in Stunden verfolgt (Netto):",
+  "trackedMinutesNet": "Sie haben in Minuten verfolgt (Netto):",
+  "sessionDetails": "Sitzungsdetails",
+  "selectCategoryToTrack": "Bitte wählen Sie eine Kategorie, um die Verfolgung zu starten.",
+  "deleteTrackedSession": "Löschen Sie Ihre verfolgte Sitzung.",
+  "confirmDeleteTrackedSession": "Möchten Sie Ihre verfolgte Sitzung wirklich löschen?",
   "startNow": "Jetzt starten",
-  "workTime" :"Arbeitszeiten",
   "breakTime": "Pausenzeit",
   "home": "Startseite",
   "breakLabel" : "Pause",
@@ -10,15 +40,12 @@
   "welcome": "Herzlich willkommen!",
   "numOfBreaks" : "Anzahl der Pausen",
   "todayThe" : "Heute ist die",
-  "startWork": "Arbeit beginnen",
   "startBreak": "Pause beginnen",
   "dateFormat": "dd.MM.yyyy",
-  "stopWork": "Arbeit beenden",
   "stopBreak": "Pause anhalten",
   "theBreakWillEndNow": "Die Pause wird jetzt enden.",
   "theBreakWillStartNow": "Die Pause wird jetzt beginnen.",
   "theWorkWillFinishNow": "Die Arbeit wird jetzt enden.",
-  "workWillStartNow": "Die Arbeit wird jetzt beginnen!",
   "appVersion": "App-Version",
   "infos": "Infos",
   "contactUs": "Kontaktieren Sie uns",
@@ -45,31 +72,11 @@
   "enterYourFullName": "Geben Sie Ihren vollständigen Namen ein",
   "archives": "Archive",
   "chooseDate": "Wählen Sie ein Datum",
-  "startYourWorkBeforeBreak": "Beginnen Sie Ihre Arbeit, bevor Sie eine Pause machen",
-  "youWork": "Heute haben Sie {times} {timesLabel} gearbeitet.",
-  "@youWork": {
-    "placeholders": {
-      "times": {
-        "type": "int",
-        "format": "decimalPattern",
-        "example": "123"
-      },
-       "timesLabel": {
-        "type": "String"
-       }
-  }
-  },
   "hours": "Stunden",
   "hour": "Stunde",
-  "noMoreBreaksAvailable": "Sie haben Ihre Arbeit beendet, keine weiteren Pausen mehr für Ihre Arbeit heute verfügbar!",
-  "workFinishedForToday": "Ihre Arbeit ist für heute bereits abgeschlossen",
-   "minute": "Minute",
+  "minute": "Minute",
   "minutes": "Minuten",
-  "workStartedAt": "Arbeit begonnen um:",
-  "workEndedAt": "Arbeit beendet um:",
   "date": "Datum:",
-  "youWorkedHours": "Sie haben in Stunden gearbeitet (Brutto):",
-  "youWorkedInMinuteGross": "Sie haben in Minuten (Brutto) gearbeitet:",
   "youHadBreaks": "Sie hatten:",
   "moreDetails": "Mehr Details",
    "breakNo": "Pause Nr.:",
@@ -83,7 +90,7 @@
       }
     }
   },
-   "activateCategoryToStart": "Bitte aktivieren Sie zuerst {categoryName}, um zu starten",
+  "activateCategoryToStart": "Bitte aktivieren Sie zuerst {categoryName}, um zu starten",
   "@activateCategoryToStart": {
     "placeholders": {
       "categoryName": {
@@ -94,9 +101,6 @@
   "noBreakTaken": "Es wurde keine Pause genommen.",
   "ofBreak": "an Pause",
   "totalBreakDurationMin": "Gesamte Pausendauer in Min:",
-  "youWorkedNetHours": "Sie haben in Stunden gearbeitet (Netto):",
-   "youWorkedInMinuteNet": "Sie haben in Minuten (Netto) gearbeitet:",
-  "workDetails": "Arbeitsdetails",
   "closeBreakFirst": "Sie müssen zuerst Ihre Pause beenden",
   "informationCollection": "1. Information Collection:",
   "useOfInformation": "2. Verwendung der Informationen:",
@@ -104,8 +108,8 @@
   "darkLightModeSettings": "4. Dunkel-/Hellmodus-Einstellungen:",
   "dataSecurity": "5. Datensicherheit:",
   "policyChanges": "6. Änderungen dieser Richtlinie:",
-  "dataStorageInfo": "Die EyoTime Management (ETM) App speichert keine persönlichen Daten auf externen Servern. Alle Daten, wie Arbeitszeiten und Pausen, werden ausschließlich lokal auf deinem Gerät gespeichert und sind nur für dich zugänglich.",
-  "dataPurpose": "Die App erfasst und speichert Daten nur zur Zeiterfassung und Analyse deiner Arbeitszeiten. Es gibt keine Drittanbieter-Analysen, keine Werbung, und keine Daten werden an externe Dienste gesendet.",
+  "dataStorageInfo": "Die EyoTime Management (ETM) App speichert keine persönlichen Daten auf externen Servern. Alle Daten, einschließlich Zeitangaben und Pausen, werden lokal auf Ihrem Gerät gespeichert und sind nur für Sie zugänglich.",
+  "dataPurpose": "Die App sammelt und speichert Daten ausschließlich zum Verfolgen und Analysieren Ihrer Zeit. Es gibt keine Drittanbieter-Analysen, keine Werbung und keine Daten werden an externe Dienste gesendet.",
   "contactUsExplanation": "Falls du über die „Contact Us“-Funktion eine Nachricht an das Team von Younes Dahbi (EyoGroup) senden möchtest, leitet die App die eingegebenen Informationen direkt an deinen E-Mail-Client weiter. Weder Younes Dahbi noch EyoGroup erhalten direkte Informationen aus diesem Prozess, und es findet keine zusätzliche Speicherung oder Synchronisation außerhalb deiner E-Mail-Anwendung statt.",
   "darkModePreference": "Die App speichert deine Präferenz für den Dunkel- oder Hellmodus nur lokal auf deinem Gerät und greift nicht auf persönliche Daten zu.",
   "localDataSecurity": "Alle Daten bleiben auf deinem Gerät und werden nicht an Dritte weitergegeben. Die App nutzt lokal gespeicherte Informationen ausschließlich zur Funktionalität der Anwendung.",
@@ -124,7 +128,7 @@
   "contactUsExplanation": "Für Fragen oder Anmerkungen zur App oder zu diesen Nutzungsbedingungen, kontaktiere Younes Dahbi (EyoGroup) über die „Contact Us“-Funktion innerhalb der App.",
   "email": "Email",
   "contactDetails": "Contact Details",
-   "chooseCategory": "Wählen Sie eine Kategorie",
+  "chooseCategory": "Wählen Sie eine Kategorie",
   "selectCategory": "Kategorie auswählen",
   "productivity": "Produktivität",
   "healthFitness": "Gesundheit & Fitness",
@@ -133,21 +137,18 @@
   "finance": "Finanzen",
   "social": "Sozial",
   "entertainment": "Unterhaltung",
-  "selectCategoryToStart": "Bitte wählen Sie eine Kategorie, um Ihre Arbeit zu beginnen",
-  "deleteWorkDay": "Lösche deinen Arbeitstag",
   "areYouSure": "Bist du sicher?",
-  "deleteWorkConfirmation": "Möchtest du deine Arbeit wirklich löschen?",
    "cancel": "Abbrechen",
   "confirm": "Bestätigen",
    "welcomePrivacyPolicy": "Willkommen bei der Datenschutzerklärung von ETM.\n\nWir nehmen den Schutz deiner Daten sehr ernst und möchten, dass du weißt, welche Daten wir sammeln und wie wir sie verwenden.",
   "dataAccess": "Nur du, als Nutzer der App, hast Zugriff auf die auf deinem Gerät gespeicherten Daten.",
-  "dataDeletion": "Du kannst deine Arbeitszeitdaten jederzeit über die App löschen. Diese Daten werden nicht auf unseren Servern gespeichert und werden nach der Löschung nicht wiederhergestellt.",
+  "dataDeletion": "Sie können Ihre Zeitdaten jederzeit über die App löschen. Diese Daten werden nicht auf unseren Servern gespeichert und können nach dem Löschen nicht wiederhergestellt werden.",
   "policyChanges": "Wir behalten uns das Recht vor, diese Datenschutzerklärung jederzeit zu ändern. Alle Änderungen werden in der App angezeigt.",
   "contact": "Wenn du Fragen zur Datenschutzerklärung hast oder mehr über unsere Praktiken erfahren möchtest, kontaktiere uns bitte unter younesoffi.dahbi@gmail.com.",
   "dataAccessQuestion": "Wer hat Zugriff auf diese Daten?",
   "dataDeletionTitle": "Datenlöschung",
   "policyChangesTitle": "Änderungen der Datenschutzerklärung",
-  "yourWorkdayHasBeenDeleted": "Dein Arbeitstag wurde gelöscht. Du kannst jetzt einen neuen Arbeitstag starten.",
+  "timeEntryDeleted": "Ihr Zeiteintrag wurde erfolgreich gelöscht. Sie können jederzeit eine neue Sitzung starten.",
   "yourScheduleAwaits": "Dein Zeitplan wartet ⏳",
   "dontForgetTasks": "Vergiss nicht deine geplanten Aufgaben für heute. Jede Minute zählt!",
   "viewBreakDetails": "Wähle eine Kategorie, um die Pausendetails anzuzeigen.",

@@ -32,41 +32,33 @@
 		<string>tel</string>
 		<string>mailto</string>
 	</array>
+
 	<key>CFBundleURLTypes</key>
 <array>
-	<dict>
-		<key>CFBundleTypeRole</key>
-		<string>Editor</string>
-		<key>CFBundleURLSchemes</key>
-		<array>
-			<string>com.googleusercontent.apps.82637475051-150ruq6rkap9c75cgh2e227k3a76l0g6</string>
-		</array>
-	</dict>
-</array>
-<!-- End of the Google Sign-in Section -->
-<key>UIApplicationExitsOnSuspend</key>
-<false/>
-<key>CFBundleURLTypes</key>
-<array>
     <dict>
+        <key>CFBundleTypeRole</key>
+        <string>Editor</string>
         <key>CFBundleURLSchemes</key>
         <array>
-            <string>https</string>
+            <!-- TODO Replace this value: -->
+            <!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
+            <string>com.googleusercontent.apps.82637475051-150ruq6rkap9c75cgh2e227k3a76l0g6</string>
         </array>
     </dict>
 </array>
-
-<key>com.apple.developer.associated-domains</key>
-<array>
-    <string>applinks:eyogroup.com</string> <!-- Replace with your domain -->
-</array>
-<key>FlutterDeepLinkingEnabled</key>
-<false/>
-  <key>NSAppTransportSecurity</key>
-  <dict>
-    <key>NSAllowsArbitraryLoads</key>
-    <true/>
-</dict>
+	<key>UIApplicationExitsOnSuspend</key>
+	<false/>
+	<key>com.apple.developer.associated-domains</key>
+	<array>
+		<string>applinks:eyogroup.com</string>
+	</array>
+	<key>FlutterDeepLinkingEnabled</key>
+	<false/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
+	</dict>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

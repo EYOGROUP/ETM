@@ -185,7 +185,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
                               Text.rich(TextSpan(children: [
                                 TextSpan(
                                   text:
-                                      '${isInhours ? getLabels.youWorkedHours : getLabels.youWorkedInMinuteGross}  $workedTime ',
+                                      '${isInhours ? getLabels.trackedHoursGross : getLabels.trackedMinutesGross}  $workedTime ',
                                   style: const TextStyle(
                                       fontSize: 16.0,
                                       fontWeight: FontWeight.bold),
@@ -227,8 +227,8 @@ class _WorkArchievesState extends State<WorkArchieves> {
                                                 .requestRefresh();
                                             if (!context.mounted) return;
                                             Constants.showInSnackBar(
-                                                value: getLabels
-                                                    .yourWorkdayHasBeenDeleted,
+                                                value:
+                                                    getLabels.timeEntryDeleted,
                                                 context: context);
                                           }
                                         },

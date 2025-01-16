@@ -44,8 +44,6 @@ class _StartTimePageState extends State<StartTimePage> {
   bool isThumbStartTouchingText = false;
   String sliderForWorkingTime = '';
   bool isSmallLabel = false;
-  String startWorkTimeInit = "-";
-  String finishWorkTimeInit = "-";
 
 // variable for Break
   String sliderForBreakTime = "";
@@ -55,8 +53,8 @@ class _StartTimePageState extends State<StartTimePage> {
   bool isThumbBreakStartTouchingText = false;
   bool isInhours = false;
   int workedTime = 0;
-  String? workStartedTime;
-  String? workEndedTime;
+  String workStartedTime = '-';
+  String workEndedTime = '-';
 
   List<Map<String, dynamic>>? getCategories;
   bool isGettingData = false;
@@ -136,7 +134,7 @@ class _StartTimePageState extends State<StartTimePage> {
     if (!mounted) return;
 
     List<Map<String, dynamic>> isAlreadClosedWork =
-        await getNotClosedWorkData(isAlreadyStartWork: isAlreadStartedWork);
+        await getNotClosedTrackingData(isAlreadyStartWork: isAlreadStartedWork);
     bool isNotClosedAfterTime = await isNotClosedWork();
     if (!mounted) return;
 
@@ -184,18 +182,25 @@ class _StartTimePageState extends State<StartTimePage> {
           }
         }
       }
-
+      final getNotClosedWork = await getNotClosedTrackingData(
+          isAlreadyStartWork: isAlreadyStartedWorkCheck);
+      if (!mounted) return;
+      if (getNotClosedWork.isNotEmpty) {
+        return;
+      }
       if (!isWorkDayStarted) {
         workStartTime = DateTime.now();
 
-        var workSessionId = const Uuid().v4();
+        var sessionId = const Uuid().v4();
+        var workSessionId = "WS-${const Uuid().v4()}";
         final userId = FirebaseAuth.instance.currentUser?.uid;
         WorkSession workSession = WorkSession(
+          workSessionId: workSessionId,
           categoryId: categoryId,
           startTime: workStartTime!,
           createdAt: workStartTime!,
           taskDescription: _todoController.text,
-          id: workSessionId,
+          id: sessionId,
           userId: userId,
         );
 
@@ -203,6 +208,7 @@ class _StartTimePageState extends State<StartTimePage> {
         await insertStartWorkToCloudOrLokalDb(workSession: workSession);
         if (!mounted) return;
         await isSwitchCategoryAvailablity(
+            selectedCategory: categoryProvider.selectedCategory,
             isAlreadyStartWork: isAlreadStartedWork);
         if (!mounted) return;
 
@@ -216,7 +222,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
     if (!isAnotherCategory && isWorkFinished) {
       return Constants.showInSnackBar(
-          value: getLabels.workFinishedForToday, context: context);
+          value: getLabels.sessionAlreadyFinished, context: context);
     }
   }
 
@@ -304,7 +310,7 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  Future<List<Map<String, dynamic>>> getNotClosedWorkData(
+  Future<List<Map<String, dynamic>>> getNotClosedTrackingData(
       {bool? isAlreadyStartWork}) async {
     List<Map<String, dynamic>> getWorkNotClosed = [];
     TrackingDB db = TrackingDB();
@@ -373,6 +379,7 @@ class _StartTimePageState extends State<StartTimePage> {
         }
       }
     }
+
     return getWorkNotClosed;
   }
 //ca-app-pub-6165489189371233/7954842835
@@ -475,12 +482,13 @@ class _StartTimePageState extends State<StartTimePage> {
         isUserExist: isUserExists, mounted: mounted, context: context);
     if (!mounted) return;
     activatedCategories = categoryProvider.lockedCategories;
-    print(activatedCategories);
+
     isAlreadyStartedWorkCheck = await isAlreadyStartedWorkDay();
 
     if (!mounted) return;
 
     await isSwitchCategoryAvailablity(
+        selectedCategory: categoryProvider.selectedCategory,
         isAlreadyStartWork: isAlreadyStartedWorkCheck);
     if (!mounted) return;
     if (isSwitchCategoryAvailable) {
@@ -494,7 +502,7 @@ class _StartTimePageState extends State<StartTimePage> {
     // await getCategoriesFromProvider(categoryProvider: categoryProvider);
     // activatedCategories.add(getCategories!.first);
 
-    sliderForWorkingTime = AppLocalizations.of(context)!.startWork;
+    sliderForWorkingTime = AppLocalizations.of(context)!.startTracking;
     sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
 
     if (!isSwitchCategory) {
@@ -526,14 +534,14 @@ class _StartTimePageState extends State<StartTimePage> {
   void resetAllData() {
     setState(() {
       workStartTime = null;
-      workStartedTime = null;
+      workStartedTime = '-';
       categoryHint = {};
 
       workFinishTime = null;
       numberOfBreaks = 0;
       workedTime = 0;
 
-      workEndedTime = null;
+      workEndedTime = '-';
       isInhours = false;
     });
   }
@@ -546,14 +554,22 @@ class _StartTimePageState extends State<StartTimePage> {
   //   }
   // }
 
-  Future<void> isSwitchCategoryAvailablity({bool? isAlreadyStartWork}) async {
-    List<Map<String, dynamic>> getNoClosedWork =
-        await getNotClosedWorkData(isAlreadyStartWork: isAlreadyStartWork);
-    if (mounted) {
-      if (getNoClosedWork.isNotEmpty) {
-        setState(() {
-          isSwitchCategoryAvailable = false;
-        });
+  Future<void> isSwitchCategoryAvailablity(
+      {bool? isAlreadyStartWork,
+      required Map<String, dynamic> selectedCategory}) async {
+    if (selectedCategory.isNotEmpty) {
+      List<Map<String, dynamic>> getNoClosedWork =
+          await getNotClosedTrackingData(
+              isAlreadyStartWork: isAlreadyStartWork);
+      if (mounted) {
+        bool isTrackingOver24H =
+            isTrackingTimeOver24H(getTrackingData: getNoClosedWork.first);
+
+        if (getNoClosedWork.isNotEmpty && !isTrackingOver24H) {
+          setState(() {
+            isSwitchCategoryAvailable = false;
+          });
+        }
       }
     }
   }
@@ -566,7 +582,8 @@ class _StartTimePageState extends State<StartTimePage> {
     TrackingDB db = TrackingDB();
 
     if (!isClosedWork) {
-      List<Map<String, dynamic>> getNoClosedWork = await getNotClosedWorkData();
+      List<Map<String, dynamic>> getNoClosedWork =
+          await getNotClosedTrackingData();
 
       if (getNoClosedWork.isNotEmpty) {
         categoryId = getNoClosedWork[0]["categoryId"];
@@ -688,7 +705,7 @@ class _StartTimePageState extends State<StartTimePage> {
       }
       setState(() {
         _isStartWork = true;
-        sliderForWorkingTime = getLabels.stopWork;
+        sliderForWorkingTime = getLabels.stopTracking;
       });
     } else {
       setState(() {
@@ -767,34 +784,54 @@ class _StartTimePageState extends State<StartTimePage> {
     return workDay;
   }
 
-  // Future<List<Map<String, dynamic>>> getWorkSessionsFromTodayTillFinished(
-  //     {required String categoryId}) async {
-  //   List<Map<String, dynamic>> getWorkSessions = [];
+  Future<List<Map<String, dynamic>>> getTrackingSessionNotFinished(
+      {required String categoryId}) async {
+    List<Map<String, dynamic>> getTrackSessions = [];
 
-  //   DateTime? startDateNow =
-  //       DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(DateTime.now().toString());
-  //   if (isUserExists) {
-  //     final userId = FirebaseAuth.instance.currentUser?.uid;
-  //     final getWorksessions = await FirebaseFirestore.instance
-  //         .collection("workSessions")
-  //         .where("userId", isEqualTo: userId)
-  //         .where("categoryId", isEqualTo: categoryId)
-  //         .get();
-  //     if (mounted) {
-  //       List<Map<String, dynamic>> mappingWorkSessions = getWorksessions.docs
-  //           .map((workSession) => workSession.data())
-  //           .toList();
-  //       List<Map<String, dynamic>> getWorkSessionsStartedFromToday =
-  //           mappingWorkSessions
-  //               .where((workSession) =>
-  //                   DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(
-  //                       workSession["startTime"].toDate().toString()) ==
-  //                   startDateNow)
-  //               .toList();
-  //     }
-  //   }
-  //   return getWorkSessions;
-  // }
+    // DateTime? startDateNow =
+    //     DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(DateTime.now().toString());
+    if (isUserExists) {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      final getWorksessions = await FirebaseFirestore.instance
+          .collection("workSessions")
+          .where("userId", isEqualTo: userId)
+          .where("categoryId", isEqualTo: categoryId)
+          .where('isCompleted', isEqualTo: false)
+          .get();
+      if (mounted) {
+        List<Map<String, dynamic>> mappingWorkSessions = getWorksessions.docs
+            .map((workSession) => workSession.data())
+            .toList();
+        // getWorkSessions = mappingWorkSessions;
+        // List<Map<String, dynamic>> getWorkSessionsStartedFromToday =
+        //     mappingWorkSessions
+        //         .where((workSession) =>
+        //             DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(
+        //                 workSession["startTime"].toDate().toString()) ==
+        //             startDateNow)
+        //         .toList();
+        Map<String, dynamic> trackData = mappingWorkSessions.first;
+        String startTime = '';
+        if (isUserExists) {
+          startTime = DateFormat('yyyy-MM-dd HH:mm:ss')
+              .format(trackData['startTime'].toDate());
+          if (trackData['endTime'] != null && trackData['endTime'] != '') {
+            String endTime = trackData['endTime'].toDate().toString();
+            trackData.update("endTime", (value) => endTime);
+          }
+          trackData.update("startTime", (value) => startTime);
+        } else {
+          startTime = trackData['startTime'];
+        }
+        DateTime? startTimeToday =
+            DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(startTime)!;
+
+        getTrackSessions.add(trackData);
+      }
+    }
+
+    return getTrackSessions;
+  }
 
   Future<void> completedWork({required AppLocalizations getLabels}) async {
     final categoryProvider =
@@ -804,18 +841,27 @@ class _StartTimePageState extends State<StartTimePage> {
 
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
-    List<Map<String, dynamic>> worksDay = await getDataSameDateLikeToday(
+    List<Map<String, dynamic>> trackingDay = await getDataSameDateLikeToday(
         categoryIdGet: categoryProvider.selectedCategory["id"],
         isAlreadyStartWork: isAlreadyStartedWorkCheck);
 
     if (!mounted) return;
     // check if not completed and endTime not filled
-    if (worksDay.isEmpty) {
+    if (trackingDay.isEmpty) {
+      List<Map<String, dynamic>> getTrackTimeNotClosed =
+          await getNotClosedTrackingData(isAlreadyStartWork: true);
+      if (!mounted) return;
+      if (getTrackTimeNotClosed.isNotEmpty) {
+        final getData = await getTrackingSessionNotFinished(
+            categoryId: categoryProvider.selectedCategory["id"]);
+        print(getData);
+      }
+      print("hey boss");
       return;
     }
 
     // if Work day not finished
-    for (Map<String, dynamic> workDay in worksDay) {
+    for (Map<String, dynamic> workDay in trackingDay) {
       if (!workDay['isCompleted'] && workDay['endTime'] == '') {
         Map<String, dynamic> updateData = {};
         //check if all breaks closed
@@ -1082,8 +1128,12 @@ class _StartTimePageState extends State<StartTimePage> {
 
     List<Map<String, dynamic>> getWorksDayDataList =
         await getDataSameDateLikeToday(categoryIdGet: categoryId);
-    Map<String, dynamic> getWorksDayData = getWorksDayDataList.first;
     if (!mounted) return;
+    if (getWorksDayDataList.isEmpty) {
+      return Constants.showInSnackBar(
+          value: getLabels.startBeforeBreak, context: context);
+    }
+    Map<String, dynamic> getWorksDayData = getWorksDayDataList.first;
     bool? isWorkFinished =
         await isFinishedWorkForToday(getWorkDayData: getWorksDayData);
 
@@ -1091,11 +1141,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
     if (isWorkFinished) {
       return Constants.showInSnackBar(
-          value: getLabels.noMoreBreaksAvailable, context: context);
-    }
-    if (getWorksDayData.isEmpty) {
-      return Constants.showInSnackBar(
-          value: getLabels.startYourWorkBeforeBreak, context: context);
+          value: getLabels.noMoreBreaks, context: context);
     }
 
     if (isAlreadyStartedWorkCheck) {
@@ -1299,50 +1345,86 @@ class _StartTimePageState extends State<StartTimePage> {
     _timer?.cancel();
   }
 
+  bool isTrackingTimeOver24H({required Map<String, dynamic> getTrackingData}) {
+    bool isTrackingOver24H = false;
+    if (isUserExists) {
+      String startTime = "";
+
+      if (getTrackingData["startTime"] is Timestamp) {
+        startTime = getTrackingData["startTime"].toDate().toString();
+      } else {
+        startTime = getTrackingData["startTime"].toString();
+      }
+      DateTime? startTrackDate =
+          DateFormat("yyyy-MM-dd hh:mm").tryParse(startTime);
+
+      int dateAfterT24HFromStartTime =
+          DateTime.now().difference(startTrackDate!).inHours;
+
+      if (dateAfterT24HFromStartTime > 24) {
+        isTrackingOver24H = true;
+      }
+    }
+    return isTrackingOver24H;
+  }
+
   Future<void> getWorkTime(
       {required bool isSelectedCategory,
       Map<String, dynamic>? category,
       required bool isAlreadyStarted}) async {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
-
+    List<Map<String, dynamic>> getTrackingData = [];
     if (isAlreadyStarted) {
-      List<Map<String, dynamic>> getWorksDay = await getDataSameDateLikeToday(
+      getTrackingData = await getDataSameDateLikeToday(
           categoryIdGet: categoryProvider.selectedCategory["id"]);
+
       if (!mounted) return;
-      for (Map<String, dynamic> getWorkDay in getWorksDay) {
-        DateTime? startWork =
-            DateFormat('yyyy-MM-dd hh:mm').tryParse(getWorkDay['startTime']);
+      if (getTrackingData.isEmpty) {
+        //TODO do more check here
+        getTrackingData = await getTrackingSessionNotFinished(
+            categoryId: categoryProvider.selectedCategory["id"]);
+      }
+      if (getTrackingData.isEmpty) {
+        return;
+      }
+      bool isTackingOver24HFromStartTime =
+          isTrackingTimeOver24H(getTrackingData: getTrackingData.first);
 
-        String formatStartTime =
-            startWork != null ? DateFormat('HH:mm').format(startWork) : "";
+      if (isTackingOver24HFromStartTime) {
+        return;
+      }
+      DateTime? startWork = DateFormat('yyyy-MM-dd hh:mm')
+          .tryParse(getTrackingData.first['startTime']);
+
+      String formatStartTime =
+          startWork != null ? DateFormat('HH:mm').format(startWork) : "";
+      setState(() {
+        workStartedTime = formatStartTime;
+
+        if (workEndedTime == '') {
+          _isStartWork = true;
+        }
+      });
+
+      if (getTrackingData.first['isCompleted']) {
+        DateTime? endWork = DateFormat('yyyy-MM-dd HH:mm')
+            .tryParse(getTrackingData.last['endTime']);
+        String formatEndTime =
+            endWork != null ? DateFormat('HH:mm').format(endWork) : "";
         setState(() {
-          workStartedTime = formatStartTime;
+          workEndedTime = formatEndTime;
 
-          if (workEndedTime == null) {
-            _isStartWork = true;
-          }
+          _isStartWork = false;
         });
-
-        if (getWorkDay['isCompleted']) {
-          DateTime? endWork =
-              DateFormat('yyyy-MM-dd HH:mm').tryParse(getWorkDay['endTime']);
-          String formatEndTime =
-              endWork != null ? DateFormat('HH:mm').format(endWork) : "";
-          setState(() {
-            workEndedTime = formatEndTime;
-
-            _isStartWork = false;
-          });
-        }
-        if (!isSelectedCategory && category == null) {
-          await getCategoryIfWorkAlreadyStarted(
-              isClosedWork: true, data: getWorkDay);
-        } else {
-          setState(() {
-            categoryHint = {};
-          });
-        }
+      }
+      if (!isSelectedCategory && category == null) {
+        await getCategoryIfWorkAlreadyStarted(
+            isClosedWork: true, data: getTrackingData.first);
+      } else {
+        setState(() {
+          categoryHint = {};
+        });
       }
     }
   }
@@ -1626,7 +1708,7 @@ class _StartTimePageState extends State<StartTimePage> {
                                         ))),
                         Gap(MediaQuery.of(context).size.height * 0.06),
                         Text(
-                          getLabels.workTime,
+                          getLabels.trackedTime,
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize:
@@ -1645,8 +1727,8 @@ class _StartTimePageState extends State<StartTimePage> {
                                 _sliderWorkValue = 0;
                                 isThumbStartTouchingText = false;
                                 sliderForWorkingTime = _isStartWork
-                                    ? getLabels.stopWork
-                                    : getLabels.startWork;
+                                    ? getLabels.stopTracking
+                                    : getLabels.startTracking;
                                 isSmallLabel = false;
                               });
                             },
@@ -1660,8 +1742,8 @@ class _StartTimePageState extends State<StartTimePage> {
                                 setState(() {
                                   isThumbStartTouchingText = false;
                                   sliderForWorkingTime = _isStartWork
-                                      ? getLabels.theWorkWillFinishNow
-                                      : getLabels.workWillStartNow;
+                                      ? getLabels.sessionFinishNow
+                                      : getLabels.trackingStartNow;
                                   isSmallLabel = true;
                                 });
                               }
@@ -1687,6 +1769,8 @@ class _StartTimePageState extends State<StartTimePage> {
                                 //       : categoryHint,
                                 // );
                                 isSwitchCategoryAvailablity(
+                                    selectedCategory:
+                                        categoryProvider.selectedCategory,
                                     isAlreadyStartWork:
                                         isAlreadyStartedWorkCheck);
                                 // if (!mounted) return;
@@ -1750,22 +1834,22 @@ class _StartTimePageState extends State<StartTimePage> {
                         },
                         ListTile(
                           leading: Text(
-                            getLabels.workStartedAt,
+                            getLabels.sessionStartedAt,
                             style: const TextStyle(fontSize: 16.0),
                           ),
                           title: Text(
-                            workStartedTime ?? startWorkTimeInit,
+                            workStartedTime,
                             style: const TextStyle(
                                 fontSize: 20.0, fontWeight: FontWeight.bold),
                           ),
                         ),
                         ListTile(
                           leading: Text(
-                            getLabels.workEndedAt,
+                            getLabels.sessionEndedAt,
                             style: const TextStyle(fontSize: 16.0),
                           ),
                           title: Text(
-                            workEndedTime ?? finishWorkTimeInit,
+                            workEndedTime,
                             style: const TextStyle(
                                 fontSize: 20.0, fontWeight: FontWeight.bold),
                           ),
@@ -1887,7 +1971,7 @@ class _StartTimePageState extends State<StartTimePage> {
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Text(
-                        getLabels.youWork(
+                        getLabels.todayYouTracked(
                             workedTime,
                             workedTime <= 1
                                 ? isInhours

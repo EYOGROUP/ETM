@@ -838,9 +838,11 @@ class TimeManagementPovider with ChangeNotifier {
         final userId = FirebaseAuth.instance.currentUser?.uid;
 
         int durationMinutes = getWorkSessions[i]["durationMinutes"];
+        String id = getWorkSessions[i]["id"];
         String workSessionId = getWorkSessions[i]["id"];
         WorkSession workSession = WorkSession(
-            id: workSessionId,
+            id: id,
+            workSessionId: workSessionId,
             startTime: startWorkTime!,
             createdAt: startWorkTime,
             categoryId: getWorkSessions[i]["categoryId"],
