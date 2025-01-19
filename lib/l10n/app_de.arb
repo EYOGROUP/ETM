@@ -269,5 +269,12 @@
     "releaseToRefresh": "Zum Aktualisieren loslassen.",
     "refreshingData": "Daten werden aktualisiert...",
     "refreshCompleted": "Aktualisierung abgeschlossen!",
-    "refreshFailed": "Aktualisierung fehlgeschlagen. Ziehen Sie nach unten, um es erneut zu versuchen."
+    "refreshFailed": "Aktualisierung fehlgeschlagen. Ziehen Sie nach unten, um es erneut zu versuchen.",
+    "sessionExceededLimit": "Sitzungslimit überschritten",
+    "sessionExceededMessage": "Ihre Sitzung hat die maximale Dauer von 24 Stunden überschritten. Um eine genaue Verfolgung zu gewährleisten, können Sie die Sitzung auf 24 Stunden anpassen oder sie vollständig löschen. Was möchten Sie tun?",
+    "adjust": "Anpassen",
+    "discardSession": "Sitzung verwerfen",
+    "showDateTimePicker": "Datums- und Uhrzeitauswahl anzeigen",
+    "lastTimeTracked": "Letzte erfasste Zeit",
+    "timeRangeError": "Die Endzeit kann nicht vor der Startzeit liegen. Bitte wählen Sie einen gültigen Zeitraum aus."
 }

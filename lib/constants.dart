@@ -61,7 +61,11 @@ class Constants {
 
   static Future<Widget?> showDialogConfirmation(
       {required BuildContext context,
-      required Function() onConfirm,
+      Function()? onConfirm,
+      Function()? rightButton,
+      Function()? leftButton,
+      String? leftButtonTitle,
+      String? rightButtonTitle,
       required String title,
       required String message}) async {
     final getLabels = AppLocalizations.of(context)!;
@@ -81,7 +85,7 @@ class Constants {
                 message,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.error,
+                  color: Theme.of(context).colorScheme.outline,
                 ),
               ),
             )
@@ -89,11 +93,18 @@ class Constants {
         ),
         actions: [
           TextButton(
-              child: Text(getLabels.cancel),
-              onPressed: () {
-                Navigator.of(context).pop();
-              }),
-          TextButton(onPressed: onConfirm, child: Text(getLabels.confirm))
+              onPressed: leftButtonTitle == null
+                  ? () {
+                      Navigator.of(context).pop();
+                    }
+                  : leftButton,
+              child: Text(
+                leftButtonTitle ?? getLabels.cancel,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              )),
+          TextButton(
+              onPressed: rightButtonTitle == null ? onConfirm : rightButton,
+              child: Text(rightButtonTitle ?? getLabels.confirm))
         ],
       ),
     );

@@ -267,6 +267,13 @@
     "releaseToRefresh": "Release to refresh.",
     "refreshingData": "Refreshing data...",
     "refreshCompleted": "Refresh completed!",
-    "refreshFailed": "Refresh failed. Pull down to try again."
+    "refreshFailed": "Refresh failed. Pull down to try again.",
+    "sessionExceededLimit": "Session Exceeded Limit",
+   "sessionExceededMessage": "Your session has exceeded the maximum duration of 24 hours. To maintain accurate tracking, you can recover and adjust the session to 24 hours, or discard it entirely. What would you like to do?",
+   "adjust": "Adjust",
+   "discardSession": "Discard Session",
+  "showDateTimePicker": "Show Date Time Picker",
+  "lastTimeTracked": "Last Time Tracked",
+   "timeRangeError": "The end time cannot be earlier than the start time. Please select a valid time range."
   
 }

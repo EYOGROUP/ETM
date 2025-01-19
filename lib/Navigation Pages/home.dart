@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:io';
+import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 
 import 'package:gap/gap.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
@@ -157,7 +159,11 @@ class _StartTimePageState extends State<StartTimePage> {
                   [timeManagementPovider.getCurrentLocalSystemLanguage()]),
           context: context);
     }
-    if (isAlreadStartedWork && isNotClosedAfterTime) {
+    bool isAlreadyTrackingOver24H = isTrackingTimeOver24H(getTrackingData: {});
+
+    if (isAlreadStartedWork &&
+        isNotClosedAfterTime &&
+        !isAlreadyTrackingOver24H) {
       await completedWork(getLabels: getLabels);
     }
 
@@ -186,6 +192,11 @@ class _StartTimePageState extends State<StartTimePage> {
           isAlreadyStartWork: isAlreadyStartedWorkCheck);
       if (!mounted) return;
       if (getNotClosedWork.isNotEmpty) {
+        await requestToRecoveryFinishedTimeOrDeleteTheTracking(
+            notClosedTrackingTime: getNotClosedWork,
+            isTrackingNotClosed: true,
+            isTrackingOver24H: isAlreadyTrackingOver24H,
+            getLabels: getLabels);
         return;
       }
       if (!isWorkDayStarted) {
@@ -223,6 +234,143 @@ class _StartTimePageState extends State<StartTimePage> {
     if (!isAnotherCategory && isWorkFinished) {
       return Constants.showInSnackBar(
           value: getLabels.sessionAlreadyFinished, context: context);
+    }
+  }
+
+  Future<void> requestToRecoveryFinishedTimeOrDeleteTheTracking(
+      {required bool isTrackingNotClosed,
+      required bool isTrackingOver24H,
+      required List<Map<String, dynamic>> notClosedTrackingTime,
+      required AppLocalizations getLabels}) async {
+    if (isTrackingNotClosed && isTrackingOver24H) {
+      await Constants.showDialogConfirmation(
+          leftButtonTitle: getLabels.discardSession,
+          rightButtonTitle: getLabels.adjust,
+          context: context,
+          leftButton: () {},
+          rightButton: () => adjustTrackingTime(
+              getLabels: getLabels,
+              notClosedTrackingTime: notClosedTrackingTime),
+          title: getLabels.sessionExceededLimit,
+          message: getLabels.sessionExceededMessage);
+    }
+  }
+
+// Close Time if not Closed
+  Future<void> adjustTrackingTime({
+    required AppLocalizations getLabels,
+    required List<Map<String, dynamic>> notClosedTrackingTime,
+  }) async {
+    Navigator.of(context).pop();
+
+    await showDialog(
+      barrierDismissible: false,
+      builder: (context) {
+        DateTime startTime = notClosedTrackingTime.first['startTime'].toDate();
+        String? startDateConvertToString =
+            DateFormat(getLabels.dateFormat).format(startTime);
+        String? startTimeConvertToString =
+            DateFormat('HH:mm').format(startTime);
+        DateTime? setFinishedTime;
+        String? finishedTimeConvertToString;
+        return AlertDialog(
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                getLabels.cancel,
+                style: TextStyle(color: Theme.of(context).colorScheme.error),
+              ),
+            ),
+            TextButton(
+                onPressed: () {
+                  if (setFinishedTime != null) {
+                    bool isEndTimeBeforStartTime =
+                        isEndTrackingTimeBeforStartTrackingtime(
+                            startTime: startTime, endTime: setFinishedTime!);
+                    if (isEndTimeBeforStartTime) {
+                      return Constants.showInSnackBar(
+                          value: getLabels.timeRangeError, context: context);
+                    } else {
+                      Navigator.of(context).pop();
+                    }
+                  }
+                },
+                child: Text(getLabels.confirm))
+          ],
+          content: SingleChildScrollView(
+            padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  getLabels.lastTimeTracked,
+                  style: TextStyle(fontSize: 22.0),
+                ),
+                Gap(15.0),
+                Constants.leadingAndTitleTextInRow(
+                    leadingTextKey: getLabels.date,
+                    textValue: startDateConvertToString),
+                Gap(10.0),
+                Constants.leadingAndTitleTextInRow(
+                    leadingTextKey: getLabels.sessionStartedAt,
+                    textValue: startTimeConvertToString),
+                Gap(10.0),
+                StatefulBuilder(
+                  builder: (context, setState) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Constants.leadingAndTitleTextInRow(
+                          leadingTextKey: getLabels.sessionEndedAt,
+                          textValue: finishedTimeConvertToString ?? "-"),
+                      Gap(15.0),
+                      InkWell(
+                        onTap: () {
+                          DatePickerBdaya.showDatePicker(context,
+                              showTitleActions: true,
+                              minTime: startTime,
+                              maxTime: startTime
+                                  .add(Duration(hours: 23, minutes: 59)),
+                              onConfirm: (date) {
+                            DatePickerBdaya.showTimePicker(context,
+                                showTitleActions: true,
+                                onConfirm: (dateAndTime) {
+                              setState(() {
+                                setFinishedTime = dateAndTime;
+                                finishedTimeConvertToString =
+                                    DateFormat('HH:mm')
+                                        .format(setFinishedTime!);
+                              });
+                            }, currentTime: date, locale: LocaleType.en);
+                          },
+                              currentTime: DateTime.now(),
+                              locale: LocaleType.en);
+                        },
+                        child: Text(
+                          getLabels.showDateTimePicker,
+                          style: TextStyle(
+                              color: Theme.of(context).colorScheme.primary),
+                        ),
+                      )
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        );
+      },
+      context: context,
+    );
+  }
+
+  bool isEndTrackingTimeBeforStartTrackingtime(
+      {required DateTime startTime, required DateTime endTime}) {
+    if (endTime.isBefore(startTime)) {
+      return true;
+    } else {
+      return false;
     }
   }
 
@@ -1347,23 +1495,27 @@ class _StartTimePageState extends State<StartTimePage> {
 
   bool isTrackingTimeOver24H({required Map<String, dynamic> getTrackingData}) {
     bool isTrackingOver24H = false;
-    if (isUserExists) {
-      String startTime = "";
+    if (getTrackingData.isNotEmpty) {
+      if (isUserExists) {
+        String startTime = "";
 
-      if (getTrackingData["startTime"] is Timestamp) {
-        startTime = getTrackingData["startTime"].toDate().toString();
-      } else {
-        startTime = getTrackingData["startTime"].toString();
+        if (getTrackingData["startTime"] is Timestamp) {
+          startTime = getTrackingData["startTime"].toDate().toString();
+        } else {
+          startTime = getTrackingData["startTime"].toString();
+        }
+        DateTime? startTrackDate =
+            DateFormat("yyyy-MM-dd hh:mm").tryParse(startTime);
+
+        int dateAfterT24HFromStartTime =
+            DateTime.now().difference(startTrackDate!).inHours;
+
+        if (dateAfterT24HFromStartTime > 24) {
+          isTrackingOver24H = true;
+        }
       }
-      DateTime? startTrackDate =
-          DateFormat("yyyy-MM-dd hh:mm").tryParse(startTime);
-
-      int dateAfterT24HFromStartTime =
-          DateTime.now().difference(startTrackDate!).inHours;
-
-      if (dateAfterT24HFromStartTime > 24) {
-        isTrackingOver24H = true;
-      }
+    } else {
+      isTrackingOver24H = true;
     }
     return isTrackingOver24H;
   }
