@@ -277,5 +277,6 @@
     "discardSession": "Supprimer la session",
     "showDateTimePicker": "Afficher le sélecteur de date et heure",
     "lastTimeTracked": "Dernière fois suivie",
-    "timeRangeError": "L'heure de fin ne peut pas être antérieure à l'heure de début. Veuillez sélectionner une plage horaire valide."
+    "timeRangeError": "L'heure de fin ne peut pas être antérieure à l'heure de début. Veuillez sélectionner une plage horaire valide.",
+    "lastSessionClosed": "Vous venez de terminer votre dernière session. Vous pouvez maintenant commencer une nouvelle session dès que vous êtes prêt!"
 }

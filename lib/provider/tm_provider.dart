@@ -244,25 +244,25 @@ class TimeManagementPovider with ChangeNotifier {
       {required DateTime date,
       required BuildContext context,
       required bool isUserExist}) async {
-    List<Map<String, dynamic>> worksDay = [];
+    List<Map<String, dynamic>> trackingsDay = [];
 
     if (isUserExist) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       DateTime? dateFilter = DateFormat("yyyy-MM-dd").tryParse(date.toString());
-      final getUserWorkSessions = await FirebaseFirestore.instance
-          .collection('workSessions')
+      final getUsertrackingSessions = await FirebaseFirestore.instance
+          .collection('trackingSessions')
           .where('userId', isEqualTo: userId)
           .get();
       if (context.mounted) {
-        final mapWorkSessions =
-            getUserWorkSessions.docs.map((workSession) => workSession.data());
-        for (Map<String, dynamic> getWorkSession in mapWorkSessions) {
-          if (getWorkSession['isCompleted'] &&
-              getWorkSession["endTime"] != '') {
+        final maptrackingSessions = getUsertrackingSessions.docs
+            .map((trackingSession) => trackingSession.data());
+        for (Map<String, dynamic> gettrackingSession in maptrackingSessions) {
+          if (gettrackingSession['isCompleted'] &&
+              gettrackingSession["endTime"] != '') {
             if (DateFormat("yyyy-MM-dd")
-                .tryParse(getWorkSession["endTime"].toDate().toString())!
+                .tryParse(gettrackingSession["startTime"].toDate().toString())!
                 .isAtSameMomentAs(dateFilter!)) {
-              worksDay.add(getWorkSession);
+              trackingsDay.add(gettrackingSession);
             }
           }
         }
@@ -278,12 +278,12 @@ class TimeManagementPovider with ChangeNotifier {
 // check if data date same like today
         bool isSameDate = areDatesSame(startTimeToday, date);
         if (isSameDate) {
-          worksDay.add(work);
+          trackingsDay.add(work);
         }
       }
     }
 
-    return worksDay;
+    return trackingsDay;
   }
 
   Future<int> getNumberOfBreaks(
@@ -293,30 +293,40 @@ class TimeManagementPovider with ChangeNotifier {
       required bool isUserExist}) async {
     int numberOfBreaks = 0;
 
-    List<Map<String, dynamic>> getWorksDay = await getDataSameDateLikeToday(
+    List<Map<String, dynamic>> getTrackingsDay = await getDataSameDateLikeToday(
         date: date, context: context, isUserExist: isUserExist);
+
     try {
-      for (Map<String, dynamic> getWorkDay in getWorksDay) {
+      for (Map<String, dynamic> getTrackingDay in getTrackingsDay) {
         if (isUserExist) {
-          final getWorkBreaks = await FirebaseFirestore.instance
+          final getTrackingBreaks = await FirebaseFirestore.instance
               .collection('breakSessions')
-              .where("workSessionId", isEqualTo: getWorkDay['id'])
+              .where("trackingSessionId",
+                  isEqualTo: getTrackingDay['trackingSession'])
               .where("isCompleted", isEqualTo: true)
               .get();
           if (context.mounted) {
-            if (getWorkBreaks.docs.isNotEmpty) {
-              numberOfBreaks += getWorkBreaks.size;
+            final getDayFilterBreaks = getTrackingBreaks.docs.where(
+                (breakSession) => areDatesSame(
+                    breakSession.data()['startTime'].toDate(), date));
+
+            if (getDayFilterBreaks.isNotEmpty) {
+              numberOfBreaks += getDayFilterBreaks.length;
             }
           }
         } else {
           TrackingDB db = TrackingDB();
-          if (getWorkDay['id'] != null) {
+          if (getTrackingDay['id'] != null) {
             List<Map<String, dynamic>> breakSessions = await db.readData(
                     sql:
-                        "select * from break_sessions where workSessionId = '${getWorkDay['id']}' and endTime <> ''")
+                        "select * from break_sessions where trackingSessionId = '${getTrackingDay['trackingSession']}' and endTime <> ''")
                 as List<Map<String, dynamic>>;
             if (mounted) {
-              numberOfBreaks += breakSessions.length;
+              final getDayFilterBreaks = breakSessions.where((breakSession) =>
+                  areDatesSame(breakSession['startTime'].toDate(), date));
+              if (getDayFilterBreaks.isNotEmpty) {
+                numberOfBreaks += getDayFilterBreaks.length;
+              }
             }
           }
         }
@@ -353,7 +363,7 @@ class TimeManagementPovider with ChangeNotifier {
         }
         String? startWorkTime;
         String? endWorkTime;
-        print(workDay['startTime'] is Timestamp);
+
         if (isUserExist) {
           startWorkTime = workDay['startTime'].toDate().toString();
           endWorkTime = workDay['endTime'].toDate().toString();
@@ -381,36 +391,36 @@ class TimeManagementPovider with ChangeNotifier {
       required BuildContext context,
       required bool isUserExist}) async {
     bool isWorkFiniheshed = false;
-    List<Map<String, dynamic>> workSessions = [];
-    bool isWorkSessionsAllClosed = true;
+    List<Map<String, dynamic>> trackingSessions = [];
+    bool istrackingSessionsAllClosed = true;
     if (context.mounted) {
       if (isUserExist) {
         final userId = FirebaseAuth.instance.currentUser?.uid;
         DateTime? dateFilter =
             DateFormat("yyyy-MM-dd").tryParse(date.toString());
-        final getUserWorkSessions = await FirebaseFirestore.instance
-            .collection('workSessions')
+        final getUsertrackingSessions = await FirebaseFirestore.instance
+            .collection('trackingSessions')
             .where('userId', isEqualTo: userId)
             .get();
 
         if (context.mounted) {
-          final mapWorkSessions =
-              getUserWorkSessions.docs.map((workSession) => workSession.data());
-          for (Map<String, dynamic> getWorkSession in mapWorkSessions) {
-            if (getWorkSession['isCompleted'] &&
-                getWorkSession["endTime"] != '') {
+          final maptrackingSessions = getUsertrackingSessions.docs
+              .map((trackingSession) => trackingSession.data());
+          for (Map<String, dynamic> gettrackingSession in maptrackingSessions) {
+            if (gettrackingSession['isCompleted'] &&
+                gettrackingSession["endTime"] != '') {
               if (DateFormat("yyyy-MM-dd")
-                  .tryParse(getWorkSession["endTime"].toDate().toString())!
+                  .tryParse(gettrackingSession["endTime"].toDate().toString())!
                   .isAtSameMomentAs(dateFilter!)) {
-                workSessions.add(getWorkSession);
+                trackingSessions.add(gettrackingSession);
               }
             }
             if (DateFormat("yyyy-MM-dd")
-                .tryParse(getWorkSession["startTime"].toDate().toString())!
+                .tryParse(gettrackingSession["startTime"].toDate().toString())!
                 .isAtSameMomentAs(dateFilter!)) {
-              if (getWorkSession["endTime"] == '' &&
-                  !getWorkSession['isCompleted']) {
-                isWorkSessionsAllClosed = false;
+              if (gettrackingSession["endTime"] == '' &&
+                  !gettrackingSession['isCompleted']) {
+                istrackingSessionsAllClosed = false;
               }
             }
           }
@@ -418,24 +428,24 @@ class TimeManagementPovider with ChangeNotifier {
       } else {
         TrackingDB db = TrackingDB();
         String dateToday = DateFormat('yyyy-MM-dd').format(date);
-        workSessions = await db.readData(
+        trackingSessions = await db.readData(
                 sql:
                     'select * from work_sessions where substr(startTime,1,10) ="$dateToday" ')
             as List<Map<String, dynamic>>;
       }
-      if (workSessions.isNotEmpty) {
+      if (trackingSessions.isNotEmpty) {
         // isWorkFiniheshed = true;
 
         // same logic
-        for (Map<String, dynamic> workSession in workSessions) {
+        for (Map<String, dynamic> trackingSession in trackingSessions) {
           if (isUserExist) {
-            if (!workSession["isCompleted"]) {
+            if (!trackingSession["isCompleted"]) {
               isWorkFiniheshed = false;
             } else {
               isWorkFiniheshed = true;
             }
           } else {
-            if (workSession["isCompleted"] == 0) {
+            if (trackingSession["isCompleted"] == 0) {
               isWorkFiniheshed = false;
             } else {
               isWorkFiniheshed = true;
@@ -446,7 +456,7 @@ class TimeManagementPovider with ChangeNotifier {
         isWorkFiniheshed = false;
       }
     }
-    if (isWorkSessionsAllClosed && isWorkFiniheshed) {
+    if (istrackingSessionsAllClosed && isWorkFiniheshed) {
       isWorkFiniheshed = true;
     } else {
       isWorkFiniheshed = false;
@@ -470,31 +480,35 @@ class TimeManagementPovider with ChangeNotifier {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       DateTime? dateFilter = DateFormat("yyyy-MM-dd").tryParse(date.toString());
       if (categoryId != null && categoryId != '') {
-        final getUserWorkSessions = await FirebaseFirestore.instance
-            .collection("workSessions")
+        final getUsertrackingSessions = await FirebaseFirestore.instance
+            .collection("trackingSessions")
             .where("userId", isEqualTo: userId)
             .where("categoryId", isEqualTo: categoryId)
             .get();
         if (mounted) {
-          getWorksData = getUserWorkSessions.docs
-              .where((workSession) =>
-                  DateFormat("yyyy-MM-dd").tryParse(
-                      workSession.data()['startTime'].toDate().toString()) ==
+          getWorksData = getUsertrackingSessions.docs
+              .where((trackingSession) =>
+                  DateFormat("yyyy-MM-dd").tryParse(trackingSession
+                      .data()['startTime']
+                      .toDate()
+                      .toString()) ==
                   dateFilter)
               .map((workUserSession) => workUserSession.data())
               .toList();
           worksData = getWorksData;
         }
       } else {
-        final getUserWorkSessions = await FirebaseFirestore.instance
-            .collection("workSessions")
+        final getUsertrackingSessions = await FirebaseFirestore.instance
+            .collection("trackingSessions")
             .where("userId", isEqualTo: userId)
             .get();
         if (mounted) {
-          getWorksData = getUserWorkSessions.docs
-              .where((workSession) =>
-                  DateFormat("yyyy-MM-dd").tryParse(
-                      workSession.data()['startTime'].toDate().toString()) ==
+          getWorksData = getUsertrackingSessions.docs
+              .where((trackingSession) =>
+                  DateFormat("yyyy-MM-dd").tryParse(trackingSession
+                      .data()['startTime']
+                      .toDate()
+                      .toString()) ==
                   dateFilter)
               .map((workUserSession) => workUserSession.data())
               .toList();
@@ -553,12 +567,12 @@ class TimeManagementPovider with ChangeNotifier {
   }
 
   Future<List<Map<String, dynamic>>> getBreaksFromSpecificDateAndId(
-      {required int workSessionsId, required bool mounted}) async {
+      {required int trackingSessionsId, required bool mounted}) async {
     List<Map<String, dynamic>> breaks = [];
     TrackingDB db = TrackingDB();
     final getBreaksData = await db.readData(
         sql:
-            "select * from break_sessions where workSessionId='$workSessionsId' ");
+            "select * from break_sessions where trackingSessionId='$trackingSessionsId' ");
 
     if (mounted) {
       if (getBreaksData.isNotEmpty) {
@@ -588,30 +602,33 @@ class TimeManagementPovider with ChangeNotifier {
       {required DateTime breakSessionTime,
       required bool mounted,
       required bool isUserExist,
-      List<Map<String, dynamic>>? allWorks,
-      String? workSessionId}) async {
+      List<Map<String, dynamic>>? allTrackings,
+      String? trackingSessionId}) async {
     List<Map<String, dynamic>> breaks = [];
     if (isUserExist) {
-      if (workSessionId != null) {
+      if (trackingSessionId != null) {
         final getBreakSession = await FirebaseFirestore.instance
             .collection("breakSessions")
-            .where("workSessionId", isEqualTo: workSessionId)
+            .where("trackingSessionId", isEqualTo: trackingSessionId)
             .get();
         if (mounted) {
           breaks = getBreakSession.docs
-              .map((workUserSession) => workUserSession.data())
+              .map((breajUserSession) => breajUserSession.data())
               .toList();
         }
       } else {
-        for (Map<String, dynamic> work in allWorks!) {
-          final getBreakWorkSession = await FirebaseFirestore.instance
+        for (Map<String, dynamic> tracking in allTrackings!) {
+          final getBreaktrackingSession = await FirebaseFirestore.instance
               .collection("breakSessions")
-              .where("workSessionId", isEqualTo: work["id"])
+              .where("trackingSessionId",
+                  isEqualTo: tracking["trackingSession"])
               .get();
+          final getDayFilterBreaks = getBreaktrackingSession.docs.where(
+              (breakSession) => areDatesSame(
+                  breakSession['startTime'].toDate(), breakSessionTime));
           if (mounted) {
-            if (getBreakWorkSession.docs.isNotEmpty) {
-              List<Map<String, dynamic>> breaksConvert = getBreakWorkSession
-                  .docs
+            if (getDayFilterBreaks.isNotEmpty) {
+              List<Map<String, dynamic>> breaksConvert = getDayFilterBreaks
                   .map((breakSession) => breakSession.data())
                   .toList();
               breaks.addAll(breaksConvert);
@@ -623,18 +640,20 @@ class TimeManagementPovider with ChangeNotifier {
       TrackingDB db = TrackingDB();
       String formatDate = DateFormat("yyyy-MM-dd").format(breakSessionTime);
       List<Map<String, dynamic>>? getBreaksData;
-      if (workSessionId != null) {
+      if (trackingSessionId != null) {
         getBreaksData = await db.readData(
             sql:
-                'select * from break_sessions where workSessionId= "$workSessionId" ');
+                'select * from break_sessions where trackingSessionId= "$trackingSessionId" ');
       } else {
         getBreaksData = await db.readData(
             sql:
                 'select * from break_sessions where substr(endTime,1,10)="$formatDate" ');
       }
       if (mounted) {
-        if (getBreaksData.isNotEmpty) {
-          breaks = getBreaksData
+        final getDayFilterBreaks = getBreaksData.where((breakSession) =>
+            areDatesSame(breakSession['startTime'].toDate(), breakSessionTime));
+        if (getDayFilterBreaks.isNotEmpty) {
+          breaks = getDayFilterBreaks
               .map((breakData) => Map<String, dynamic>.from(breakData))
               .toList();
         }
@@ -678,14 +697,14 @@ class TimeManagementPovider with ChangeNotifier {
     if (isUserExist) {
       final checkIfBreakSessionsExist = await FirebaseFirestore.instance
           .collection("breakSessions")
-          .where("workSessionId", isEqualTo: workDay['id'])
+          .where("trackingSessionId", isEqualTo: workDay['id'])
           .limit(1)
           .get();
       if (context.mounted) {
         if (checkIfBreakSessionsExist.size > 0) {
           final getAllWorkBreaks = await FirebaseFirestore.instance
               .collection("breakSessions")
-              .where("workSessionId", isEqualTo: workDay['id'])
+              .where("trackingSessionId", isEqualTo: workDay['id'])
               .get();
           if (context.mounted) {
             formatBreaksToList = getAllWorkBreaks.docs
@@ -698,11 +717,11 @@ class TimeManagementPovider with ChangeNotifier {
       TrackingDB db = TrackingDB();
       final getBreaks = await db.readData(
           sql:
-              "select * from break_sessions where workSessionId = '${workDay['id']}'");
+              "select * from break_sessions where trackingSessionId = '${workDay['id']}'");
       final formatBreaksToListGet =
           getBreaks.map((breakData) => breakData).toList();
       formatBreaksToList = List.from(formatBreaksToListGet.map(
-        (workSession) => Map<String, dynamic>.from(workSession),
+        (trackingSession) => Map<String, dynamic>.from(trackingSession),
       ));
     }
 
@@ -734,7 +753,7 @@ class TimeManagementPovider with ChangeNotifier {
     if (isUserExist) {
       final breakSessions = await FirebaseFirestore.instance
           .collection("breakSessions")
-          .where("workSessionId", isEqualTo: id)
+          .where("trackingSessionId", isEqualTo: id)
           .get();
       if (!mounted) return;
       if (breakSessions.size > 0) {
@@ -750,7 +769,7 @@ class TimeManagementPovider with ChangeNotifier {
         }
       }
       await FirebaseFirestore.instance
-          .collection("workSessions")
+          .collection("trackingSessions")
           .doc(id)
           .delete();
     } else {
@@ -798,10 +817,10 @@ class TimeManagementPovider with ChangeNotifier {
         if (!isTableExits) {
           isLokalDataExists = false;
         } else {
-          final workSessionsGet = await db.readData(
+          final trackingSessionsGet = await db.readData(
               sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
           if (context.mounted) {
-            if (workSessionsGet.isNotEmpty) {
+            if (trackingSessionsGet.isNotEmpty) {
               isLokalDataExists = true;
             }
           }
@@ -818,48 +837,48 @@ class TimeManagementPovider with ChangeNotifier {
   }) async {
     isLokalDataInCloudSync = true;
 
-    final List<Map<String, dynamic>> getWorkSessions = await db.readData(
+    final List<Map<String, dynamic>> gettrackingSessions = await db.readData(
         sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
 
     if (context.mounted) {
       int completedItems = 0;
-      for (int i = 0; i <= getWorkSessions.length - 1; i++) {
+      for (int i = 0; i <= gettrackingSessions.length - 1; i++) {
         completedItems = i + 1;
-        _progressSyncToCloud = (completedItems / getWorkSessions.length) * 100;
+        _progressSyncToCloud =
+            (completedItems / gettrackingSessions.length) * 100;
         context.loaderOverlay
             .progress("Loading ${_progressSyncToCloud.toInt()}%");
         DateTime? startWorkTime = DateFormat("yyyy-MM-dd HH:mm:ss")
-            .tryParse(getWorkSessions[i]['startTime']);
+            .tryParse(gettrackingSessions[i]['startTime']);
         DateTime? endWorkTime = DateFormat("yyyy-MM-dd HH:mm:ss")
-            .tryParse(getWorkSessions[i]['endTime']);
+            .tryParse(gettrackingSessions[i]['endTime']);
         bool isCompleted =
-            getWorkSessions[i]['isCompleted'] == 1 ? true : false;
-        String taskDescription = getWorkSessions[i]["taskDescription"];
+            gettrackingSessions[i]['isCompleted'] == 1 ? true : false;
+        String taskDescription = gettrackingSessions[i]["taskDescription"];
         final userId = FirebaseAuth.instance.currentUser?.uid;
 
-        int durationMinutes = getWorkSessions[i]["durationMinutes"];
-        String id = getWorkSessions[i]["id"];
-        String workSessionId = getWorkSessions[i]["id"];
-        WorkSession workSession = WorkSession(
+        int durationMinutes = gettrackingSessions[i]["durationMinutes"];
+        String id = gettrackingSessions[i]["id"];
+        String trackingSessionId = gettrackingSessions[i]["id"];
+        TrackingSession trackingSession = TrackingSession(
             id: id,
-            workSessionId: workSessionId,
             startTime: startWorkTime!,
             createdAt: startWorkTime,
-            categoryId: getWorkSessions[i]["categoryId"],
+            categoryId: gettrackingSessions[i]["categoryId"],
             endTime: endWorkTime,
             isCompleted: isCompleted,
             taskDescription: taskDescription,
             userId: userId,
             durationMinutes: durationMinutes);
         await FirebaseFirestore.instance
-            .collection('workSessions')
-            .doc(workSessionId)
-            .set(workSession.cloudToMap());
+            .collection('trackingSessions')
+            .doc(trackingSessionId)
+            .set(trackingSession.cloudToMap());
 
         if (!context.mounted) return;
         final List<Map<String, dynamic>> breakSessions = await db.readData(
                 sql:
-                    'select * from break_sessions where workSessionId ="$workSessionId" ')
+                    'select * from break_sessions where trackingSessionId ="$trackingSessionId" ')
             as List<Map<String, dynamic>>;
         if (context.mounted) {
           if (breakSessions.isNotEmpty) {
@@ -873,7 +892,7 @@ class TimeManagementPovider with ChangeNotifier {
               int durationBreakMinutes = breakSession["durationMinutes"];
               BreakSession breakSessionInit = BreakSession(
                   id: breakSessionNewId,
-                  workSessionId: workSessionId,
+                  trackingSessionId: trackingSessionId,
                   startTime: startBreakTime!,
                   createdAt: startBreakTime,
                   endTime: endBreakTime,
@@ -889,7 +908,7 @@ class TimeManagementPovider with ChangeNotifier {
           }
           // delete Lokal Data
           await db.deleteData(
-              sql: 'DELETE FROM work_sessions WHERE id ="$workSessionId"');
+              sql: 'DELETE FROM work_sessions WHERE id ="$trackingSessionId"');
           if (!context.mounted) return;
         }
 
@@ -906,11 +925,11 @@ class TimeManagementPovider with ChangeNotifier {
       required bool isUserExist,
       required AppLocalizations labels,
       required TrackingDB db}) async {
-    bool isWorkSessionsInLokalExists =
+    bool istrackingSessionsInLokalExists =
         await isLokalDataExists(context: context, isUserExist: isUserExist);
 
     if (!context.mounted) return;
-    if (isWorkSessionsInLokalExists) {
+    if (istrackingSessionsInLokalExists) {
       await Constants.showDialogConfirmation(
           context: context,
           onConfirm: () async {

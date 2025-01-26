@@ -92,6 +92,8 @@ class _StartTimePageState extends State<StartTimePage> {
         if (!mounted) return;
 
         await getAllData(isSwitchCategory: false, isInit: true);
+        if (!mounted) return;
+        setState(() {});
       },
     );
   }
@@ -202,11 +204,11 @@ class _StartTimePageState extends State<StartTimePage> {
       if (!isWorkDayStarted) {
         workStartTime = DateTime.now();
 
-        var sessionId = const Uuid().v4();
-        var workSessionId = "WS-${const Uuid().v4()}";
+        var sessionId = "S-${const Uuid().v4()}";
+        var trackingSessionId = "TS-${const Uuid().v4()}";
         final userId = FirebaseAuth.instance.currentUser?.uid;
-        WorkSession workSession = WorkSession(
-          workSessionId: workSessionId,
+        TrackingSession trackingSession = TrackingSession(
+          trackingSessionId: trackingSessionId,
           categoryId: categoryId,
           startTime: workStartTime!,
           createdAt: workStartTime!,
@@ -216,7 +218,7 @@ class _StartTimePageState extends State<StartTimePage> {
         );
 
 // TODO check if work over nexday
-        await insertStartWorkToCloudOrLokalDb(workSession: workSession);
+        await insertStartWorkToCloudOrLokalDb(trackingSession: trackingSession);
         if (!mounted) return;
         await isSwitchCategoryAvailablity(
             selectedCategory: categoryProvider.selectedCategory,
@@ -256,6 +258,91 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
+//Closed Not Closed Session
+  Future<void> closedTrackingSessionAfter24H(
+      {required Map<String, dynamic> trackingSessionMap,
+      required DateTime finishedTime,
+      required AppLocalizations getLabels}) async {
+    if (trackingSessionMap.isNotEmpty) {
+      DateTime startTime = trackingSessionMap['startTime'].toDate();
+      int year = startTime.year;
+      int mounth = startTime.month;
+      int day = startTime.day;
+      int hours = 23;
+      int minute = 59;
+
+      DateTime firstEndTime = DateTime(year, mounth, day, hours, minute);
+      int firstDurationMinutes = firstEndTime.difference(startTime).inMinutes;
+      String sesssionId = trackingSessionMap["id"];
+      Map<String, dynamic> updatedData = {
+        "isSplit": true,
+        "isCompleted": true,
+        "endTime": firstEndTime,
+        "durationMinutes": firstDurationMinutes,
+      };
+      // now Second Splited Session
+      DateTime newDate = firstEndTime.add(Duration(days: 1));
+
+      DateTime secondStartTime =
+          DateTime(newDate.year, newDate.month, newDate.day, 00, 00);
+      int secondSessionDurationInMinute =
+          finishedTime.difference(secondStartTime).inMinutes;
+      var newSecondSessionId = "S-${const Uuid().v4()}";
+      TrackingSession trackingSession = TrackingSession(
+          id: newSecondSessionId,
+          startTime: secondStartTime,
+          createdAt: finishedTime,
+          categoryId: trackingSessionMap['categoryId'],
+          isSplit: true,
+          isCompleted: true,
+          userId: trackingSessionMap["userId"],
+          taskDescription: trackingSessionMap["taskDescription"],
+          trackingSessionId: trackingSessionMap["trackingSessionId"],
+          durationMinutes: secondSessionDurationInMinute,
+          endTime: finishedTime);
+      await FirebaseFirestore.instance
+          .collection("trackingSessions")
+          .doc(sesssionId)
+          .update(updatedData);
+      if (!mounted) return;
+      await FirebaseFirestore.instance
+          .collection("trackingSessions")
+          .doc(newSecondSessionId)
+          .set(trackingSession.cloudToMap());
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      Constants.showInSnackBar(
+          value: getLabels.lastSessionClosed, context: context);
+    }
+  }
+
+  // switchFromWorkSessionsToToTrackingSession() async {
+  //   final trackingSessionsGet =
+  //       await FirebaseFirestore.instance.collection("trackingSessions").get();
+  //   List<Map<String, dynamic>> convertToList = trackingSessionsGet.docs
+  //       .map(
+  //         (e) => e.data(),
+  //       )
+  //       .toList();
+  //   for (Map<String, dynamic> trackingSession in convertToList) {
+  //     WorkSession trackingSession = WorkSession(
+  //         id: trackingSession['id'],
+  //         startTime: trackingSession['startTime'].toDate(),
+  //         createdAt: trackingSession['createdAt'].toDate(),
+  //         categoryId: trackingSession["categoryId"],
+  //         durationMinutes: trackingSession["durationMinutes"],
+  //         isCompleted: trackingSession["isCompleted"],
+  //         isSplit: trackingSession['isSplit'],
+  //         taskDescription: trackingSession["taskDescription"],
+  //         userId: trackingSession['userId']);
+  //     await FirebaseFirestore.instance
+  //         .collection("trackingSessions")
+  //         .doc(trackingSession["id"])
+  //         .set(trackingSession.cloudToMap());
+  //     if (!mounted) return;
+  //   }
+  // }
+
 // Close Time if not Closed
   Future<void> adjustTrackingTime({
     required AppLocalizations getLabels,
@@ -285,14 +372,18 @@ class _StartTimePageState extends State<StartTimePage> {
             TextButton(
                 onPressed: () {
                   if (setFinishedTime != null) {
-                    bool isEndTimeBeforStartTime =
-                        isEndTrackingTimeBeforStartTrackingtime(
-                            startTime: startTime, endTime: setFinishedTime!);
+                    bool isEndTimeBeforStartTime = isEndTimeBeforStarttime(
+                        startTime: startTime, endTime: setFinishedTime!);
                     if (isEndTimeBeforStartTime) {
                       return Constants.showInSnackBar(
                           value: getLabels.timeRangeError, context: context);
                     } else {
-                      Navigator.of(context).pop();
+                      closedTrackingSessionAfter24H(
+                          getLabels: getLabels,
+                          finishedTime: setFinishedTime!,
+                          trackingSessionMap: notClosedTrackingTime.first);
+
+                      // Navigator.of(context).pop();
                     }
                   }
                 },
@@ -365,7 +456,7 @@ class _StartTimePageState extends State<StartTimePage> {
     );
   }
 
-  bool isEndTrackingTimeBeforStartTrackingtime(
+  bool isEndTimeBeforStarttime(
       {required DateTime startTime, required DateTime endTime}) {
     if (endTime.isBefore(startTime)) {
       return true;
@@ -375,13 +466,13 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   Future<void> insertStartWorkToCloudOrLokalDb(
-      {required WorkSession workSession}) async {
+      {required TrackingSession trackingSession}) async {
     if (isUserExists) {
       try {
         await FirebaseFirestore.instance
-            .collection('workSessions')
-            .doc(workSession.id)
-            .set(workSession.cloudToMap());
+            .collection('trackingSessions')
+            .doc(trackingSession.id)
+            .set(trackingSession.cloudToMap());
         if (mounted) {
           setState(() {
             _isStartWork = true;
@@ -398,7 +489,7 @@ class _StartTimePageState extends State<StartTimePage> {
       TrackingDB db = TrackingDB();
 
       await db.insertData(
-          tableName: 'work_sessions', data: workSession.lokalToMap());
+          tableName: 'work_sessions', data: trackingSession.lokalToMap());
       if (mounted) {
         setState(() {
           _isStartWork = true;
@@ -412,7 +503,7 @@ class _StartTimePageState extends State<StartTimePage> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
 
-    List<Map<String, dynamic>> workSession = [];
+    List<Map<String, dynamic>> trackingSession = [];
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
 
     if (categoryHint.isNotEmpty ||
@@ -422,14 +513,14 @@ class _StartTimePageState extends State<StartTimePage> {
 
       if (!isUserExists) {
         TrackingDB db = TrackingDB();
-        workSession = await db.readData(
+        trackingSession = await db.readData(
                 sql:
                     'select * from work_sessions where (isCompleted=0 OR isCompleted =1) AND substr(startTime,1,10) ="$dateToday" AND categoryId="$categoryId" ')
             as List<Map<String, dynamic>>;
       } else {
-        //check if workSession exist
+        //check if trackingSession exist
         final checkWorkSession = await FirebaseFirestore.instance
-            .collection('workSessions')
+            .collection('trackingSessions')
             .limit(1)
             .get();
 
@@ -437,13 +528,13 @@ class _StartTimePageState extends State<StartTimePage> {
           if (checkWorkSession.size > 0) {
             final userId = FirebaseAuth.instance.currentUser?.uid;
             final worksesionsGet = await FirebaseFirestore.instance
-                .collection('workSessions')
+                .collection('trackingSessions')
                 .where('userId', isEqualTo: userId)
                 .where('isCompleted', whereIn: [false, true])
                 .where('categoryId', isEqualTo: categoryId)
                 .get();
             //.where("startTime".substring(1, 10), isEqualTo: dateToday)
-            workSession = worksesionsGet.docs
+            trackingSession = worksesionsGet.docs
                 .map((worksession) => worksession.data())
                 .toList();
           }
@@ -451,7 +542,7 @@ class _StartTimePageState extends State<StartTimePage> {
       }
     }
 
-    if (workSession.isNotEmpty) {
+    if (trackingSession.isNotEmpty) {
       return true;
     } else {
       return false;
@@ -462,7 +553,7 @@ class _StartTimePageState extends State<StartTimePage> {
       {bool? isAlreadyStartWork}) async {
     List<Map<String, dynamic>> getWorkNotClosed = [];
     TrackingDB db = TrackingDB();
-    // List<Map<String, dynamic>> workSession = [];
+    // List<Map<String, dynamic>> trackingSession = [];
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
@@ -476,16 +567,16 @@ class _StartTimePageState extends State<StartTimePage> {
                 sql:
                     "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday' and categoryId = '$categoryId'");
           } else {
-            //check if workSession exist
+            //check if trackingSession exist
             final checkWorkSession = await FirebaseFirestore.instance
-                .collection('workSessions')
+                .collection('trackingSessions')
                 .limit(1)
                 .get();
             if (mounted) {
               if (checkWorkSession.size > 0) {
                 final userId = FirebaseAuth.instance.currentUser?.uid;
                 final worksesionsGet = await FirebaseFirestore.instance
-                    .collection('workSessions')
+                    .collection('trackingSessions')
                     .where("userId", isEqualTo: userId)
                     .where('isCompleted', isEqualTo: false)
                     .where('categoryId', isEqualTo: categoryId)
@@ -503,16 +594,16 @@ class _StartTimePageState extends State<StartTimePage> {
                 sql:
                     "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday'");
           } else {
-            //check if workSession exist
+            //check if trackingSession exist
             final checkWorkSession = await FirebaseFirestore.instance
-                .collection('workSessions')
+                .collection('trackingSessions')
                 .limit(1)
                 .get();
             if (mounted) {
               if (checkWorkSession.size > 0) {
                 final userId = FirebaseAuth.instance.currentUser?.uid;
                 final worksesionsGet = await FirebaseFirestore.instance
-                    .collection('workSessions')
+                    .collection('trackingSessions')
                     .where('userId', isEqualTo: userId)
                     .where('isCompleted', isEqualTo: false)
                     // .where("startTime".substring(1, 10), isEqualTo: dateToday)
@@ -706,12 +797,15 @@ class _StartTimePageState extends State<StartTimePage> {
       {bool? isAlreadyStartWork,
       required Map<String, dynamic> selectedCategory}) async {
     if (selectedCategory.isNotEmpty) {
+      bool isTrackingOver24H = false;
       List<Map<String, dynamic>> getNoClosedWork =
           await getNotClosedTrackingData(
               isAlreadyStartWork: isAlreadyStartWork);
       if (mounted) {
-        bool isTrackingOver24H =
-            isTrackingTimeOver24H(getTrackingData: getNoClosedWork.first);
+        if (getNoClosedWork.isNotEmpty) {
+          isTrackingOver24H =
+              isTrackingTimeOver24H(getTrackingData: getNoClosedWork.first);
+        }
 
         if (getNoClosedWork.isNotEmpty && !isTrackingOver24H) {
           setState(() {
@@ -767,40 +861,40 @@ class _StartTimePageState extends State<StartTimePage> {
   Future<bool> isNotClosedWork() async {
     bool isNotClosedWork = false;
 
-    List<Map<String, dynamic>> workSession = [];
+    List<Map<String, dynamic>> trackingSession = [];
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.selectedCategory.isNotEmpty) {
       String categoryId = categoryProvider.selectedCategory["id"];
       if (isUserExists) {
-        //check if workSession exist
+        //check if trackingSession exist
         final checkWorkSession = await FirebaseFirestore.instance
-            .collection('workSessions')
+            .collection('trackingSessions')
             .limit(1)
             .get();
         if (mounted) {
           if (checkWorkSession.size > 0) {
             final userId = FirebaseAuth.instance.currentUser?.uid;
             final worksesionsGet = await FirebaseFirestore.instance
-                .collection('workSessions')
+                .collection('trackingSessions')
                 .where("userId", isEqualTo: userId)
                 .where('isCompleted', isEqualTo: false)
                 .where('categoryId', isEqualTo: categoryId)
                 .get();
-            workSession = worksesionsGet.docs
+            trackingSession = worksesionsGet.docs
                 .map((worksession) => worksession.data())
                 .toList();
           }
         }
       } else {
         TrackingDB db = TrackingDB();
-        workSession = await db.readData(
+        trackingSession = await db.readData(
                 sql:
                     'select * from work_sessions where isCompleted=0  and categoryId="$categoryId"')
             as List<Map<String, dynamic>>;
       }
     }
-    if (workSession.isNotEmpty) {
+    if (trackingSession.isNotEmpty) {
       isNotClosedWork = true;
     }
     return isNotClosedWork;
@@ -810,19 +904,19 @@ class _StartTimePageState extends State<StartTimePage> {
     final getLabels = AppLocalizations.of(context)!;
     TrackingDB db = TrackingDB();
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    List<Map<String, dynamic>> workSessions = [];
+    List<Map<String, dynamic>> trackingSessions = [];
     if (isUserExists) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       DateTime? dateFilter =
           DateFormat("yyyy-MM-dd").tryParse(dateToday.toString());
 
       final getUserWorkSession = await FirebaseFirestore.instance
-          .collection('workSessions')
+          .collection('trackingSessions')
           .where('userId', isEqualTo: userId)
           .where("isCompleted", isEqualTo: false)
           .get();
       if (context.mounted) {
-        workSessions = getUserWorkSession.docs
+        trackingSessions = getUserWorkSession.docs
             .where(
               (userWorkSession) =>
                   DateFormat("yyyy-MM-dd").tryParse(userWorkSession
@@ -831,20 +925,20 @@ class _StartTimePageState extends State<StartTimePage> {
                       .toString()) ==
                   dateFilter,
             )
-            .map((workSession) => workSession.data())
+            .map((trackingSession) => trackingSession.data())
             .toList();
       }
     } else {
-      workSessions = await db.readData(
+      trackingSessions = await db.readData(
               sql:
                   'select * from work_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
           as List<Map<String, dynamic>>;
     }
-    if (workSessions.isNotEmpty) {
+    if (trackingSessions.isNotEmpty) {
       bool isBreak =
-          await isBreakTooken(getWorkDayData: workSessions.first, db: db);
+          await isBreakTooken(getWorkDayData: trackingSessions.first, db: db);
       bool isClosedBreak = await isAlreadyClosedBreak(
-          getDayWorkData: workSessions.first, db: db);
+          getDayWorkData: trackingSessions.first, db: db);
       if (isBreak && !isClosedBreak) {
         setState(() {
           _isBreak = true;
@@ -874,7 +968,7 @@ class _StartTimePageState extends State<StartTimePage> {
       if (isUserExists) {
         final userId = FirebaseAuth.instance.currentUser?.uid;
         final getWorksessions = await FirebaseFirestore.instance
-            .collection('workSessions')
+            .collection('trackingSessions')
             .where('userId', isEqualTo: userId)
             .where("categoryId", isEqualTo: categoryIdGet)
             .get();
@@ -887,7 +981,7 @@ class _StartTimePageState extends State<StartTimePage> {
                     'select * from work_sessions where categoryId="$categoryId"')
             as List<Map<String, dynamic>>;
         worksessions = List.from(worksessionsGet.map(
-          (workSession) => Map<String, dynamic>.from(workSession),
+          (trackingSession) => Map<String, dynamic>.from(trackingSession),
         ));
       }
       for (Map<String, dynamic> work in worksessions) {
@@ -941,40 +1035,42 @@ class _StartTimePageState extends State<StartTimePage> {
     if (isUserExists) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       final getWorksessions = await FirebaseFirestore.instance
-          .collection("workSessions")
+          .collection("trackingSessions")
           .where("userId", isEqualTo: userId)
           .where("categoryId", isEqualTo: categoryId)
           .where('isCompleted', isEqualTo: false)
           .get();
       if (mounted) {
         List<Map<String, dynamic>> mappingWorkSessions = getWorksessions.docs
-            .map((workSession) => workSession.data())
+            .map((trackingSession) => trackingSession.data())
             .toList();
         // getWorkSessions = mappingWorkSessions;
         // List<Map<String, dynamic>> getWorkSessionsStartedFromToday =
         //     mappingWorkSessions
-        //         .where((workSession) =>
+        //         .where((trackingSession) =>
         //             DateFormat("yyyy-MM-dd HH:mm:ss").tryParse(
-        //                 workSession["startTime"].toDate().toString()) ==
+        //                 trackingSession["startTime"].toDate().toString()) ==
         //             startDateNow)
         //         .toList();
-        Map<String, dynamic> trackData = mappingWorkSessions.first;
-        String startTime = '';
-        if (isUserExists) {
-          startTime = DateFormat('yyyy-MM-dd HH:mm:ss')
-              .format(trackData['startTime'].toDate());
-          if (trackData['endTime'] != null && trackData['endTime'] != '') {
-            String endTime = trackData['endTime'].toDate().toString();
-            trackData.update("endTime", (value) => endTime);
+        if (mappingWorkSessions.isNotEmpty) {
+          Map<String, dynamic> trackData = mappingWorkSessions.first;
+          String startTime = '';
+          if (isUserExists) {
+            startTime = DateFormat('yyyy-MM-dd HH:mm:ss')
+                .format(trackData['startTime'].toDate());
+            if (trackData['endTime'] != null && trackData['endTime'] != '') {
+              String endTime = trackData['endTime'].toDate().toString();
+              trackData.update("endTime", (value) => endTime);
+            }
+            trackData.update("startTime", (value) => startTime);
+          } else {
+            startTime = trackData['startTime'];
           }
-          trackData.update("startTime", (value) => startTime);
-        } else {
-          startTime = trackData['startTime'];
-        }
-        DateTime? startTimeToday =
-            DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(startTime)!;
+          DateTime? startTimeToday =
+              DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(startTime)!;
 
-        getTrackSessions.add(trackData);
+          getTrackSessions.add(trackData);
+        }
       }
     }
 
@@ -1029,7 +1125,7 @@ class _StartTimePageState extends State<StartTimePage> {
           };
 
           await FirebaseFirestore.instance
-              .collection("workSessions")
+              .collection("trackingSessions")
               .doc(workDay['id'])
               .update(updateData);
         } else {
@@ -1140,7 +1236,7 @@ class _StartTimePageState extends State<StartTimePage> {
       required TrackingDB db}) async {
     bool isAlreadyClosedBreak = false;
     List<Map<String, dynamic>> breakSessions = [];
-    String workSessionId = getDayWorkData['id'];
+    String trackingSessionId = getDayWorkData['id'];
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
           .collection('breakSessions')
@@ -1151,7 +1247,7 @@ class _StartTimePageState extends State<StartTimePage> {
           final getAllBreaksDependOnWorkSession = await FirebaseFirestore
               .instance
               .collection('breakSessions')
-              .where("workSessionId", isEqualTo: workSessionId)
+              .where("trackingSessionId", isEqualTo: trackingSessionId)
               .where("endTime", isNull: true)
               .where("isCompleted", isEqualTo: false)
               .get();
@@ -1163,7 +1259,7 @@ class _StartTimePageState extends State<StartTimePage> {
     } else {
       breakSessions = await db.readData(
               sql:
-                  "select * from break_sessions where workSessionId ='$workSessionId' and endTime =''")
+                  "select * from break_sessions where trackingSessionId ='$trackingSessionId' and endTime =''")
           as List<Map<String, dynamic>>;
     }
 
@@ -1181,7 +1277,7 @@ class _StartTimePageState extends State<StartTimePage> {
       {required Map<String, dynamic> getWorkDayData,
       required TrackingDB db}) async {
     bool isBreakTooken = false;
-    String workSessionId = getWorkDayData['id'];
+    String trackingSessionId = getWorkDayData['id'];
     List<Map<String, dynamic>> breakSessions = [];
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
@@ -1193,7 +1289,7 @@ class _StartTimePageState extends State<StartTimePage> {
           final getAllBreaksDependOnWorkSession = await FirebaseFirestore
               .instance
               .collection('breakSessions')
-              .where("workSessionId", isEqualTo: workSessionId)
+              .where("trackingSessionId", isEqualTo: trackingSessionId)
               .get();
           breakSessions = getAllBreaksDependOnWorkSession.docs
               .map((breakSession) => breakSession.data())
@@ -1203,7 +1299,7 @@ class _StartTimePageState extends State<StartTimePage> {
     } else {
       breakSessions = await db.readData(
               sql:
-                  "select * from break_sessions where workSessionId ='$workSessionId' ")
+                  "select * from break_sessions where trackingSessionId ='$trackingSessionId' ")
           as List<Map<String, dynamic>>;
     }
     if (breakSessions.isNotEmpty) {
@@ -1225,7 +1321,7 @@ class _StartTimePageState extends State<StartTimePage> {
       {required Map<String, dynamic> getDayWorkData}) async {
     Map<String, dynamic> notClosedBreak = {};
     List<Map<String, dynamic>> breakSessions = [];
-    String workSessionId = getDayWorkData['id'];
+    String trackingSessionId = getDayWorkData['id'];
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
           .collection('breakSessions')
@@ -1236,7 +1332,7 @@ class _StartTimePageState extends State<StartTimePage> {
           final getAllBreaksDependOnWorkSession = await FirebaseFirestore
               .instance
               .collection('breakSessions')
-              .where("workSessionId", isEqualTo: workSessionId)
+              .where("trackingSessionId", isEqualTo: trackingSessionId)
               .where("isCompleted", isEqualTo: false)
               .where("endTime", isNull: true)
               .get();
@@ -1249,7 +1345,7 @@ class _StartTimePageState extends State<StartTimePage> {
       TrackingDB db = TrackingDB();
       breakSessions = await db.readData(
               sql:
-                  "select * from break_sessions where workSessionId ='$workSessionId' and endTime =''")
+                  "select * from break_sessions where trackingSessionId ='$trackingSessionId' and endTime =''")
           as List<Map<String, dynamic>>;
     }
     if (context.mounted) {
@@ -1387,7 +1483,7 @@ class _StartTimePageState extends State<StartTimePage> {
     var breakSessionId = const Uuid().v4();
     BreakSession breakSession = BreakSession(
       durationMinutes: 0,
-      workSessionId: getWorkDayData['id'],
+      trackingSessionId: getWorkDayData['id'],
       startTime: breakTime,
       createdAt: breakTime,
       reason: _breakReasonController.text,
@@ -1424,10 +1520,11 @@ class _StartTimePageState extends State<StartTimePage> {
 
       List<Map<String, dynamic>> getWorksDayList =
           await getDataSameDateLikeToday(categoryIdGet: categoryId);
+
       if (getWorksDayList.isNotEmpty) {
         startLoadingAnimation();
         Map<String, dynamic> getWorksDay = getWorksDayList.first;
-        String workSessionId = getWorksDay["id"];
+        String trackingSessionId = getWorksDay["id"];
 
         List<Map<String, dynamic>> breakSessions = [];
         if (isUserExists) {
@@ -1440,7 +1537,7 @@ class _StartTimePageState extends State<StartTimePage> {
               final getAllBreaksDependOnWorkSession = await FirebaseFirestore
                   .instance
                   .collection('breakSessions')
-                  .where("workSessionId", isEqualTo: workSessionId)
+                  .where("trackingSessionId", isEqualTo: trackingSessionId)
                   .where("isCompleted", isEqualTo: true)
                   .where("endTime", isNull: false)
                   .get();
@@ -1453,7 +1550,7 @@ class _StartTimePageState extends State<StartTimePage> {
           TrackingDB db = TrackingDB();
           breakSessions = await db.readData(
                   sql:
-                      "select * from break_sessions where workSessionId = '$workSessionId' and endTime <> ''")
+                      "select * from break_sessions where trackingSessionId = '$trackingSessionId' and endTime <> ''")
               as List<Map<String, dynamic>>;
         }
 
@@ -1527,6 +1624,7 @@ class _StartTimePageState extends State<StartTimePage> {
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     List<Map<String, dynamic>> getTrackingData = [];
+
     if (isAlreadyStarted) {
       getTrackingData = await getDataSameDateLikeToday(
           categoryIdGet: categoryProvider.selectedCategory["id"]);
@@ -1534,6 +1632,7 @@ class _StartTimePageState extends State<StartTimePage> {
       if (!mounted) return;
       if (getTrackingData.isEmpty) {
         //TODO do more check here
+
         getTrackingData = await getTrackingSessionNotFinished(
             categoryId: categoryProvider.selectedCategory["id"]);
       }
@@ -1624,11 +1723,12 @@ class _StartTimePageState extends State<StartTimePage> {
                           //     )
                           //     .first;
                           // c.isUnlocked = false;
-                          TrackingDB db = TrackingDB();
-                          final data = await db.readData(
-                              sql: "select * FROM categories");
-                          print(data);
-                          // final data = await db.deleteData(
+                          // TrackingDB db = TrackingDB();
+                          // final data = await db.readData(
+                          //     sql: "select * FROM categories");
+                          // print(data);
+
+                          // // final data = await db.deleteData(
                           //     sql:
                           //         "delete FROM categories where id='6dd44514-2116-4425-973b-91555472592a'");
                           // print(data);

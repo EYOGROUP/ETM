@@ -78,7 +78,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
       {required TimeManagementPovider tmProvider}) async {
     int getData = await tmProvider.getNumberOfBreaks(
         isUserExist: isUserExist!,
-        date: _dates.last,
+        date: _dates.first,
         mounted: mounted,
         context: context);
     setState(() {
@@ -218,7 +218,7 @@ class _WorkArchievesState extends State<WorkArchieves> {
                                               await Navigator.of(context)
                                                   .push(MaterialPageRoute(
                                             builder: (context) => WorkDetails(
-                                                workDate: _dates.first),
+                                                trackingDate: _dates.first),
                                           ));
                                           if (!mounted) return;
                                           if (isFinished != null &&

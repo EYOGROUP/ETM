@@ -54,7 +54,7 @@ class TrackingDB {
 
           ///
           const breakSessionTable =
-              ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,workSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
+              ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,trackingSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(trackingSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
           await db.execute(breakSessionTable);
         }
       },
@@ -71,13 +71,13 @@ class TrackingDB {
     const categoriesTable =
         ''' CREATE TABLE categories (id TEXT PRIMARY KEY,isUnlocked INTEGER NOT NULL,isPremium INTEGER NOT NULL,unlockExpiry TEXT NOT NULL) ''';
 
-    const workSessionTable =
+    const trackingSessionTable =
         ''' CREATE TABLE work_sessions (id TEXT PRIMARY KEY , startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,
       breakTimeMinutes INTEGER DEFAULT 0, taskDescription TEXT, createdAt TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId TEXT NOT NULL,isSplit INTEGER NOT NULL, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
     const breakSessionTable =
-        ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,workSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(workSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
+        ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,trackingSessionId TEXT NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, FOREIGN KEY(trackingSessionId) REFERENCES work_sessions(id) ON DELETE CASCADE )''';
     if (version == 1) {
-      await db.execute(workSessionTable);
+      await db.execute(trackingSessionTable);
       await db.execute(breakSessionTable);
       await db.execute(categoriesTable);
     }

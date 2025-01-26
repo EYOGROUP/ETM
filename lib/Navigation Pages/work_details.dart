@@ -12,8 +12,8 @@ import 'package:time_management/provider/tm_provider.dart';
 import 'package:time_management/provider/user_provider.dart';
 
 class WorkDetails extends StatefulWidget {
-  final DateTime workDate;
-  const WorkDetails({super.key, required this.workDate});
+  final DateTime trackingDate;
+  const WorkDetails({super.key, required this.trackingDate});
 
   @override
   State<WorkDetails> createState() => _WorkDetailsState();
@@ -50,20 +50,20 @@ class _WorkDetailsState extends State<WorkDetails> {
     );
   }
 
-  Future<void> getAllCategoriesBreaks({String? workSessionId}) async {
+  Future<void> getAllCategoriesBreaks({String? trackingSessionId}) async {
     breaks = await Provider.of<TimeManagementPovider>(context, listen: false)
         .getBreaksFromSpecificDate(
             isUserExist: isUserExist!,
-            allWorks: worksData,
-            breakSessionTime: widget.workDate,
+            allTrackings: worksData,
+            breakSessionTime: widget.trackingDate,
             mounted: mounted,
-            workSessionId: workSessionId);
+            trackingSessionId: trackingSessionId);
 
     if (!mounted) return;
     getTotalOfBreakDuration(breaks: breaks!);
   }
 
-  Future<void> getBreaks({required int workSessionsId}) async {
+  Future<void> getBreaks({required int trackingSessionsId}) async {
     getTotalOfBreakDuration(breaks: breaks!);
   }
 
@@ -77,14 +77,14 @@ class _WorkDetailsState extends State<WorkDetails> {
     worksData = await Provider.of<TimeManagementPovider>(context, listen: false)
         .getWorkDataFromSpecificDate(
             isUserExist: isUserExist!,
-            date: widget.workDate,
+            date: widget.trackingDate,
             mounted: mounted,
             categoryId: _selectedCategoryForFilter?.id);
 
     if (!mounted) return;
     if (worksData != null && worksData!.isNotEmpty) {
       await getAllCategoriesBreaks();
-      // await getBreaks(workSessionsId: worksData?.first["id"]);
+      // await getBreaks(trackingSessionsId: worksData?.first["id"]);
       if (!mounted) return;
       getGrossWork(worksData: worksData!);
       getNettWork(worksData: worksData!);
@@ -427,7 +427,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                     LeadingAndTitle(
                       leading: getLabels.date,
                       title: DateFormat(getLabels.dateFormat)
-                          .format(widget.workDate),
+                          .format(widget.trackingDate),
                     ),
                     if (worksData!.isNotEmpty) ...{
                       Text(

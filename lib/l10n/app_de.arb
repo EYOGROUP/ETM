@@ -276,5 +276,6 @@
     "discardSession": "Sitzung verwerfen",
     "showDateTimePicker": "Datums- und Uhrzeitauswahl anzeigen",
     "lastTimeTracked": "Letzte erfasste Zeit",
-    "timeRangeError": "Die Endzeit kann nicht vor der Startzeit liegen. Bitte wählen Sie einen gültigen Zeitraum aus."
+    "timeRangeError": "Die Endzeit kann nicht vor der Startzeit liegen. Bitte wählen Sie einen gültigen Zeitraum aus.",
+    "lastSessionClosed": "Sie haben gerade Ihre letzte Sitzung beendet. Sie können eine neue Sitzung starten, wann immer Sie bereit sind!"
 }

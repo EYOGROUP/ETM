@@ -274,6 +274,7 @@
    "discardSession": "Discard Session",
   "showDateTimePicker": "Show Date Time Picker",
   "lastTimeTracked": "Last Time Tracked",
-   "timeRangeError": "The end time cannot be earlier than the start time. Please select a valid time range."
+  "timeRangeError": "The end time cannot be earlier than the start time. Please select a valid time range.",
+  "lastSessionClosed": "You just closed your last session. You can now start tracking a new session whenever you're ready!"
   
 }
