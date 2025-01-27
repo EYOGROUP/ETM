@@ -193,6 +193,7 @@ class _StartTimePageState extends State<StartTimePage> {
       final getNotClosedWork = await getNotClosedTrackingData(
           isAlreadyStartWork: isAlreadyStartedWorkCheck);
       if (!mounted) return;
+
       if (getNotClosedWork.isNotEmpty) {
         await requestToRecoveryFinishedTimeOrDeleteTheTracking(
             notClosedTrackingTime: getNotClosedWork,
@@ -264,6 +265,19 @@ class _StartTimePageState extends State<StartTimePage> {
       required DateTime finishedTime,
       required AppLocalizations getLabels}) async {
     if (trackingSessionMap.isNotEmpty) {
+      //check if all breaks closed
+      final eTMProvider =
+          Provider.of<TimeManagementPovider>(context, listen: false);
+      bool isAllBreaksClosed = await eTMProvider.isAllBreaksClosed(
+          trackingDay: trackingSessionMap,
+          context: context,
+          isUserExist: isUserExists);
+
+      if (!mounted) return;
+      if (!isAllBreaksClosed) {
+        return Constants.showInSnackBar(
+            value: getLabels.closeBreakFirst, context: context);
+      }
       DateTime startTime = trackingSessionMap['startTime'].toDate();
       int year = startTime.year;
       int mounth = startTime.month;
@@ -1110,7 +1124,7 @@ class _StartTimePageState extends State<StartTimePage> {
         Map<String, dynamic> updateData = {};
         //check if all breaks closed
         bool isAllBreaksClosed = await breakProvider.isAllBreaksClosed(
-            workDay: workDay, context: context, isUserExist: isUserExists);
+            trackingDay: workDay, context: context, isUserExist: isUserExists);
 
         if (!mounted) return;
         if (!isAllBreaksClosed) {
@@ -1277,7 +1291,7 @@ class _StartTimePageState extends State<StartTimePage> {
       {required Map<String, dynamic> getWorkDayData,
       required TrackingDB db}) async {
     bool isBreakTooken = false;
-    String trackingSessionId = getWorkDayData['id'];
+    String trackingSessionId = getWorkDayData['trackingSessionId'];
     List<Map<String, dynamic>> breakSessions = [];
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
@@ -1309,19 +1323,20 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   Future<bool> isFinishedWorkForToday(
-      {required Map<String, dynamic> getWorkDayData}) async {
+      {required Map<String, dynamic> getTrackingDayData}) async {
     bool isFinishedWorkForToday = false;
-    if (getWorkDayData['endTime'] != '' && getWorkDayData['isCompleted']) {
+    if (getTrackingDayData['endTime'] != '' &&
+        getTrackingDayData['isCompleted']) {
       isFinishedWorkForToday = true;
     }
     return isFinishedWorkForToday;
   }
 
   Future<Map<String, dynamic>> getNotClosedBreak(
-      {required Map<String, dynamic> getDayWorkData}) async {
+      {required Map<String, dynamic> getTrackingDayData}) async {
     Map<String, dynamic> notClosedBreak = {};
     List<Map<String, dynamic>> breakSessions = [];
-    String trackingSessionId = getDayWorkData['id'];
+    String trackingSessionId = getTrackingDayData['trackingSessionId'];
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
           .collection('breakSessions')
@@ -1370,16 +1385,16 @@ class _StartTimePageState extends State<StartTimePage> {
           value: getLabels.selectCategory, context: context);
     }
 
-    List<Map<String, dynamic>> getWorksDayDataList =
+    List<Map<String, dynamic>> getTraickingsDayDataList =
         await getDataSameDateLikeToday(categoryIdGet: categoryId);
     if (!mounted) return;
-    if (getWorksDayDataList.isEmpty) {
+    if (getTraickingsDayDataList.isEmpty) {
       return Constants.showInSnackBar(
           value: getLabels.startBeforeBreak, context: context);
     }
-    Map<String, dynamic> getWorksDayData = getWorksDayDataList.first;
+    Map<String, dynamic> getTrackingDayData = getTraickingsDayDataList.first;
     bool? isWorkFinished =
-        await isFinishedWorkForToday(getWorkDayData: getWorksDayData);
+        await isFinishedWorkForToday(getTrackingDayData: getTrackingDayData);
 
     if (!mounted) return;
 
@@ -1392,12 +1407,12 @@ class _StartTimePageState extends State<StartTimePage> {
       // here to start process for the break
       bool isAlreadyClosedBreakCheck = false;
       bool isBreakTookenCheck =
-          await isBreakTooken(getWorkDayData: getWorksDayData, db: db);
+          await isBreakTooken(getWorkDayData: getTrackingDayData, db: db);
       if (!mounted) return;
 
       if (isBreakTookenCheck) {
-        isAlreadyClosedBreakCheck =
-            await isAlreadyClosedBreak(getDayWorkData: getWorksDayData, db: db);
+        isAlreadyClosedBreakCheck = await isAlreadyClosedBreak(
+            getDayWorkData: getTrackingDayData, db: db);
       }
 
       if (!mounted) return;
@@ -1406,7 +1421,7 @@ class _StartTimePageState extends State<StartTimePage> {
       if (isBreakTookenCheck) {
         if (isAlreadyClosedBreakCheck) {
           await insertNewBreak(
-              getWorkDayData: getWorksDayData, breakTime: breakTime, db: db);
+              getWorkDayData: getTrackingDayData, breakTime: breakTime, db: db);
           if (!mounted) return;
           setState(() {
             _isBreak = true;
@@ -1416,11 +1431,11 @@ class _StartTimePageState extends State<StartTimePage> {
           await finishBreak(
               db: db,
               endBreakTime: breakTime,
-              getWorksDayData: getWorksDayData);
+              getTrackingDayData: getTrackingDayData);
         }
       } else {
         await insertNewBreak(
-            getWorkDayData: getWorksDayData, breakTime: breakTime, db: db);
+            getWorkDayData: getTrackingDayData, breakTime: breakTime, db: db);
         if (!mounted) return;
         setState(() {
           _isBreak = true;
@@ -1434,13 +1449,45 @@ class _StartTimePageState extends State<StartTimePage> {
     return endTimeBreak.difference(startedBreak).inMinutes;
   }
 
+  // check If Break Tooken is after 00:00 nextDay and is Not Closed
+  bool isBreakTookenDayBefore(
+      {required DateTime timeToClose, required DateTime startTime}) {
+    bool isSameDate = areDatesSame(timeToClose, startTime);
+    if (isSameDate) {
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+// splite break to next day
+  Future<void> splitBreakDayToTheNextDay(
+      {required DateTime timeToClose,
+      required DateTime startTime,
+      Map<String, dynamic>? endTimeUpdate,
+      required DateTime endBreakTime,
+      required Map<String, dynamic> breakSession}) async {
+    bool isBreakTookenAlreadyYeasterday =
+        isBreakTookenDayBefore(startTime: startTime, timeToClose: timeToClose);
+    if (isBreakTookenAlreadyYeasterday) {
+      endTimeUpdate = {
+        'endTime': endBreakTime,
+        'reason': _breakReasonController.text,
+        "isCompleted": true,
+        "durationMinutes": calculateBreakTooken(
+            startedBreak: breakSession['startTime'].toDate(),
+            endTimeBreak: endBreakTime)
+      };
+    }
+  }
+
   Future<void> finishBreak(
       {required TrackingDB db,
-      required Map<String, dynamic> getWorksDayData,
+      required Map<String, dynamic> getTrackingDayData,
       required DateTime endBreakTime}) async {
     // // finish Break
     Map<String, dynamic> breakSession =
-        await getNotClosedBreak(getDayWorkData: getWorksDayData);
+        await getNotClosedBreak(getTrackingDayData: getTrackingDayData);
     if (!mounted) return;
     String breakSessionId = breakSession["id"];
     Map<String, dynamic>? endTimeUpdate;
@@ -1480,10 +1527,10 @@ class _StartTimePageState extends State<StartTimePage> {
       {required Map<String, dynamic> getWorkDayData,
       required DateTime breakTime,
       required TrackingDB db}) async {
-    var breakSessionId = const Uuid().v4();
+    var breakSessionId = "BS-${const Uuid().v4()}";
     BreakSession breakSession = BreakSession(
       durationMinutes: 0,
-      trackingSessionId: getWorkDayData['id'],
+      trackingSessionId: getWorkDayData['trackingSessionId'],
       startTime: breakTime,
       createdAt: breakTime,
       reason: _breakReasonController.text,

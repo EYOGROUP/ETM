@@ -688,7 +688,7 @@ class TimeManagementPovider with ChangeNotifier {
   }
 
   Future<bool> isAllBreaksClosed(
-      {required Map<String, dynamic> workDay,
+      {required Map<String, dynamic> trackingDay,
       required BuildContext context,
       required bool isUserExist}) async {
     bool isAllBreaksClosed = true;
@@ -697,14 +697,16 @@ class TimeManagementPovider with ChangeNotifier {
     if (isUserExist) {
       final checkIfBreakSessionsExist = await FirebaseFirestore.instance
           .collection("breakSessions")
-          .where("trackingSessionId", isEqualTo: workDay['id'])
+          .where("trackingSessionId",
+              isEqualTo: trackingDay['trackingSessionId'])
           .limit(1)
           .get();
       if (context.mounted) {
         if (checkIfBreakSessionsExist.size > 0) {
           final getAllWorkBreaks = await FirebaseFirestore.instance
               .collection("breakSessions")
-              .where("trackingSessionId", isEqualTo: workDay['id'])
+              .where("trackingSessionId",
+                  isEqualTo: trackingDay['trackingSessionId'])
               .get();
           if (context.mounted) {
             formatBreaksToList = getAllWorkBreaks.docs
@@ -717,7 +719,7 @@ class TimeManagementPovider with ChangeNotifier {
       TrackingDB db = TrackingDB();
       final getBreaks = await db.readData(
           sql:
-              "select * from break_sessions where trackingSessionId = '${workDay['id']}'");
+              "select * from break_sessions where trackingSessionId = '${trackingDay['trackingSessionId']}'");
       final formatBreaksToListGet =
           getBreaks.map((breakData) => breakData).toList();
       formatBreaksToList = List.from(formatBreaksToListGet.map(
