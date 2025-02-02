@@ -63,10 +63,12 @@ class BreakSession {
   String? reason;
   final bool? isCompleted;
   final DateTime createdAt;
+  final bool isSplit;
   BreakSession({
     required this.id,
     required this.trackingSessionId,
     required this.startTime,
+    this.isSplit = false,
     this.endTime,
     this.durationMinutes,
     this.reason,
@@ -82,6 +84,7 @@ class BreakSession {
       "durationMinutes": durationMinutes ?? 0,
       "reason": reason ?? '',
       "createdAt": createdAt.toString(),
+      'isSplit': isSplit ? 1 : 0,
     };
   }
 
@@ -95,6 +98,7 @@ class BreakSession {
       "reason": reason,
       "createdAt": createdAt,
       'isCompleted': isCompleted!,
+      "isSplit": isSplit
     };
   }
 }

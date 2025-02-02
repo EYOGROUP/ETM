@@ -275,6 +275,9 @@
   "showDateTimePicker": "Show Date Time Picker",
   "lastTimeTracked": "Last Time Tracked",
   "timeRangeError": "The end time cannot be earlier than the start time. Please select a valid time range.",
-  "lastSessionClosed": "You just closed your last session. You can now start tracking a new session whenever you're ready!"
+  "lastSessionClosed": "You just closed your last session. You can now start tracking a new session whenever you're ready!",
+  "breakExceededLimit": "Break Exceeded Limit",
+  "breakExceededMessage": "Your break has exceeded the maximum allowed duration. To maintain accurate tracking, you can recover and adjust the break to the allowed limit, or discard it entirely. What would you like to do?",
+  "discardBreak": "Discard Break"
   
 }

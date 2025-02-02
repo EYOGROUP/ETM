@@ -195,10 +195,11 @@ class _StartTimePageState extends State<StartTimePage> {
       if (!mounted) return;
 
       if (getNotClosedWork.isNotEmpty) {
-        await requestToRecoveryFinishedTimeOrDeleteTheTracking(
-            notClosedTrackingTime: getNotClosedWork,
-            isTrackingNotClosed: true,
-            isTrackingOver24H: isAlreadyTrackingOver24H,
+        await requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
+            notClosedTime: getNotClosedWork,
+            isNotClosed: true,
+            isTrackingTime: true,
+            isOver24H: isAlreadyTrackingOver24H,
             getLabels: getLabels);
         return;
       }
@@ -240,22 +241,105 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  Future<void> requestToRecoveryFinishedTimeOrDeleteTheTracking(
-      {required bool isTrackingNotClosed,
-      required bool isTrackingOver24H,
-      required List<Map<String, dynamic>> notClosedTrackingTime,
+  Future<void> requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
+      {required bool isNotClosed,
+      required bool isOver24H,
+      required List<Map<String, dynamic>> notClosedTime,
+      required bool isTrackingTime,
       required AppLocalizations getLabels}) async {
-    if (isTrackingNotClosed && isTrackingOver24H) {
+    if (isNotClosed && isOver24H) {
       await Constants.showDialogConfirmation(
           leftButtonTitle: getLabels.discardSession,
           rightButtonTitle: getLabels.adjust,
           context: context,
           leftButton: () {},
           rightButton: () => adjustTrackingTime(
+              isForTrackingTime: isTrackingTime,
               getLabels: getLabels,
-              notClosedTrackingTime: notClosedTrackingTime),
-          title: getLabels.sessionExceededLimit,
-          message: getLabels.sessionExceededMessage);
+              notClosedTime: notClosedTime),
+          title: isTrackingTime
+              ? getLabels.sessionExceededLimit
+              : getLabels.breakExceededLimit,
+          message: isTrackingTime
+              ? getLabels.sessionExceededMessage
+              : getLabels.breakExceededMessage);
+    }
+  }
+
+  Future<void> closedBreakSessionAfter24H(
+      {required Map<String, dynamic> breakSessionMap,
+      required DateTime finishedTime,
+      required AppLocalizations getLabels}) async {
+    if (breakSessionMap.isNotEmpty) {
+      DateTime startTime = breakSessionMap['startTime'].toDate();
+
+      int year = startTime.year;
+      int mounth = startTime.month;
+      int day = startTime.day;
+      int hours = 23;
+      int minute = 59;
+      DateTime? startBreakTime = DateTime(year, mounth, day);
+      DateTime? endBreakTime = DateTime(year, mounth, day);
+      String sesssionId = breakSessionMap["id"];
+
+      if (startBreakTime.isAtSameMomentAs(endBreakTime)) {
+        int durationMinutes = finishedTime.difference(startTime).inMinutes;
+        Map<String, dynamic> updatedData = {
+          "isSplit": false,
+          "isCompleted": true,
+          "endTime": finishedTime,
+          "durationMinutes": durationMinutes,
+          "reason": _breakReasonController.text,
+        };
+        await FirebaseFirestore.instance
+            .collection("breakSessions")
+            .doc(sesssionId)
+            .update(updatedData);
+        if (!mounted) return;
+        Navigator.of(context).pop();
+        return;
+      }
+      DateTime firstEndTime = DateTime(year, mounth, day, hours, minute);
+      int firstDurationMinutes = firstEndTime.difference(startTime).inMinutes;
+      Map<String, dynamic> updatedData = {
+        "isSplit": true,
+        "isCompleted": true,
+        "endTime": firstEndTime,
+        "durationMinutes": firstDurationMinutes,
+        "reason": _breakReasonController.text,
+      };
+      // now Second Splited Session
+      DateTime newDate = firstEndTime.add(Duration(days: 1));
+
+      DateTime secondStartTime =
+          DateTime(newDate.year, newDate.month, newDate.day, 00, 00);
+      int secondSessionDurationInMinute =
+          finishedTime.difference(secondStartTime).inMinutes;
+      var newSecondSessionId = "B-${const Uuid().v4()}";
+      BreakSession breackSession = BreakSession(
+          id: newSecondSessionId,
+          createdAt: finishedTime,
+          startTime: secondStartTime,
+          endTime: firstEndTime,
+          durationMinutes: secondSessionDurationInMinute,
+          isCompleted: true,
+          isSplit: true,
+          reason: _breakReasonController.text,
+          trackingSessionId: breakSessionMap['trackingSessionId']);
+
+      await FirebaseFirestore.instance
+          .collection("breakSessions")
+          .doc(sesssionId)
+          .update(updatedData);
+      if (!mounted) return;
+      await FirebaseFirestore.instance
+          .collection("breakSessions")
+          .doc(newSecondSessionId)
+          .set(breackSession.cloudToMap());
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      Constants.showInSnackBar(
+          value: getLabels.lastSessionClosed, context: context);
     }
   }
 
@@ -310,7 +394,7 @@ class _StartTimePageState extends State<StartTimePage> {
           isSplit: true,
           isCompleted: true,
           userId: trackingSessionMap["userId"],
-          taskDescription: trackingSessionMap["taskDescription"],
+          taskDescription: _todoController.text,
           trackingSessionId: trackingSessionMap["trackingSessionId"],
           durationMinutes: secondSessionDurationInMinute,
           endTime: finishedTime);
@@ -358,22 +442,23 @@ class _StartTimePageState extends State<StartTimePage> {
   // }
 
 // Close Time if not Closed
-  Future<void> adjustTrackingTime({
-    required AppLocalizations getLabels,
-    required List<Map<String, dynamic>> notClosedTrackingTime,
-  }) async {
+  Future<void> adjustTrackingTime(
+      {required AppLocalizations getLabels,
+      required List<Map<String, dynamic>> notClosedTime,
+      required bool isForTrackingTime}) async {
     Navigator.of(context).pop();
 
     await showDialog(
       barrierDismissible: false,
       builder: (context) {
-        DateTime startTime = notClosedTrackingTime.first['startTime'].toDate();
+        DateTime startTime = notClosedTime.first['startTime'].toDate();
         String? startDateConvertToString =
             DateFormat(getLabels.dateFormat).format(startTime);
         String? startTimeConvertToString =
             DateFormat('HH:mm').format(startTime);
         DateTime? setFinishedTime;
         String? finishedTimeConvertToString;
+        bool isReasonInAdding = false;
         return AlertDialog(
           actions: [
             TextButton(
@@ -392,10 +477,17 @@ class _StartTimePageState extends State<StartTimePage> {
                       return Constants.showInSnackBar(
                           value: getLabels.timeRangeError, context: context);
                     } else {
-                      closedTrackingSessionAfter24H(
-                          getLabels: getLabels,
-                          finishedTime: setFinishedTime!,
-                          trackingSessionMap: notClosedTrackingTime.first);
+                      if (isForTrackingTime) {
+                        closedTrackingSessionAfter24H(
+                            getLabels: getLabels,
+                            finishedTime: setFinishedTime!,
+                            trackingSessionMap: notClosedTime.first);
+                      } else {
+                        closedBreakSessionAfter24H(
+                            breakSessionMap: notClosedTime.first,
+                            finishedTime: setFinishedTime!,
+                            getLabels: getLabels);
+                      }
 
                       // Navigator.of(context).pop();
                     }
@@ -419,7 +511,9 @@ class _StartTimePageState extends State<StartTimePage> {
                     textValue: startDateConvertToString),
                 Gap(10.0),
                 Constants.leadingAndTitleTextInRow(
-                    leadingTextKey: getLabels.sessionStartedAt,
+                    leadingTextKey: isForTrackingTime
+                        ? getLabels.sessionStartedAt
+                        : getLabels.breakStartedAt,
                     textValue: startTimeConvertToString),
                 Gap(10.0),
                 StatefulBuilder(
@@ -427,16 +521,37 @@ class _StartTimePageState extends State<StartTimePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Constants.leadingAndTitleTextInRow(
-                          leadingTextKey: getLabels.sessionEndedAt,
+                          leadingTextKey: isForTrackingTime
+                              ? getLabels.sessionEndedAt
+                              : getLabels.breakFinishedAt,
                           textValue: finishedTimeConvertToString ?? "-"),
                       Gap(15.0),
                       InkWell(
                         onTap: () {
+                          DateTime startTimeSession = DateTime(
+                            startTime.year,
+                            startTime.month,
+                            startTime.day,
+                            startTime.hour,
+                            startTime.minute,
+                          );
+                          DateTime checkDay = DateTime(
+                              notClosedTime.first["startTrackingSessions"].year,
+                              notClosedTime
+                                  .first["startTrackingSessions"].month,
+                              notClosedTime.first["startTrackingSessions"].day,
+                              23,
+                              59);
+                          bool isFinishedWillBeToNotAnotherDay =
+                              startTimeSession.isAfter(checkDay);
+
                           DatePickerBdaya.showDatePicker(context,
                               showTitleActions: true,
                               minTime: startTime,
-                              maxTime: startTime
-                                  .add(Duration(hours: 23, minutes: 59)),
+                              maxTime: isFinishedWillBeToNotAnotherDay
+                                  ? startTime
+                                  : startTime
+                                      .add(Duration(hours: 23, minutes: 59)),
                               onConfirm: (date) {
                             DatePickerBdaya.showTimePicker(context,
                                 showTitleActions: true,
@@ -457,7 +572,43 @@ class _StartTimePageState extends State<StartTimePage> {
                           style: TextStyle(
                               color: Theme.of(context).colorScheme.primary),
                         ),
-                      )
+                      ),
+                      Gap(10.0),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            getLabels.reason,
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              isReasonInAdding = !isReasonInAdding;
+                              setState(() {});
+                            },
+                            child: !isReasonInAdding
+                                ? Text(
+                                    getLabels.add,
+                                    style: TextStyle(
+                                        color: Theme.of(context)
+                                            .colorScheme
+                                            .primary),
+                                  )
+                                : Icon(
+                                    Icons.clear,
+                                    color: Theme.of(context).colorScheme.error,
+                                  ),
+                          ),
+                        ],
+                      ),
+                      Gap(10.0),
+                      if (isReasonInAdding)
+                        TextFieldFlexibel(
+                            maxLength: isForTrackingTime ? 500 : 200,
+                            controller: isForTrackingTime
+                                ? _todoController
+                                : _breakReasonController,
+                            hintText: getLabels.write)
                     ],
                   ),
                 )
@@ -573,63 +724,63 @@ class _StartTimePageState extends State<StartTimePage> {
         Provider.of<CategoryProvider>(context, listen: false);
 
     if (mounted) {
-      if (isAlreadyStartWork != null && isAlreadyStartWork) {
-        if (categoryProvider.selectedCategory.isNotEmpty) {
-          String categoryId = categoryProvider.selectedCategory["id"];
-          if (!isUserExists) {
-            getWorkNotClosed = await db.readData(
-                sql:
-                    "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday' and categoryId = '$categoryId'");
-          } else {
-            //check if trackingSession exist
-            final checkWorkSession = await FirebaseFirestore.instance
-                .collection('trackingSessions')
-                .limit(1)
-                .get();
-            if (mounted) {
-              if (checkWorkSession.size > 0) {
-                final userId = FirebaseAuth.instance.currentUser?.uid;
-                final worksesionsGet = await FirebaseFirestore.instance
-                    .collection('trackingSessions')
-                    .where("userId", isEqualTo: userId)
-                    .where('isCompleted', isEqualTo: false)
-                    .where('categoryId', isEqualTo: categoryId)
-                    .get();
-                //  .where("startTime".substring(1, 10), isEqualTo: dateToday)
-                getWorkNotClosed = worksesionsGet.docs
-                    .map((worksession) => worksession.data())
-                    .toList();
-              }
-            }
-          }
+      // if (isAlreadyStartWork != null && isAlreadyStartWork) {
+      if (categoryProvider.selectedCategory.isNotEmpty) {
+        String categoryId = categoryProvider.selectedCategory["id"];
+        if (!isUserExists) {
+          getWorkNotClosed = await db.readData(
+              sql:
+                  "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday' and categoryId = '$categoryId'");
         } else {
-          if (!isUserExists) {
-            getWorkNotClosed = await db.readData(
-                sql:
-                    "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday'");
-          } else {
-            //check if trackingSession exist
-            final checkWorkSession = await FirebaseFirestore.instance
-                .collection('trackingSessions')
-                .limit(1)
-                .get();
-            if (mounted) {
-              if (checkWorkSession.size > 0) {
-                final userId = FirebaseAuth.instance.currentUser?.uid;
-                final worksesionsGet = await FirebaseFirestore.instance
-                    .collection('trackingSessions')
-                    .where('userId', isEqualTo: userId)
-                    .where('isCompleted', isEqualTo: false)
-                    // .where("startTime".substring(1, 10), isEqualTo: dateToday)
-                    .get();
-                // TODO time
-                getWorkNotClosed = worksesionsGet.docs
-                    .map((worksession) => worksession.data())
-                    .toList();
-              }
+          //check if trackingSession exist
+          final checkWorkSession = await FirebaseFirestore.instance
+              .collection('trackingSessions')
+              .limit(1)
+              .get();
+          if (mounted) {
+            if (checkWorkSession.size > 0) {
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              final worksesionsGet = await FirebaseFirestore.instance
+                  .collection('trackingSessions')
+                  .where("userId", isEqualTo: userId)
+                  .where('isCompleted', isEqualTo: false)
+                  .where('categoryId', isEqualTo: categoryId)
+                  .get();
+              //  .where("startTime".substring(1, 10), isEqualTo: dateToday)
+              getWorkNotClosed = worksesionsGet.docs
+                  .map((worksession) => worksession.data())
+                  .toList();
             }
           }
         }
+      } else {
+        if (!isUserExists) {
+          getWorkNotClosed = await db.readData(
+              sql:
+                  "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday'");
+        } else {
+          //check if trackingSession exist
+          final checkWorkSession = await FirebaseFirestore.instance
+              .collection('trackingSessions')
+              .limit(1)
+              .get();
+          if (mounted) {
+            if (checkWorkSession.size > 0) {
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              final worksesionsGet = await FirebaseFirestore.instance
+                  .collection('trackingSessions')
+                  .where('userId', isEqualTo: userId)
+                  .where('isCompleted', isEqualTo: false)
+                  // .where("startTime".substring(1, 10), isEqualTo: dateToday)
+                  .get();
+              // TODO time
+              getWorkNotClosed = worksesionsGet.docs
+                  .map((worksession) => worksession.data())
+                  .toList();
+            }
+          }
+        }
+        // }
       }
     }
 
@@ -1333,27 +1484,58 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   Future<Map<String, dynamic>> getNotClosedBreak(
-      {required Map<String, dynamic> getTrackingDayData}) async {
+      {Map<String, dynamic>? getTrackingDayData, String? categoryId}) async {
     Map<String, dynamic> notClosedBreak = {};
     List<Map<String, dynamic>> breakSessions = [];
-    String trackingSessionId = getTrackingDayData['trackingSessionId'];
+    String? trackingSessionId;
+    if (getTrackingDayData != null) {
+      trackingSessionId = getTrackingDayData['trackingSessionId'];
+    }
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
           .collection('breakSessions')
           .limit(1)
           .get();
       if (mounted) {
+        QuerySnapshot<Map<String, dynamic>>? getAllBreaksDependOnWorkSession;
         if (checkBreakSession.size > 0) {
-          final getAllBreaksDependOnWorkSession = await FirebaseFirestore
-              .instance
-              .collection('breakSessions')
-              .where("trackingSessionId", isEqualTo: trackingSessionId)
-              .where("isCompleted", isEqualTo: false)
-              .where("endTime", isNull: true)
-              .get();
-          breakSessions = getAllBreaksDependOnWorkSession.docs
-              .map((breakSession) => breakSession.data())
-              .toList();
+          if (trackingSessionId != null && categoryId == null) {
+            getAllBreaksDependOnWorkSession = await FirebaseFirestore.instance
+                .collection('breakSessions')
+                .where("trackingSessionId", isEqualTo: trackingSessionId)
+                .where("isCompleted", isEqualTo: false)
+                .where("endTime", isEqualTo: '')
+                .get();
+          }
+          if (categoryId != null && trackingSessionId == null) {
+            final getNotClosedTrackingFormCategorySelected =
+                await getNotClosedTrackingData();
+            if (mounted) {
+              if (getNotClosedTrackingFormCategorySelected.isNotEmpty) {
+                String trackingSessionIdGet =
+                    getNotClosedTrackingFormCategorySelected
+                        .first['trackingSessionId'];
+                DateTime startTrackingSession =
+                    getNotClosedTrackingFormCategorySelected.first['startTime']
+                        .toDate();
+                getAllBreaksDependOnWorkSession = await FirebaseFirestore
+                    .instance
+                    .collection('breakSessions')
+                    .where("trackingSessionId", isEqualTo: trackingSessionIdGet)
+                    .where("isCompleted", isEqualTo: false)
+                    .where("endTime", isEqualTo: '')
+                    .get();
+                if (getAllBreaksDependOnWorkSession.docs.isNotEmpty) {
+                  breakSessions = getAllBreaksDependOnWorkSession.docs
+                      .map((breakSession) => breakSession.data())
+                      .toList();
+
+                  breakSessions.first
+                      .addAll({"startTrackingSessions": startTrackingSession});
+                }
+              }
+            }
+          }
         }
       }
     } else {
@@ -1371,6 +1553,26 @@ class _StartTimePageState extends State<StartTimePage> {
     return notClosedBreak;
   }
 
+  // Future<void> requestToRecoveryFinishedBreakOrDelete(
+  //     {required bool isBreakNotClosed,
+  //     required bool isBreakOver24H,
+  //     required List<Map<String, dynamic>> notClosedBreakTime,
+  //     required AppLocalizations getLabels}) async {
+  //   if (isBreakNotClosed && isBreakNotClosed) {
+  //     await Constants.showDialogConfirmation(
+  //         leftButtonTitle: getLabels.discardSession,
+  //         rightButtonTitle: getLabels.adjust,
+  //         context: context,
+  //         leftButton: () {},
+  //         rightButton: () => adjustTrackingTime(
+  //             isForTrackingTime: false,
+  //             getLabels: getLabels,
+  //             notClosedTrackingTime: notClosedBreakTime),
+  //         title: getLabels.sessionExceededLimit,
+  //         message: getLabels.sessionExceededMessage);
+  //   }
+  // }
+
   Future<void> takeOrFinishBreak() async {
     final getLabels = AppLocalizations.of(context)!;
     final categoryProvider =
@@ -1384,9 +1586,23 @@ class _StartTimePageState extends State<StartTimePage> {
       return Constants.showInSnackBar(
           value: getLabels.selectCategory, context: context);
     }
-
+    Map<String, dynamic> getNotClosedBreakAsMap =
+        await getNotClosedBreak(categoryId: categoryId);
+    if (!mounted) return;
     List<Map<String, dynamic>> getTraickingsDayDataList =
         await getDataSameDateLikeToday(categoryIdGet: categoryId);
+    if (!mounted) return;
+    if (getNotClosedBreakAsMap.isNotEmpty && getTraickingsDayDataList.isEmpty) {
+      List<Map<String, dynamic>> notClosedbreaks = [getNotClosedBreakAsMap];
+      print(getNotClosedBreakAsMap);
+      await requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
+          getLabels: getLabels,
+          isOver24H: true,
+          isTrackingTime: false,
+          notClosedTime: notClosedbreaks,
+          isNotClosed: true);
+      return;
+    }
     if (!mounted) return;
     if (getTraickingsDayDataList.isEmpty) {
       return Constants.showInSnackBar(
