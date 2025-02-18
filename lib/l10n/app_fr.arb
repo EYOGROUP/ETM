@@ -281,5 +281,8 @@
     "lastSessionClosed": "Vous venez de terminer votre dernière session. Vous pouvez maintenant commencer une nouvelle session dès que vous êtes prêt!",
     "breakExceededLimit": "Limite de pause dépassée",
     "breakExceededMessage": "Votre pause a dépassé la durée maximale autorisée. Pour maintenir un suivi précis, vous pouvez récupérer et ajuster la pause à la limite autorisée, ou la supprimer entièrement. Que souhaitez-vous faire?",
-    "discardBreak": "Supprimer la pause"
+    "discardBreak": "Supprimer la pause",
+    "filter": "Filtre",
+    "category": "Catégorie",
+    "resetFilters": "Réinitialiser les filtres"
 }

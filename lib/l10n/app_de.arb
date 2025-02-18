@@ -280,5 +280,8 @@
     "lastSessionClosed": "Sie haben gerade Ihre letzte Sitzung beendet. Sie können eine neue Sitzung starten, wann immer Sie bereit sind!",
     "breakExceededLimit": "Pausenlimit überschritten",
     "breakExceededMessage": "Ihre Pause hat die maximal zulässige Dauer überschritten. Um eine genaue Verfolgung sicherzustellen, können Sie die Pause auf das erlaubte Limit anpassen oder sie vollständig verwerfen. Was möchten Sie tun?",
-    "discardBreak": "Pause verwerfen"
+    "discardBreak": "Pause verwerfen",
+    "filter": "Filter",
+    "category": "Kategorie",
+    "resetFilters": "Filter zurücksetzen"
 }

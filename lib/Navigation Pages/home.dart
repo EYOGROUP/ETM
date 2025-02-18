@@ -142,11 +142,9 @@ class _StartTimePageState extends State<StartTimePage> {
     bool isNotClosedAfterTime = await isNotClosedWork();
     if (!mounted) return;
 
-    if (categoryProvider.selectedCategory.isEmpty &&
-        !isAlreadStartedWork &&
-        isAlreadClosedWork.isEmpty &&
-        !isNotClosedAfterTime &&
-        categoryHint.isEmpty) {
+    if (categoryProvider.selectedCategory.isEmpty && categoryHint.isEmpty ||
+        (!categoryProvider.isSwitchedToCloudCategories &&
+            !categoryProvider.isSwitchedToLokalCategories)) {
       return Constants.showInSnackBar(
           value: getLabels.selectCategory, context: context);
     }
@@ -460,6 +458,7 @@ class _StartTimePageState extends State<StartTimePage> {
         String? finishedTimeConvertToString;
         bool isReasonInAdding = false;
         return AlertDialog(
+          scrollable: true,
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
@@ -496,8 +495,8 @@ class _StartTimePageState extends State<StartTimePage> {
                 child: Text(getLabels.confirm))
           ],
           content: SingleChildScrollView(
-            padding: EdgeInsets.only(
-                bottom: MediaQuery.of(context).viewInsets.bottom),
+            // padding: EdgeInsets.only(
+            //     bottom: MediaQuery.of(context).viewInsets.bottom),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -528,27 +527,34 @@ class _StartTimePageState extends State<StartTimePage> {
                       Gap(15.0),
                       InkWell(
                         onTap: () {
-                          DateTime startTimeSession = DateTime(
-                            startTime.year,
-                            startTime.month,
-                            startTime.day,
-                            startTime.hour,
-                            startTime.minute,
-                          );
-                          DateTime checkDay = DateTime(
-                              notClosedTime.first["startTrackingSessions"].year,
-                              notClosedTime
-                                  .first["startTrackingSessions"].month,
-                              notClosedTime.first["startTrackingSessions"].day,
-                              23,
-                              59);
-                          bool isFinishedWillBeToNotAnotherDay =
-                              startTimeSession.isAfter(checkDay);
+                          bool? isFinishedWillBeToNotAnotherDay;
+                          if (!isForTrackingTime) {
+                            DateTime startTimeSession = DateTime(
+                              startTime.year,
+                              startTime.month,
+                              startTime.day,
+                              startTime.hour,
+                              startTime.minute,
+                            );
+
+                            DateTime checkDay = DateTime(
+                                notClosedTime
+                                    .first["startTrackingSessions"].year,
+                                notClosedTime
+                                    .first["startTrackingSessions"].month,
+                                notClosedTime
+                                    .first["startTrackingSessions"].day,
+                                23,
+                                59);
+                            isFinishedWillBeToNotAnotherDay =
+                                startTimeSession.isAfter(checkDay);
+                          }
 
                           DatePickerBdaya.showDatePicker(context,
                               showTitleActions: true,
                               minTime: startTime,
-                              maxTime: isFinishedWillBeToNotAnotherDay
+                              maxTime: !isForTrackingTime &&
+                                      isFinishedWillBeToNotAnotherDay!
                                   ? startTime
                                   : startTime
                                       .add(Duration(hours: 23, minutes: 59)),
@@ -604,6 +610,7 @@ class _StartTimePageState extends State<StartTimePage> {
                       Gap(10.0),
                       if (isReasonInAdding)
                         TextFieldFlexibel(
+                            maxLines: 5,
                             maxLength: isForTrackingTime ? 500 : 200,
                             controller: isForTrackingTime
                                 ? _todoController
@@ -1580,7 +1587,9 @@ class _StartTimePageState extends State<StartTimePage> {
     String? categoryId;
     TrackingDB db = TrackingDB();
 
-    if (categoryProvider.selectedCategory.isNotEmpty) {
+    if (categoryProvider.selectedCategory.isNotEmpty &&
+        ((categoryProvider.isSwitchedToCloudCategories ||
+            categoryProvider.isSwitchedToLokalCategories))) {
       categoryId = categoryProvider.selectedCategory["id"];
     } else {
       return Constants.showInSnackBar(

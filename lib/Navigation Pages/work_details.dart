@@ -120,7 +120,7 @@ class _WorkDetailsState extends State<WorkDetails> {
         List grossInHourSplit =
             grossWorkDayInHour.toStringAsFixed(2).split(".");
         grossWorkTimeLabel =
-            "${grossInHourSplit[0]}H ${grossInHourSplit[1]}min ";
+            "${grossInHourSplit[0]}H ${grossInHourSplit[1]} min ";
       }
     } else {
       grossWorkTimeLabel = "$workedDayInHourFormatInInt min";
@@ -143,7 +143,7 @@ class _WorkDetailsState extends State<WorkDetails> {
           netWorkTimeLabel = "${netWorkDayInHour.toInt()}H  ";
         } else {
           List networkDay = netWorkDayInHour.toStringAsFixed(2).split(".");
-          netWorkTimeLabel = "${networkDay[0]}H ${networkDay[1]}min ";
+          netWorkTimeLabel = "${networkDay[0]}H ${networkDay[1]} min ";
         }
       } else {
         netWorkDayInMin = difference;
@@ -266,11 +266,11 @@ class _WorkDetailsState extends State<WorkDetails> {
                           GestureDetector(
                             onTap: () {
                               setState(() {
-                                _selectedCategoryForFilter = categories.first;
+                                _selectedCategoryForFilter = null;
                               });
                             },
                             child: Text(
-                              "Reset Filters",
+                              labels.resetFilters,
                               style: TextStyle(
                                   color: Theme.of(context).colorScheme.primary,
                                   decoration: TextDecoration.underline),
@@ -294,7 +294,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                                   Navigator.of(context).pop();
                                 },
                                 child: Text(
-                                  "Save",
+                                  labels.confirm,
                                   style: TextStyle(
                                       fontSize: 18.0,
                                       color: Theme.of(context)
@@ -406,19 +406,22 @@ class _WorkDetailsState extends State<WorkDetails> {
                       child: Row(
                         children: [
                           Text(
-                            "Filter:",
+                            "${getLabels.filter}:",
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 22.0),
                           ),
                           Spacer(),
                           GestureDetector(
                               onTap: () => showBottomFilter(labels: getLabels),
-                              child: Icon(Icons.filter_list)),
+                              child: Icon(
+                                Icons.filter_list,
+                                color: Theme.of(context).colorScheme.primary,
+                              )),
                         ],
                       ),
                     ),
                     LeadingAndTitle(
-                      leading: "Category:",
+                      leading: "${getLabels.category}:",
                       title: _selectedCategoryForFilter != null
                           ? _selectedCategoryForFilter!
                               .name[eTMPovider.getCurrentLocalSystemLanguage()]
@@ -490,7 +493,11 @@ class _WorkDetailsState extends State<WorkDetails> {
                                       },
                                       child: Text(
                                         getLabels.checkItOut,
-                                        style: TextStyle(fontSize: 12.0),
+                                        style: TextStyle(
+                                            fontSize: 12.0,
+                                            color: Theme.of(context)
+                                                .colorScheme
+                                                .tertiary),
                                       )),
                                 )
                               ],
@@ -533,7 +540,7 @@ class _WorkDetailsState extends State<WorkDetails> {
                                     int breakNo = index + 1;
 
                                     return Padding(
-                                      padding: const EdgeInsets.all(8.0),
+                                      padding: const EdgeInsets.all(6.0),
                                       child: Card(
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
@@ -587,14 +594,23 @@ class _WorkDetailsState extends State<WorkDetails> {
                                                         MainAxisAlignment
                                                             .spaceBetween,
                                                     children: [
-                                                      Text(
-                                                        getLabels
-                                                            .breakReasonSet,
-                                                        style: TextStyle(
-                                                            fontSize: 13.0),
+                                                      Flexible(
+                                                        child: Text(
+                                                          getLabels
+                                                              .breakReasonSet,
+                                                          style: TextStyle(
+                                                              fontSize: 13.0),
+                                                        ),
                                                       ),
                                                       Expanded(
                                                         child: TextButton(
+                                                            style: ButtonStyle(
+                                                                padding: WidgetStatePropertyAll(
+                                                                    EdgeInsets
+                                                                        .all(
+                                                                            0.0)),
+                                                                alignment: Alignment
+                                                                    .centerRight),
                                                             onPressed: () {
                                                               showNotice(
                                                                   textTitle:
@@ -610,7 +626,11 @@ class _WorkDetailsState extends State<WorkDetails> {
                                                                   .checkItOut,
                                                               style: TextStyle(
                                                                   fontSize:
-                                                                      12.0),
+                                                                      12.0,
+                                                                  color: Theme.of(
+                                                                          context)
+                                                                      .colorScheme
+                                                                      .tertiary),
                                                             )),
                                                       )
                                                     ],
@@ -640,6 +660,23 @@ class _WorkDetailsState extends State<WorkDetails> {
                         Text(getLabels.viewBreakDetails),
                         Gap(MediaQuery.of(context).size.height * 0.23),
                       },
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          for (double i = 0; i <= dividerCount; i++) ...{
+                            if (i % 2 == 0) ...{
+                              const Flexible(
+                                child: SizedBox(
+                                  width: 20,
+                                  child: Divider(),
+                                ),
+                              ),
+                            } else ...{
+                              const Gap(10),
+                            }
+                          }
+                        ],
+                      ),
                       Padding(
                         padding: EdgeInsets.symmetric(
                             horizontal:
@@ -671,7 +708,24 @@ class _WorkDetailsState extends State<WorkDetails> {
                           ],
                         ),
                       ),
-                      if (_selectedCategoryForFilter != null)
+                      if (_selectedCategoryForFilter != null) ...{
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            for (double i = 0; i <= dividerCount; i++) ...{
+                              if (i % 2 == 0) ...{
+                                const Flexible(
+                                  child: SizedBox(
+                                    width: 20,
+                                    child: Divider(),
+                                  ),
+                                ),
+                              } else ...{
+                                const Gap(10),
+                              }
+                            }
+                          ],
+                        ),
                         TextButton(
                             style: const ButtonStyle(
                                 padding: WidgetStatePropertyAll(
@@ -685,7 +739,12 @@ class _WorkDetailsState extends State<WorkDetails> {
                                   cancelText: getLabels.cancel,
                                   confirmText: getLabels.confirm);
                             },
-                            child: Text(getLabels.deleteTrackedSession)),
+                            child: Text(
+                              getLabels.deleteTrackedSession,
+                              style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error),
+                            )),
+                      }
                     } else ...{
                       SizedBox(
                           height: MediaQuery.of(context).size.height * 0.7,
