@@ -73,7 +73,7 @@ class _WelcomePageState extends State<WelcomePage> {
                               DateFormat('yyyy-MM-dd').format(DateTime.now());
                           // final tets = await delete.readData(
                           //     sql:
-                          //         'select * from work_sessions where (isCompleted=0 and substr(startTime,1,10) ="$dateToday") OR (isCompleted =1 and substr(startTime,1,10) ="$dateToday" AND categoryId="$catId")');
+                          //         'select * from tracking_sessions where (isCompleted=0 and substr(startTime,1,10) ="$dateToday") OR (isCompleted =1 and substr(startTime,1,10) ="$dateToday" AND categoryId="$catId")');
                           final tets = await delete.readData(
                               sql: 'select * from categories ');
                           print(tets);

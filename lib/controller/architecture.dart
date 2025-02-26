@@ -33,6 +33,7 @@ class TrackingSession {
       'categoryId': categoryId,
       "taskDescription": taskDescription,
       'isCompleted': isCompleted ? 1 : 0,
+      "trackingSession": trackingSessionId,
       'isSplit': isSplit ? 1 : 0,
     };
   }
@@ -85,6 +86,7 @@ class BreakSession {
       "reason": reason ?? '',
       "createdAt": createdAt.toString(),
       'isSplit': isSplit ? 1 : 0,
+      'isCompleted': isCompleted! ? 1 : 0,
     };
   }
 

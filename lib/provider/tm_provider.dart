@@ -45,7 +45,7 @@ class TimeManagementPovider with ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> monitorInternet(BuildContext context) async {
+  Future<void> monitorInternet({required BuildContext context}) async {
     final subscription = Connectivity().onConnectivityChanged.listen(
       (List<ConnectivityResult> connectivity) async {
         bool hasInternet = await hasActiveInternet();
@@ -60,6 +60,7 @@ class TimeManagementPovider with ChangeNotifier {
                 value: getLabels.noInternetConnection, context: context);
           } else {
             _isInternetConnected = true;
+
             categoryProvider.switchToLokalCategories = false;
 
             return Constants.showInSnackBar(
@@ -95,6 +96,7 @@ class TimeManagementPovider with ChangeNotifier {
       if (context.mounted) {
         final categoryProvider =
             Provider.of<CategoryProvider>(context, listen: false);
+
         categoryProvider.switchToLokalCategories = false;
       }
 
@@ -270,7 +272,7 @@ class TimeManagementPovider with ChangeNotifier {
     } else {
       TrackingDB db = TrackingDB();
       List<Map<String, dynamic>> works = await db.readData(
-          sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+          sql: 'select * from tracking_sessions') as List<Map<String, dynamic>>;
       for (Map<String, dynamic> work in works) {
         DateTime? startTimeToday =
             DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(work['startTime'])!;
@@ -430,7 +432,7 @@ class TimeManagementPovider with ChangeNotifier {
         String dateToday = DateFormat('yyyy-MM-dd').format(date);
         trackingSessions = await db.readData(
                 sql:
-                    'select * from work_sessions where substr(startTime,1,10) ="$dateToday" ')
+                    'select * from tracking_sessions where substr(startTime,1,10) ="$dateToday" ')
             as List<Map<String, dynamic>>;
       }
       if (trackingSessions.isNotEmpty) {
@@ -519,11 +521,11 @@ class TimeManagementPovider with ChangeNotifier {
       if (categoryId != null && categoryId != '') {
         getWorksData = await db.readData(
             sql:
-                'select * from work_sessions where substr(startTime,1,10)="$formatDate" and categoryId="$categoryId"');
+                'select * from tracking_sessions where substr(startTime,1,10)="$formatDate" and categoryId="$categoryId"');
       } else {
         getWorksData = await db.readData(
             sql:
-                'select * from work_sessions where substr(startTime,1,10)="$formatDate"');
+                'select * from tracking_sessions where substr(startTime,1,10)="$formatDate"');
         // worksDataGet.clear();
       }
       if (getWorksData.isNotEmpty) {
@@ -776,7 +778,7 @@ class TimeManagementPovider with ChangeNotifier {
           .delete();
     } else {
       TrackingDB db = TrackingDB();
-      await db.deleteData(sql: "delete from work_sessions where id ='$id'");
+      await db.deleteData(sql: "delete from tracking_sessions where id ='$id'");
     }
   }
 
@@ -814,13 +816,14 @@ class TimeManagementPovider with ChangeNotifier {
     bool isLokalDataExists = false;
     if (isUserExist) {
       TrackingDB db = TrackingDB();
-      bool? isTableExits = await db.doesTableExist("work_sessions");
+      bool? isTableExits = await db.doesTableExist("tracking_sessions");
       if (context.mounted) {
         if (!isTableExits) {
           isLokalDataExists = false;
         } else {
-          final trackingSessionsGet = await db.readData(
-              sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+          final trackingSessionsGet =
+              await db.readData(sql: 'select * from tracking_sessions')
+                  as List<Map<String, dynamic>>;
           if (context.mounted) {
             if (trackingSessionsGet.isNotEmpty) {
               isLokalDataExists = true;
@@ -840,7 +843,7 @@ class TimeManagementPovider with ChangeNotifier {
     isLokalDataInCloudSync = true;
 
     final List<Map<String, dynamic>> gettrackingSessions = await db.readData(
-        sql: 'select * from work_sessions') as List<Map<String, dynamic>>;
+        sql: 'select * from tracking_sessions') as List<Map<String, dynamic>>;
 
     if (context.mounted) {
       int completedItems = 0;
@@ -910,7 +913,8 @@ class TimeManagementPovider with ChangeNotifier {
           }
           // delete Lokal Data
           await db.deleteData(
-              sql: 'DELETE FROM work_sessions WHERE id ="$trackingSessionId"');
+              sql:
+                  'DELETE FROM tracking_sessions WHERE id ="$trackingSessionId"');
           if (!context.mounted) return;
         }
 

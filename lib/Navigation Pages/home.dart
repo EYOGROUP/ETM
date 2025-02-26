@@ -82,9 +82,9 @@ class _StartTimePageState extends State<StartTimePage> {
       (_) async {
         _categories = ETMCategory.categories;
 
-        await checkInternet();
-        if (!mounted) return;
         await checkUserIfExist();
+        if (!mounted) return;
+        await checkInternet(isUserExists: isUserExists);
         if (!mounted) return;
         await getCategoriesFromProvider();
         if (!mounted) return;
@@ -108,17 +108,27 @@ class _StartTimePageState extends State<StartTimePage> {
     setState(() {});
   }
 
-  Future<void> checkInternet() async {
+  Future<void> checkInternet({required bool isUserExists}) async {
     final eTManagement =
         Provider.of<TimeManagementPovider>(context, listen: false);
-    await eTManagement.monitorInternet(context);
+    await eTManagement.monitorInternet(context: context);
     if (!mounted) return;
     eTManagement.isConnectedToInternet(context: context);
   }
 
   checkUserIfExist() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
+    final categoryProvider =
+        Provider.of<CategoryProvider>(context, listen: false);
     isUserExists = await userProvider.isUserLogin(context: context);
+    if (!mounted) return;
+    if (isUserExists) {
+      categoryProvider.switchToCloudCategories = true;
+      categoryProvider.switchToLokalCategories = false;
+    } else {
+      categoryProvider.switchToCloudCategories = false;
+      categoryProvider.switchToLokalCategories = true;
+    }
   }
 
   Future<void> startWork(
@@ -131,23 +141,22 @@ class _StartTimePageState extends State<StartTimePage> {
     getLabels = AppLocalizations.of(context)!;
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
-
-    if (!mounted) return;
-
-    bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
-    if (!mounted) return;
-
-    List<Map<String, dynamic>> isAlreadClosedWork =
-        await getNotClosedTrackingData(isAlreadyStartWork: isAlreadStartedWork);
-    bool isNotClosedAfterTime = await isNotClosedWork();
-    if (!mounted) return;
-
     if (categoryProvider.selectedCategory.isEmpty && categoryHint.isEmpty ||
         (!categoryProvider.isSwitchedToCloudCategories &&
             !categoryProvider.isSwitchedToLokalCategories)) {
       return Constants.showInSnackBar(
           value: getLabels.selectCategory, context: context);
     }
+
+    bool isAlreadStartedWork = await isAlreadyStartedWorkDay();
+    if (!mounted) return;
+
+    List<Map<String, dynamic>> isAlreadClosedWork =
+        await getNotClosedTrackingData(isAlreadyStartWork: isAlreadStartedWork);
+    if (!mounted) return;
+    bool isNotClosedAfterTime = await isNotClosedWork();
+    if (!mounted) return;
+
     bool isCategoryAlreadyActivated = await isAlreadyCategoryActivated(
         categorySet: categoryProvider.selectedCategory);
 
@@ -165,29 +174,33 @@ class _StartTimePageState extends State<StartTimePage> {
         isNotClosedAfterTime &&
         !isAlreadyTrackingOver24H) {
       await completedWork(getLabels: getLabels);
+      if (!mounted) return;
+      return;
     }
 
     if (categoryProvider.selectedCategory.isNotEmpty) {
       String categoryId = categoryProvider.selectedCategory["id"];
-      List<Map<String, dynamic>> worksDay =
+
+      List<Map<String, dynamic>> trackingSessions =
           await getDataSameDateLikeToday(categoryIdGet: categoryId);
       if (!mounted) return;
 
-      if (worksDay.isEmpty) {
+      if (trackingSessions.isEmpty) {
         isWorkDayStarted = false;
       } else {
         isWorkDayStarted = true;
-        for (Map<String, dynamic> workDay in worksDay) {
-          if (workDay["categoryId"] != categoryId) {
+        for (Map<String, dynamic> trackingSession in trackingSessions) {
+          if (trackingSession["categoryId"] != categoryId) {
             isAnotherCategory = true;
           }
           if (!isAnotherCategory &&
-              workDay["isCompleted"] &&
-              workDay["endTime"] != "") {
+              trackingSession["isCompleted"] &&
+              trackingSession["endTime"] != "") {
             isWorkFinished = true;
           }
         }
       }
+
       final getNotClosedWork = await getNotClosedTrackingData(
           isAlreadyStartWork: isAlreadyStartedWorkCheck);
       if (!mounted) return;
@@ -218,6 +231,7 @@ class _StartTimePageState extends State<StartTimePage> {
         );
 
 // TODO check if work over nexday
+
         await insertStartWorkToCloudOrLokalDb(trackingSession: trackingSession);
         if (!mounted) return;
         await isSwitchCategoryAvailablity(
@@ -661,7 +675,7 @@ class _StartTimePageState extends State<StartTimePage> {
       TrackingDB db = TrackingDB();
 
       await db.insertData(
-          tableName: 'work_sessions', data: trackingSession.lokalToMap());
+          tableName: 'tracking_sessions', data: trackingSession.lokalToMap());
       if (mounted) {
         setState(() {
           _isStartWork = true;
@@ -687,7 +701,7 @@ class _StartTimePageState extends State<StartTimePage> {
         TrackingDB db = TrackingDB();
         trackingSession = await db.readData(
                 sql:
-                    'select * from work_sessions where (isCompleted=0 OR isCompleted =1) AND substr(startTime,1,10) ="$dateToday" AND categoryId="$categoryId" ')
+                    'select * from tracking_sessions where (isCompleted=0 OR isCompleted =1) AND substr(startTime,1,10) ="$dateToday" AND categoryId="$categoryId" ')
             as List<Map<String, dynamic>>;
       } else {
         //check if trackingSession exist
@@ -726,7 +740,7 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> getWorkNotClosed = [];
     TrackingDB db = TrackingDB();
     // List<Map<String, dynamic>> trackingSession = [];
-    String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    // String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
 
@@ -737,7 +751,7 @@ class _StartTimePageState extends State<StartTimePage> {
         if (!isUserExists) {
           getWorkNotClosed = await db.readData(
               sql:
-                  "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday' and categoryId = '$categoryId'");
+                  "select * from tracking_sessions where endTime='' and isCompleted = 0 and categoryId = '$categoryId'");
         } else {
           //check if trackingSession exist
           final checkWorkSession = await FirebaseFirestore.instance
@@ -764,7 +778,7 @@ class _StartTimePageState extends State<StartTimePage> {
         if (!isUserExists) {
           getWorkNotClosed = await db.readData(
               sql:
-                  "select * from work_sessions where endTime='' and substr(startTime,1,10)='$dateToday'");
+                  "select * from tracking_sessions where endTime='' and and isCompleted = 0");
         } else {
           //check if trackingSession exist
           final checkWorkSession = await FirebaseFirestore.instance
@@ -884,6 +898,8 @@ class _StartTimePageState extends State<StartTimePage> {
       {required bool isSwitchCategory,
       Map<String, dynamic>? categorySet,
       required bool isInit}) async {
+    await checkUserIfExist();
+    if (!mounted) return;
     final timeManagementPovider =
         Provider.of<TimeManagementPovider>(context, listen: false);
     timeManagementPovider.setOrientation(context);
@@ -1062,7 +1078,7 @@ class _StartTimePageState extends State<StartTimePage> {
         TrackingDB db = TrackingDB();
         trackingSession = await db.readData(
                 sql:
-                    'select * from work_sessions where isCompleted=0  and categoryId="$categoryId"')
+                    'select * from tracking_sessions where isCompleted=0  and categoryId="$categoryId"')
             as List<Map<String, dynamic>>;
       }
     }
@@ -1103,7 +1119,7 @@ class _StartTimePageState extends State<StartTimePage> {
     } else {
       trackingSessions = await db.readData(
               sql:
-                  'select * from work_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
+                  'select * from tracking_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
           as List<Map<String, dynamic>>;
     }
     if (trackingSessions.isNotEmpty) {
@@ -1133,7 +1149,7 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> workDay = [];
     TrackingDB db = TrackingDB();
     workFinishTime = DateTime.now();
-    List<Map<String, dynamic>> worksessions = [];
+    List<Map<String, dynamic>> trackingSessions = [];
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
     if (categoryProvider.selectedCategory.isNotEmpty) {
@@ -1145,29 +1161,36 @@ class _StartTimePageState extends State<StartTimePage> {
             .where("categoryId", isEqualTo: categoryIdGet)
             .get();
 
-        worksessions = getWorksessions.docs.map((work) => work.data()).toList();
+        trackingSessions = getWorksessions.docs
+            .map((trackingSession) => trackingSession.data())
+            .toList();
       } else {
         String categoryId = categoryProvider.selectedCategory["id"];
         final worksessionsGet = await db.readData(
                 sql:
-                    'select * from work_sessions where categoryId="$categoryId"')
+                    'select * from tracking_sessions where categoryId="$categoryId"')
             as List<Map<String, dynamic>>;
-        worksessions = List.from(worksessionsGet.map(
+        trackingSessions = List.from(worksessionsGet.map(
           (trackingSession) => Map<String, dynamic>.from(trackingSession),
         ));
       }
-      for (Map<String, dynamic> work in worksessions) {
+      for (Map<String, dynamic> trackingSession in trackingSessions) {
         String startTime = '';
         if (isUserExists) {
           startTime = DateFormat('yyyy-MM-dd HH:mm:ss')
-              .format(work['startTime'].toDate());
-          if (work['endTime'] != null && work['endTime'] != '') {
-            String endTime = work['endTime'].toDate().toString();
-            work.update("endTime", (value) => endTime);
+              .format(trackingSession['startTime'].toDate());
+          if (trackingSession['endTime'] != null &&
+              trackingSession['endTime'] != '') {
+            String endTime = trackingSession['endTime'].toDate().toString();
+            trackingSession.update("endTime", (value) => endTime);
           }
-          work.update("startTime", (value) => startTime);
+          trackingSession.update("startTime", (value) => startTime);
         } else {
-          startTime = work['startTime'];
+          startTime = trackingSession['startTime'];
+          if (trackingSession['endTime'] != '') {
+            String endTime = trackingSession['endTime'];
+            trackingSession.update("endTime", (value) => endTime);
+          }
         }
         DateTime? startTimeToday =
             DateFormat('yyyy-MM-dd HH:mm:ss').tryParse(startTime)!;
@@ -1177,20 +1200,20 @@ class _StartTimePageState extends State<StartTimePage> {
         if (isSameDate) {
           bool? isCompledUpdate;
           if (isUserExists) {
-            if (!work["isCompleted"]) {
+            if (!trackingSession["isCompleted"]) {
               isCompledUpdate = false;
             } else {
               isCompledUpdate = true;
             }
           } else {
-            if (work["isCompleted"] == 0) {
+            if (trackingSession["isCompleted"] == 0) {
               isCompledUpdate = false;
             } else {
               isCompledUpdate = true;
             }
           }
-          work.update("isCompleted", (value) => isCompledUpdate);
-          workDay.add(work);
+          trackingSession.update("isCompleted", (value) => isCompledUpdate);
+          workDay.add(trackingSession);
         }
       }
     }
@@ -1270,9 +1293,8 @@ class _StartTimePageState extends State<StartTimePage> {
       if (getTrackTimeNotClosed.isNotEmpty) {
         final getData = await getTrackingSessionNotFinished(
             categoryId: categoryProvider.selectedCategory["id"]);
-        print(getData);
       }
-      print("hey boss");
+
       return;
     }
 
@@ -1307,7 +1329,7 @@ class _StartTimePageState extends State<StartTimePage> {
             'taskDescription': _todoController.text
           };
           await db.updateData(
-              tableName: 'work_sessions',
+              tableName: 'tracking_sessions',
               data: updateData,
               columnId: 'id',
               id: workDay['id']);
@@ -1603,7 +1625,6 @@ class _StartTimePageState extends State<StartTimePage> {
     if (!mounted) return;
     if (getNotClosedBreakAsMap.isNotEmpty && getTraickingsDayDataList.isEmpty) {
       List<Map<String, dynamic>> notClosedbreaks = [getNotClosedBreakAsMap];
-      print(getNotClosedBreakAsMap);
       await requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
           getLabels: getLabels,
           isOver24H: true,
@@ -1882,9 +1903,15 @@ class _StartTimePageState extends State<StartTimePage> {
         if (dateAfterT24HFromStartTime > 24) {
           isTrackingOver24H = true;
         }
+      } else {
+        DateTime? startTrackingLokalDate = DateFormat("yyyy-MM-dd hh:mm")
+            .tryParse(getTrackingData["startTime"]);
+        int dateAfterT24HFromStartTime =
+            DateTime.now().difference(startTrackingLokalDate!).inHours;
+        if (dateAfterT24HFromStartTime > 24) {
+          isTrackingOver24H = true;
+        }
       }
-    } else {
-      isTrackingOver24H = true;
     }
     return isTrackingOver24H;
   }
@@ -1995,10 +2022,11 @@ class _StartTimePageState extends State<StartTimePage> {
                           //     )
                           //     .first;
                           // c.isUnlocked = false;
-                          // TrackingDB db = TrackingDB();
-                          // final data = await db.readData(
-                          //     sql: "select * FROM categories");
-                          // print(data);
+                          TrackingDB db = TrackingDB();
+                          // db.deleteDB();
+                          final data = await db.readData(
+                              sql: "select * FROM tracking_sessions");
+                          print(data);
 
                           // // final data = await db.deleteData(
                           //     sql:
@@ -2220,6 +2248,7 @@ class _StartTimePageState extends State<StartTimePage> {
                                         onPressed: () async {
                                           categoryProvider
                                               .switchToLokalCategories = false;
+
                                           await getCategoriesFromProvider();
                                           if (!mounted) return;
                                           categoryProvider
