@@ -33,7 +33,7 @@ class TrackingSession {
       'categoryId': categoryId,
       "taskDescription": taskDescription,
       'isCompleted': isCompleted ? 1 : 0,
-      "trackingSession": trackingSessionId,
+      "trackingSessionId": trackingSessionId,
       'isSplit': isSplit ? 1 : 0,
     };
   }
@@ -62,7 +62,7 @@ class BreakSession {
   DateTime? endTime;
   int? durationMinutes;
   String? reason;
-  final bool? isCompleted;
+  final bool isCompleted;
   final DateTime createdAt;
   final bool isSplit;
   BreakSession({
@@ -86,7 +86,7 @@ class BreakSession {
       "reason": reason ?? '',
       "createdAt": createdAt.toString(),
       'isSplit': isSplit ? 1 : 0,
-      'isCompleted': isCompleted! ? 1 : 0,
+      'isCompleted': isCompleted ? 1 : 0,
     };
   }
 
@@ -99,7 +99,7 @@ class BreakSession {
       "durationMinutes": durationMinutes ?? 0,
       "reason": reason,
       "createdAt": createdAt,
-      'isCompleted': isCompleted!,
+      'isCompleted': isCompleted,
       "isSplit": isSplit
     };
   }

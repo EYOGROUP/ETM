@@ -284,5 +284,6 @@
     "discardBreak": "Supprimer la pause",
     "filter": "Filtre",
     "category": "Catégorie",
-    "resetFilters": "Réinitialiser les filtres"
+    "resetFilters": "Réinitialiser les filtres",
+    "somethingWentWrong": "Une erreur s'est produite, veuillez réessayer."
 }

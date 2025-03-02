@@ -72,6 +72,10 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {});
   }
 
+  bool isTrackingAsLokalOn({required TimeManagementPovider eTManagement}) {
+    return eTManagement.isTrackingSessionAsLokalAlreadyStarted;
+  }
+
   @override
   Widget build(BuildContext context) {
     final getLabels = AppLocalizations.of(context)!;
@@ -114,7 +118,10 @@ class _ProfilePageState extends State<ProfilePage> {
                             containerText: getLabels.signInWithGoogle,
                             isSVG: true,
                             onTap: () {
-                              userProvider.signInWithGoogle(context: context);
+                              if (!isTrackingAsLokalOn(
+                                  eTManagement: tmProvider)) {
+                                userProvider.signInWithGoogle(context: context);
+                              }
                             },
                           ),
                           LoginRegisterContainer(
@@ -122,9 +129,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             containerText: getLabels.signInWithEmail,
                             isSVG: false,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => LoginPage(),
-                              ));
+                              if (!isTrackingAsLokalOn(
+                                  eTManagement: tmProvider)) {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => LoginPage(),
+                                ));
+                              }
                             },
                           ),
                           LoginRegisterContainer(
@@ -132,9 +142,12 @@ class _ProfilePageState extends State<ProfilePage> {
                             containerText: getLabels.newUserRegisterHere,
                             isSVG: false,
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                builder: (context) => RegisterPage(),
-                              ));
+                              if (!isTrackingAsLokalOn(
+                                  eTManagement: tmProvider)) {
+                                Navigator.of(context).push(MaterialPageRoute(
+                                  builder: (context) => RegisterPage(),
+                                ));
+                              }
                             },
                           ),
                         } else ...{

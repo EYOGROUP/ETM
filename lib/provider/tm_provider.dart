@@ -15,7 +15,6 @@ import 'dart:io';
 import 'package:time_management/db/mydb.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/category_provider.dart';
-import 'package:time_management/provider/user_provider.dart';
 import 'package:uuid/uuid.dart';
 
 class TimeManagementPovider with ChangeNotifier {
@@ -31,6 +30,10 @@ class TimeManagementPovider with ChangeNotifier {
   bool _isInternetConnected = false;
   bool get isInternetConnectedGet => _isInternetConnected;
 
+  bool _isTrackingSessionAsLokalAlreadyStarted = false;
+  bool get isTrackingSessionAsLokalAlreadyStarted =>
+      _isTrackingSessionAsLokalAlreadyStarted;
+
   bool? isLokalDataInCloudSync;
 
   double _progressSyncToCloud = 0;
@@ -42,6 +45,14 @@ class TimeManagementPovider with ChangeNotifier {
 
   set isInAddingReasonSet(bool isInAdding) {
     _isInAddingReason = isInAdding;
+    notifyListeners();
+  }
+
+// Check if Sessions started as lokal
+  set isTrackingSessionAsLokalAlreadyStartedSet(
+      bool isTrackingSessionAsLokalAlreadyStartedGet) {
+    _isTrackingSessionAsLokalAlreadyStarted =
+        isTrackingSessionAsLokalAlreadyStartedGet;
     notifyListeners();
   }
 

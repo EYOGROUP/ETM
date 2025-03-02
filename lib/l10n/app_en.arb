@@ -281,6 +281,7 @@
   "discardBreak": "Discard Break",
   "filter": "Filter",
   "category": "Category",
-  "resetFilters": "Reset Filters"
+  "resetFilters": "Reset Filters",
+   "somethingWentWrong": "Something went wrong, please try again."
   
 }

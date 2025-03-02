@@ -131,7 +131,7 @@ class _StartTimePageState extends State<StartTimePage> {
     }
   }
 
-  Future<void> startWork(
+  Future<void> startTracking(
       {required TimeManagementPovider timeManagementPovider}) async {
     bool isWorkDayStarted = false;
     bool isAnotherCategory = false;
@@ -232,7 +232,8 @@ class _StartTimePageState extends State<StartTimePage> {
 
 // TODO check if work over nexday
 
-        await insertStartWorkToCloudOrLokalDb(trackingSession: trackingSession);
+        await insertStartWorkToCloudOrLokalDb(
+            trackingSession: trackingSession, getLabels: getLabels);
         if (!mounted) return;
         await isSwitchCategoryAvailablity(
             selectedCategory: categoryProvider.selectedCategory,
@@ -652,35 +653,40 @@ class _StartTimePageState extends State<StartTimePage> {
   }
 
   Future<void> insertStartWorkToCloudOrLokalDb(
-      {required TrackingSession trackingSession}) async {
+      {required TrackingSession trackingSession,
+      required AppLocalizations getLabels}) async {
     if (isUserExists) {
       try {
         await FirebaseFirestore.instance
             .collection('trackingSessions')
             .doc(trackingSession.id)
             .set(trackingSession.cloudToMap());
+        if (!mounted) return;
+        setState(() {
+          _isStartWork = true;
+          isAlreadyStartedWorkCheck = true;
+        });
+      } on FirebaseException catch (error) {
+        if (!mounted) return;
+        Constants.showInSnackBar(
+            value: error.message.toString(), context: context);
+      }
+    } else {
+      try {
+        TrackingDB db = TrackingDB();
+
+        await db.insertData(
+            tableName: 'tracking_sessions', data: trackingSession.lokalToMap());
         if (mounted) {
           setState(() {
             _isStartWork = true;
             isAlreadyStartedWorkCheck = true;
           });
         }
-      } on FirebaseException catch (error) {
-        if (mounted) {
-          Constants.showInSnackBar(
-              value: error.message.toString(), context: context);
-        }
-      }
-    } else {
-      TrackingDB db = TrackingDB();
-
-      await db.insertData(
-          tableName: 'tracking_sessions', data: trackingSession.lokalToMap());
-      if (mounted) {
-        setState(() {
-          _isStartWork = true;
-          isAlreadyStartedWorkCheck = true;
-        });
+      } catch (e) {
+        if (!mounted) return;
+        return Constants.showInSnackBar(
+            value: getLabels.somethingWentWrong, context: context);
       }
     }
   }
@@ -778,7 +784,7 @@ class _StartTimePageState extends State<StartTimePage> {
         if (!isUserExists) {
           getWorkNotClosed = await db.readData(
               sql:
-                  "select * from tracking_sessions where endTime='' and and isCompleted = 0");
+                  "select * from tracking_sessions where endTime='' and isCompleted = 0");
         } else {
           //check if trackingSession exist
           final checkWorkSession = await FirebaseFirestore.instance
@@ -1093,6 +1099,8 @@ class _StartTimePageState extends State<StartTimePage> {
     TrackingDB db = TrackingDB();
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
     List<Map<String, dynamic>> trackingSessions = [];
+    dynamic etmProvider;
+
     if (isUserExists) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       DateTime? dateFilter =
@@ -1117,6 +1125,7 @@ class _StartTimePageState extends State<StartTimePage> {
             .toList();
       }
     } else {
+      etmProvider = Provider.of<TimeManagementPovider>(context, listen: false);
       trackingSessions = await db.readData(
               sql:
                   'select * from tracking_sessions where isCompleted=0 and substr(startTime,1,10) ="$dateToday" ')
@@ -1133,11 +1142,18 @@ class _StartTimePageState extends State<StartTimePage> {
           sliderForBreakTime = getLabels.stopBreak;
         });
       }
+      if (!isUserExists) {
+        etmProvider.isTrackingSessionAsLokalAlreadyStartedSet = true;
+      }
       setState(() {
         _isStartWork = true;
+
         sliderForWorkingTime = getLabels.stopTracking;
       });
     } else {
+      if (!isUserExists) {
+        etmProvider.isTrackingSessionAsLokalAlreadyStartedSet = false;
+      }
       setState(() {
         _isStartWork = false;
       });
@@ -1385,7 +1401,7 @@ class _StartTimePageState extends State<StartTimePage> {
       }
     }
 
-    startLoadingAnimation();
+    // startLoadingAnimation(isBreaksCountReady: );
     for (Map<String, dynamic> workDay in worksDay) {
       String? startWorkTime;
       String? endWorkTime;
@@ -1430,7 +1446,8 @@ class _StartTimePageState extends State<StartTimePage> {
       required TrackingDB db}) async {
     bool isAlreadyClosedBreak = false;
     List<Map<String, dynamic>> breakSessions = [];
-    String trackingSessionId = getDayWorkData['id'];
+    String trackingSessionId = getDayWorkData['trackingSessionId'];
+
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
           .collection('breakSessions')
@@ -1453,7 +1470,7 @@ class _StartTimePageState extends State<StartTimePage> {
     } else {
       breakSessions = await db.readData(
               sql:
-                  "select * from break_sessions where trackingSessionId ='$trackingSessionId' and endTime =''")
+                  "select * from break_sessions where  trackingSessionId ='$trackingSessionId' and  endTime =''")
           as List<Map<String, dynamic>>;
     }
 
@@ -1471,6 +1488,7 @@ class _StartTimePageState extends State<StartTimePage> {
       {required Map<String, dynamic> getWorkDayData,
       required TrackingDB db}) async {
     bool isBreakTooken = false;
+
     String trackingSessionId = getWorkDayData['trackingSessionId'];
     List<Map<String, dynamic>> breakSessions = [];
     if (isUserExists) {
@@ -1781,6 +1799,8 @@ class _StartTimePageState extends State<StartTimePage> {
       createdAt: breakTime,
       reason: _breakReasonController.text,
       id: breakSessionId,
+      isSplit: false,
+      isCompleted: false,
     );
     if (isUserExists) {
       await FirebaseFirestore.instance
@@ -1807,7 +1827,7 @@ class _StartTimePageState extends State<StartTimePage> {
       {required bool isSwitchCategory,
       required Map<String, dynamic> categorySelected}) async {
     numberOfBreaks = 0;
-
+    bool isBreaksCountReady = false;
     if (categorySelected.isNotEmpty) {
       String categoryId = categorySelected["id"];
 
@@ -1815,11 +1835,14 @@ class _StartTimePageState extends State<StartTimePage> {
           await getDataSameDateLikeToday(categoryIdGet: categoryId);
 
       if (getWorksDayList.isNotEmpty) {
-        startLoadingAnimation();
+        List<Map<String, dynamic>> breakSessions = [];
+        if (breakSessions.length == numberOfBreaks) {
+          isBreaksCountReady = true;
+        }
+        startLoadingAnimation(isBreaksCountReady: isBreaksCountReady);
         Map<String, dynamic> getWorksDay = getWorksDayList.first;
         String trackingSessionId = getWorksDay["id"];
 
-        List<Map<String, dynamic>> breakSessions = [];
         if (isUserExists) {
           final checkBreakSession = await FirebaseFirestore.instance
               .collection('breakSessions')
@@ -1854,17 +1877,25 @@ class _StartTimePageState extends State<StartTimePage> {
             _isDisposed = true;
           });
         }
-        startLoadingAnimation(); // End the loading animation
+
+        if (breakSessions.length == numberOfBreaks) {
+          isBreaksCountReady = true;
+          isInitFinished = true;
+        }
+
+        startLoadingAnimation(
+            isBreaksCountReady:
+                isBreaksCountReady); // End the loading animation
       }
     } else {
       isInitFinished = true;
     }
   }
 
-  void startLoadingAnimation() {
+  void startLoadingAnimation({required bool isBreaksCountReady}) {
     _timer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
-      if (_isDisposed) {
-        timer.cancel();
+      if (_isDisposed || isBreaksCountReady) {
+        _timer?.cancel();
         return;
       }
 
@@ -2023,7 +2054,7 @@ class _StartTimePageState extends State<StartTimePage> {
                           //     .first;
                           // c.isUnlocked = false;
                           TrackingDB db = TrackingDB();
-                          // db.deleteDB();
+                          db.deleteDB();
                           final data = await db.readData(
                               sql: "select * FROM tracking_sessions");
                           print(data);
@@ -2304,7 +2335,7 @@ class _StartTimePageState extends State<StartTimePage> {
                                 _sliderWorkValue = value;
                               });
                               if (value >= 5.0) {
-                                await startWork(
+                                await startTracking(
                                     timeManagementPovider:
                                         timeManagementPovider);
 

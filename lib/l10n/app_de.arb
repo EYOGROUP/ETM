@@ -283,5 +283,6 @@
     "discardBreak": "Pause verwerfen",
     "filter": "Filter",
     "category": "Kategorie",
-    "resetFilters": "Filter zurücksetzen"
+    "resetFilters": "Filter zurücksetzen",
+    "somethingWentWrong": "Etwas ist schiefgelaufen, bitte versuchen Sie es erneut."
 }
