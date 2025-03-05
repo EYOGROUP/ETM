@@ -168,7 +168,11 @@ class _StartTimePageState extends State<StartTimePage> {
                   [timeManagementPovider.getCurrentLocalSystemLanguage()]),
           context: context);
     }
-    bool isAlreadyTrackingOver24H = isTrackingTimeOver24H(getTrackingData: {});
+    final getNotClosedWork = await getNotClosedTrackingData(
+        isAlreadyStartWork: isAlreadyStartedWorkCheck);
+    if (!mounted) return;
+    bool isAlreadyTrackingOver24H =
+        isTrackingTimeOver24H(getTrackingData: getNotClosedWork.first);
 
     if (isAlreadStartedWork &&
         isNotClosedAfterTime &&
@@ -200,10 +204,6 @@ class _StartTimePageState extends State<StartTimePage> {
           }
         }
       }
-
-      final getNotClosedWork = await getNotClosedTrackingData(
-          isAlreadyStartWork: isAlreadyStartedWorkCheck);
-      if (!mounted) return;
 
       if (getNotClosedWork.isNotEmpty) {
         await requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
@@ -460,13 +460,19 @@ class _StartTimePageState extends State<StartTimePage> {
       required List<Map<String, dynamic>> notClosedTime,
       required bool isForTrackingTime}) async {
     Navigator.of(context).pop();
-
+    print(isForTrackingTime);
     await showDialog(
       barrierDismissible: false,
       builder: (context) {
-        DateTime startTime = notClosedTime.first['startTime'].toDate();
+        DateTime? startTime;
+        if (isUserExists) {
+          startTime = notClosedTime.first['startTime'].toDate();
+        } else {
+          startTime = DateFormat("yyyy-MM-dd HH:mm:ss")
+              .tryParse(notClosedTime.first['startTime']);
+        }
         String? startDateConvertToString =
-            DateFormat(getLabels.dateFormat).format(startTime);
+            DateFormat(getLabels.dateFormat).format(startTime!);
         String? startTimeConvertToString =
             DateFormat('HH:mm').format(startTime);
         DateTime? setFinishedTime;
@@ -486,7 +492,7 @@ class _StartTimePageState extends State<StartTimePage> {
                 onPressed: () {
                   if (setFinishedTime != null) {
                     bool isEndTimeBeforStartTime = isEndTimeBeforStarttime(
-                        startTime: startTime, endTime: setFinishedTime!);
+                        startTime: startTime!, endTime: setFinishedTime!);
                     if (isEndTimeBeforStartTime) {
                       return Constants.showInSnackBar(
                           value: getLabels.timeRangeError, context: context);
@@ -545,7 +551,7 @@ class _StartTimePageState extends State<StartTimePage> {
                           bool? isFinishedWillBeToNotAnotherDay;
                           if (!isForTrackingTime) {
                             DateTime startTimeSession = DateTime(
-                              startTime.year,
+                              startTime!.year,
                               startTime.month,
                               startTime.day,
                               startTime.hour,
@@ -571,7 +577,7 @@ class _StartTimePageState extends State<StartTimePage> {
                               maxTime: !isForTrackingTime &&
                                       isFinishedWillBeToNotAnotherDay!
                                   ? startTime
-                                  : startTime
+                                  : startTime!
                                       .add(Duration(hours: 23, minutes: 59)),
                               onConfirm: (date) {
                             DatePickerBdaya.showTimePicker(context,
@@ -1530,74 +1536,212 @@ class _StartTimePageState extends State<StartTimePage> {
     return isFinishedWorkForToday;
   }
 
-  Future<Map<String, dynamic>> getNotClosedBreak(
-      {Map<String, dynamic>? getTrackingDayData, String? categoryId}) async {
+  // Future<Map<String, dynamic>> getNotClosedBreak(
+  //     {Map<String, dynamic>? getTrackingDayData, String? categoryId}) async {
+  //   Map<String, dynamic> notClosedBreak = {};
+  //   List<Map<String, dynamic>> breakSessions = [];
+  //   String? trackingSessionId;
+
+  //   if (getTrackingDayData != null) {
+  //     trackingSessionId = getTrackingDayData['trackingSessionId'];
+  //   }
+  //   if (isUserExists) {
+  //     final checkBreakSession = await FirebaseFirestore.instance
+  //         .collection('breakSessions')
+  //         .limit(1)
+  //         .get();
+  //     if (mounted) {
+  //       QuerySnapshot<Map<String, dynamic>>? getAllBreaksDependOnWorkSession;
+  //       if (checkBreakSession.size > 0) {
+  //         if (trackingSessionId != null && categoryId == null) {
+  //           getAllBreaksDependOnWorkSession = await FirebaseFirestore.instance
+  //               .collection('breakSessions')
+  //               .where("trackingSessionId", isEqualTo: trackingSessionId)
+  //               .where("isCompleted", isEqualTo: false)
+  //               .where("endTime", isEqualTo: '')
+  //               .get();
+  //         }
+  //         if (categoryId != null && trackingSessionId == null) {
+  //           final getNotClosedTrackingFormCategorySelected =
+  //               await getNotClosedTrackingData();
+  //           if (mounted) {
+  //             if (getNotClosedTrackingFormCategorySelected.isNotEmpty) {
+  //               String trackingSessionIdGet =
+  //                   getNotClosedTrackingFormCategorySelected
+  //                       .first['trackingSessionId'];
+  //               DateTime startTrackingSession =
+  //                   getNotClosedTrackingFormCategorySelected.first['startTime']
+  //                       .toDate();
+  //               getAllBreaksDependOnWorkSession = await FirebaseFirestore
+  //                   .instance
+  //                   .collection('breakSessions')
+  //                   .where("trackingSessionId", isEqualTo: trackingSessionIdGet)
+  //                   .where("isCompleted", isEqualTo: false)
+  //                   .where("endTime", isEqualTo: '')
+  //                   .get();
+  //               if (getAllBreaksDependOnWorkSession.docs.isNotEmpty) {
+  //                 breakSessions = getAllBreaksDependOnWorkSession.docs
+  //                     .map((breakSession) => breakSession.data())
+  //                     .toList();
+
+  //                 breakSessions.first
+  //                     .addAll({"startTrackingSessions": startTrackingSession});
+  //               }
+  //             }
+  //           }
+  //         }
+  //       }
+  //     }
+  //   } else {
+  //     TrackingDB db = TrackingDB();
+  //     if (trackingSessionId != null && categoryId == null) {
+  //       breakSessions = await db.readData(
+  //               sql:
+  //                   "select * from break_sessions where trackingSessionId ='$trackingSessionId' and endTime ='' ")
+  //           as List<Map<String, dynamic>>;
+  //     }
+  //     if (trackingSessionId == null && categoryId != null) {
+  //       final getNotClosedTrackingFormCategorySelected =
+  //           await getNotClosedTrackingData();
+
+  //       if (mounted) {
+  //         if (getNotClosedTrackingFormCategorySelected.isNotEmpty) {
+  //           String trackingSessionIdGet =
+  //               getNotClosedTrackingFormCategorySelected
+  //                   .first['trackingSessionId'];
+
+  //           DateTime? startTrackingSession = DateFormat('yyyy-MM-dd HH:mm:ss')
+  //               .tryParse(getNotClosedTrackingFormCategorySelected
+  //                   .first['startTime']);
+
+  //           List<Map<String, dynamic>> breakSessionsList = await db.readData(
+  //                   sql:
+  //                       "select * from break_sessions where trackingSessionId ='$trackingSessionIdGet' and endTime ='' and isCompleted=0 ")
+  //               as List<Map<String, dynamic>>;
+  //           breakSessions = List.from(breakSessionsList.map(
+  //             (breakSession) => Map<String, dynamic>.from(breakSession),
+  //           ));
+  //           breakSessions.first
+  //               .addAll({"startTrackingSessions": startTrackingSession});
+  //         }
+  //       }
+  //     }
+  //   }
+  //   if (context.mounted) {
+  //     if (breakSessions.isNotEmpty) {
+  //       notClosedBreak = breakSessions.first;
+  //     }
+  //   }
+  //   return notClosedBreak;
+  // }
+
+  Future<Map<String, dynamic>> getNotClosedBreak({
+    Map<String, dynamic>? getTrackingDayData,
+    String? categoryId,
+  }) async {
     Map<String, dynamic> notClosedBreak = {};
     List<Map<String, dynamic>> breakSessions = [];
-    String? trackingSessionId;
-    if (getTrackingDayData != null) {
-      trackingSessionId = getTrackingDayData['trackingSessionId'];
-    }
-    if (isUserExists) {
-      final checkBreakSession = await FirebaseFirestore.instance
-          .collection('breakSessions')
-          .limit(1)
-          .get();
-      if (mounted) {
-        QuerySnapshot<Map<String, dynamic>>? getAllBreaksDependOnWorkSession;
-        if (checkBreakSession.size > 0) {
-          if (trackingSessionId != null && categoryId == null) {
-            getAllBreaksDependOnWorkSession = await FirebaseFirestore.instance
-                .collection('breakSessions')
-                .where("trackingSessionId", isEqualTo: trackingSessionId)
-                .where("isCompleted", isEqualTo: false)
-                .where("endTime", isEqualTo: '')
-                .get();
-          }
-          if (categoryId != null && trackingSessionId == null) {
-            final getNotClosedTrackingFormCategorySelected =
-                await getNotClosedTrackingData();
-            if (mounted) {
-              if (getNotClosedTrackingFormCategorySelected.isNotEmpty) {
-                String trackingSessionIdGet =
-                    getNotClosedTrackingFormCategorySelected
-                        .first['trackingSessionId'];
-                DateTime startTrackingSession =
-                    getNotClosedTrackingFormCategorySelected.first['startTime']
-                        .toDate();
-                getAllBreaksDependOnWorkSession = await FirebaseFirestore
-                    .instance
-                    .collection('breakSessions')
-                    .where("trackingSessionId", isEqualTo: trackingSessionIdGet)
-                    .where("isCompleted", isEqualTo: false)
-                    .where("endTime", isEqualTo: '')
-                    .get();
-                if (getAllBreaksDependOnWorkSession.docs.isNotEmpty) {
-                  breakSessions = getAllBreaksDependOnWorkSession.docs
-                      .map((breakSession) => breakSession.data())
-                      .toList();
+    String? trackingSessionId = getTrackingDayData?['trackingSessionId'];
 
-                  breakSessions.first
-                      .addAll({"startTrackingSessions": startTrackingSession});
-                }
-              }
-            }
-          }
-        }
-      }
-    } else {
-      TrackingDB db = TrackingDB();
-      breakSessions = await db.readData(
-              sql:
-                  "select * from break_sessions where trackingSessionId ='$trackingSessionId' and endTime =''")
-          as List<Map<String, dynamic>>;
+    if (!isUserExists) {
+      return await _handleLocalDatabase(trackingSessionId, categoryId);
     }
-    if (context.mounted) {
-      if (breakSessions.isNotEmpty) {
-        notClosedBreak = breakSessions.first;
-      }
+
+    final checkBreakSession = await FirebaseFirestore.instance
+        .collection('breakSessions')
+        .limit(1)
+        .get();
+
+    if (!mounted || checkBreakSession.size == 0) return notClosedBreak;
+
+    QuerySnapshot<Map<String, dynamic>>? getAllBreaksDependOnWorkSession;
+
+    if (trackingSessionId != null && categoryId == null) {
+      getAllBreaksDependOnWorkSession =
+          await _fetchBreakSessions(trackingSessionId);
+    } else if (categoryId != null && trackingSessionId == null) {
+      getAllBreaksDependOnWorkSession = await _fetchBreakSessionsForCategory();
     }
+
+    if (getAllBreaksDependOnWorkSession?.docs.isNotEmpty ?? false) {
+      breakSessions = getAllBreaksDependOnWorkSession!.docs
+          .map((doc) => doc.data())
+          .toList();
+    }
+
+    if (context.mounted && breakSessions.isNotEmpty) {
+      notClosedBreak = breakSessions.first;
+    }
+
     return notClosedBreak;
+  }
+
+// Cloud Data
+  Future<QuerySnapshot<Map<String, dynamic>>> _fetchBreakSessions(
+      String trackingSessionId) {
+    return FirebaseFirestore.instance
+        .collection('breakSessions')
+        .where("trackingSessionId", isEqualTo: trackingSessionId)
+        .where("isCompleted", isEqualTo: false)
+        .where("endTime", isEqualTo: '')
+        .get();
+  }
+
+  Future<QuerySnapshot<Map<String, dynamic>>?>?
+      _fetchBreakSessionsForCategory() async {
+    final notClosedTrackingData = await getNotClosedTrackingData();
+    if (!mounted || notClosedTrackingData.isEmpty) return null;
+
+    String trackingSessionIdGet =
+        notClosedTrackingData.first['trackingSessionId'];
+    DateTime startTrackingSession =
+        notClosedTrackingData.first['startTime'].toDate();
+
+    var querySnapshot = await _fetchBreakSessions(trackingSessionIdGet);
+    if (querySnapshot.docs.isNotEmpty) {
+      querySnapshot.docs.first
+          .data()
+          .addAll({"startTrackingSessions": startTrackingSession});
+    }
+    return querySnapshot;
+  }
+
+// Database Data
+  Future<Map<String, dynamic>> _handleLocalDatabase(
+      String? trackingSessionId, String? categoryId) async {
+    TrackingDB db = TrackingDB();
+    List<Map<String, dynamic>> breakSessions = [];
+
+    if (trackingSessionId != null && categoryId == null) {
+      breakSessions = await db.readData(
+        sql:
+            "SELECT * FROM break_sessions WHERE trackingSessionId ='$trackingSessionId' AND endTime =''",
+      ) as List<Map<String, dynamic>>;
+    } else if (categoryId != null && trackingSessionId == null) {
+      final notClosedTrackingData = await getNotClosedTrackingData();
+      if (!mounted || notClosedTrackingData.isEmpty) return {};
+
+      String trackingSessionIdGet =
+          notClosedTrackingData.first['trackingSessionId'];
+      DateTime? startTrackingSession = DateFormat('yyyy-MM-dd HH:mm:ss')
+          .tryParse(notClosedTrackingData.first['startTime']);
+
+      List<Map<String, dynamic>> breakSessionsList = await db.readData(
+        sql:
+            "SELECT * FROM break_sessions WHERE trackingSessionId ='$trackingSessionIdGet' AND endTime ='' AND isCompleted=0",
+      ) as List<Map<String, dynamic>>;
+
+      breakSessions = List.from(breakSessionsList.map(
+        (breakSession) => Map<String, dynamic>.from(breakSession),
+      ));
+
+      if (breakSessions.isNotEmpty) {
+        breakSessions.first
+            .addAll({"startTrackingSessions": startTrackingSession});
+      }
+    }
+
+    return breakSessions.isNotEmpty ? breakSessions.first : {};
   }
 
   // Future<void> requestToRecoveryFinishedBreakOrDelete(
@@ -1638,6 +1782,7 @@ class _StartTimePageState extends State<StartTimePage> {
     Map<String, dynamic> getNotClosedBreakAsMap =
         await getNotClosedBreak(categoryId: categoryId);
     if (!mounted) return;
+    print(getNotClosedBreakAsMap);
     List<Map<String, dynamic>> getTraickingsDayDataList =
         await getDataSameDateLikeToday(categoryIdGet: categoryId);
     if (!mounted) return;
@@ -1752,6 +1897,7 @@ class _StartTimePageState extends State<StartTimePage> {
     // // finish Break
     Map<String, dynamic> breakSession =
         await getNotClosedBreak(getTrackingDayData: getTrackingDayData);
+
     if (!mounted) return;
     String breakSessionId = breakSession["id"];
     Map<String, dynamic>? endTimeUpdate;
@@ -1937,13 +2083,16 @@ class _StartTimePageState extends State<StartTimePage> {
       } else {
         DateTime? startTrackingLokalDate = DateFormat("yyyy-MM-dd hh:mm")
             .tryParse(getTrackingData["startTime"]);
+
         int dateAfterT24HFromStartTime =
             DateTime.now().difference(startTrackingLokalDate!).inHours;
+
         if (dateAfterT24HFromStartTime > 24) {
           isTrackingOver24H = true;
         }
       }
     }
+
     return isTrackingOver24H;
   }
 
