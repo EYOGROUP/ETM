@@ -285,5 +285,6 @@
     "filter": "Filtre",
     "category": "Catégorie",
     "resetFilters": "Réinitialiser les filtres",
-    "somethingWentWrong": "Une erreur s'est produite, veuillez réessayer."
+    "somethingWentWrong": "Une erreur s'est produite, veuillez réessayer.",
+    "discardBreak": "Annuler la pause"
 }

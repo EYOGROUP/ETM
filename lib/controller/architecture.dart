@@ -11,6 +11,7 @@ class TrackingSession {
   String? trackingSessionId;
   final bool isSplit;
   bool isCompleted;
+  String? trackingSessionIdCommun;
   TrackingSession(
       {required this.id,
       required this.startTime,
@@ -22,6 +23,7 @@ class TrackingSession {
       required this.categoryId,
       this.trackingSessionId,
       this.isSplit = false,
+      this.trackingSessionIdCommun,
       this.isCompleted = false});
   Map<String, dynamic> lokalToMap() {
     return {
@@ -35,6 +37,7 @@ class TrackingSession {
       'isCompleted': isCompleted ? 1 : 0,
       "trackingSessionId": trackingSessionId,
       'isSplit': isSplit ? 1 : 0,
+      "trackingSessionIdCommun": trackingSessionIdCommun,
     };
   }
 
@@ -65,6 +68,7 @@ class BreakSession {
   final bool isCompleted;
   final DateTime createdAt;
   final bool isSplit;
+
   BreakSession({
     required this.id,
     required this.trackingSessionId,

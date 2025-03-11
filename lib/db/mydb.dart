@@ -27,11 +27,11 @@ class TrackingDB {
       CREATE TABLE tracking_sessions_new (
         id TEXT PRIMARY KEY,
         startTime TEXT NOT NULL,
-         trackingSessionId TEXT UNIQUE, 
+         trackingSessionId TEXT NOT NULL, 
         endTime TEXT NOT NULL,
         duration_minutes INTEGER NOT NULL,
-      breakTimeMinutes INTEGER DEFAULT 0,
        taskDescription TEXT,
+      trackingSessionIdCommun TEXT,
        createdAt TEXT NOT NULL,
         isCompleted INTEGER NOT NULL,
         categoryId TEXT NOT NULL,
@@ -42,7 +42,7 @@ class TrackingDB {
 
           // 3. Copy data from the old tracking_sessions table to the new one (only the necessary columns)
           await db.execute('''
-      INSERT INTO tracking_sessions_new (id, startTime, trackingSessionId, endTime, isCompleted, categoryId)
+      INSERT INTO tracking_sessions_new (id, startTime,trackingSessionIdCommun, trackingSessionId, endTime, isCompleted, categoryId)
       SELECT id, startTime, endTime, isCompleted,isSplit, categoryId FROM tracking_sessions;
     ''');
 
@@ -55,7 +55,7 @@ class TrackingDB {
 
           ///
           const breakSessionTable =
-              ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,trackingSessionId TEXT NOT NULL, startTime TEXT NOT NULL, isCompleted INTEGER NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, isSplit INTEGER NOT NULL,FOREIGN KEY(trackingSessionId) REFERENCES tracking_sessions(trackingSessionId) ON DELETE CASCADE )''';
+              ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,trackingSessionId TEXT NOT NULL, startTime TEXT NOT NULL, isCompleted INTEGER NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL, isSplit INTEGER NOT NULL,FOREIGN KEY(trackingSessionId) REFERENCES tracking_sessions(id) ON DELETE CASCADE )''';
           await db.execute(breakSessionTable);
         }
       },
@@ -68,19 +68,54 @@ class TrackingDB {
   }
 
   _onCreate(Database db, int version) async {
-    // When creating the db, create the table
-    const categoriesTable =
-        ''' CREATE TABLE categories (id TEXT PRIMARY KEY,isUnlocked INTEGER NOT NULL,isPremium INTEGER NOT NULL,unlockExpiry TEXT NOT NULL) ''';
+    // When creating the db, create the tables
+    const categoriesTable = '''
+    CREATE TABLE categories (
+      id TEXT PRIMARY KEY,
+      isUnlocked INTEGER NOT NULL,
+      isPremium INTEGER NOT NULL,
+      unlockExpiry TEXT NOT NULL
+    );
+  ''';
 
-    const trackingSessionTable =
-        ''' CREATE TABLE tracking_sessions (id TEXT PRIMARY KEY , startTime TEXT NOT NULL, trackingSessionId TEXT UNIQUE  ,endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,
-      breakTimeMinutes INTEGER DEFAULT 0, taskDescription TEXT, createdAt TEXT NOT NULL, isCompleted INTEGER NOT NULL,categoryId TEXT NOT NULL,isSplit INTEGER NOT NULL, FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL )''';
-    const breakSessionTable =
-        ''' CREATE TABLE break_sessions (id TEXT PRIMARY KEY ,trackingSessionId TEXT NOT NULL, isCompleted INTEGER NOT NULL, startTime TEXT NOT NULL, endTime TEXT NOT NULL,durationMinutes INTEGER NOT NULL,reason TEXT,createdAt TEXT NOT NULL,isSplit INTEGER NOT NULL, FOREIGN KEY(trackingSessionId) REFERENCES tracking_sessions(trackingSessionId) ON DELETE CASCADE )''';
+    const trackingSessionTable = '''
+    CREATE TABLE tracking_sessions (
+      id TEXT PRIMARY KEY UNIQUE,
+      startTime TEXT NOT NULL,
+      trackingSessionId TEXT NOT NULL UNIQUE,
+      trackingSessionIdCommun TEXT,
+      endTime TEXT NOT NULL,
+      durationMinutes INTEGER NOT NULL,
+      taskDescription TEXT,
+      createdAt TEXT NOT NULL,
+      isCompleted INTEGER NOT NULL,
+      categoryId TEXT NOT NULL,
+      isSplit INTEGER NOT NULL,
+      FOREIGN KEY(categoryId) REFERENCES categories(id) ON DELETE SET NULL
+    );
+  ''';
+
+    const breakSessionTable = '''
+    CREATE TABLE break_sessions (
+      id TEXT PRIMARY KEY,
+      trackingSessionId TEXT,
+      isCompleted INTEGER NOT NULL,
+      startTime TEXT NOT NULL,
+      endTime TEXT NOT NULL,
+      durationMinutes INTEGER NOT NULL,
+      reason TEXT,
+      createdAt TEXT NOT NULL,
+      isSplit INTEGER NOT NULL,
+      FOREIGN KEY(trackingSessionId) REFERENCES tracking_sessions(trackingSessionId) ON DELETE CASCADE
+    );
+  ''';
+
+    // Only create tables when the database is created for the first time
     if (version == 1) {
-      await db.execute(trackingSessionTable);
-      await db.execute(breakSessionTable);
-      await db.execute(categoriesTable);
+      await db.execute(categoriesTable); // Create the 'categories' table
+      await db.execute(
+          trackingSessionTable); // Create the 'tracking_sessions' table
+      await db.execute(breakSessionTable); // Create the 'break_sessions' table
     }
   }
 

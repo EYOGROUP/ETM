@@ -284,5 +284,6 @@
     "filter": "Filter",
     "category": "Kategorie",
     "resetFilters": "Filter zurücksetzen",
-    "somethingWentWrong": "Etwas ist schiefgelaufen, bitte versuchen Sie es erneut."
+    "somethingWentWrong": "Etwas ist schiefgelaufen, bitte versuchen Sie es erneut.",
+    "discardBreak": "Pause verwerfen"
 }

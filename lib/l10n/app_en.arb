@@ -282,6 +282,7 @@
   "filter": "Filter",
   "category": "Category",
   "resetFilters": "Reset Filters",
-   "somethingWentWrong": "Something went wrong, please try again."
+  "somethingWentWrong": "Something went wrong, please try again.",
+  "discardBreak": "Discard Break"
   
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:dropdown_button2/dropdown_button2.dart';
@@ -154,6 +155,7 @@ class _StartTimePageState extends State<StartTimePage> {
     List<Map<String, dynamic>> isAlreadClosedWork =
         await getNotClosedTrackingData(isAlreadyStartWork: isAlreadStartedWork);
     if (!mounted) return;
+
     bool isNotClosedAfterTime = await isNotClosedWork();
     if (!mounted) return;
 
@@ -171,8 +173,10 @@ class _StartTimePageState extends State<StartTimePage> {
     final getNotClosedWork = await getNotClosedTrackingData(
         isAlreadyStartWork: isAlreadyStartedWorkCheck);
     if (!mounted) return;
-    bool isAlreadyTrackingOver24H =
-        isTrackingTimeOver24H(getTrackingData: getNotClosedWork.first);
+
+    bool isAlreadyTrackingOver24H = isTrackingTimeOver24H(
+        getTrackingData:
+            getNotClosedWork.isNotEmpty ? getNotClosedWork.first : {});
 
     if (isAlreadStartedWork &&
         isNotClosedAfterTime &&
@@ -262,7 +266,9 @@ class _StartTimePageState extends State<StartTimePage> {
       required AppLocalizations getLabels}) async {
     if (isNotClosed && isOver24H) {
       await Constants.showDialogConfirmation(
-          leftButtonTitle: getLabels.discardSession,
+          leftButtonTitle: isTrackingTime
+              ? getLabels.discardSession
+              : getLabels.discardBreak,
           rightButtonTitle: getLabels.adjust,
           context: context,
           leftButton: () {},
@@ -284,9 +290,15 @@ class _StartTimePageState extends State<StartTimePage> {
       required DateTime finishedTime,
       required AppLocalizations getLabels}) async {
     if (breakSessionMap.isNotEmpty) {
-      DateTime startTime = breakSessionMap['startTime'].toDate();
+      DateTime? startTime;
 
-      int year = startTime.year;
+      if (isUserExists) {
+        startTime = breakSessionMap['startTime'].toDate();
+      } else {
+        startTime = DateFormat("yyyy-MM-dd HH:mm:ss")
+            .tryParse(breakSessionMap['startTime']);
+      }
+      int year = startTime!.year;
       int mounth = startTime.month;
       int day = startTime.day;
       int hours = 23;
@@ -298,16 +310,25 @@ class _StartTimePageState extends State<StartTimePage> {
       if (startBreakTime.isAtSameMomentAs(endBreakTime)) {
         int durationMinutes = finishedTime.difference(startTime).inMinutes;
         Map<String, dynamic> updatedData = {
-          "isSplit": false,
-          "isCompleted": true,
-          "endTime": finishedTime,
+          "isSplit": isUserExists ? false : 0,
+          "isCompleted": isUserExists ? true : 1,
+          "endTime": isUserExists ? finishedTime : finishedTime.toString(),
           "durationMinutes": durationMinutes,
           "reason": _breakReasonController.text,
         };
-        await FirebaseFirestore.instance
-            .collection("breakSessions")
-            .doc(sesssionId)
-            .update(updatedData);
+        if (isUserExists) {
+          await FirebaseFirestore.instance
+              .collection("breakSessions")
+              .doc(sesssionId)
+              .update(updatedData);
+        } else {
+          TrackingDB db = TrackingDB();
+          await db.updateData(
+              tableName: "break_sessions",
+              data: updatedData,
+              columnId: "Id",
+              id: sesssionId);
+        }
         if (!mounted) return;
         Navigator.of(context).pop();
         return;
@@ -315,9 +336,9 @@ class _StartTimePageState extends State<StartTimePage> {
       DateTime firstEndTime = DateTime(year, mounth, day, hours, minute);
       int firstDurationMinutes = firstEndTime.difference(startTime).inMinutes;
       Map<String, dynamic> updatedData = {
-        "isSplit": true,
-        "isCompleted": true,
-        "endTime": firstEndTime,
+        "isSplit": isUserExists ? true : 1,
+        "isCompleted": isUserExists ? true : 1,
+        "endTime": isUserExists ? firstEndTime : firstEndTime.toString(),
         "durationMinutes": firstDurationMinutes,
         "reason": _breakReasonController.text,
       };
@@ -340,20 +361,57 @@ class _StartTimePageState extends State<StartTimePage> {
           reason: _breakReasonController.text,
           trackingSessionId: breakSessionMap['trackingSessionId']);
 
-      await FirebaseFirestore.instance
-          .collection("breakSessions")
-          .doc(sesssionId)
-          .update(updatedData);
-      if (!mounted) return;
-      await FirebaseFirestore.instance
-          .collection("breakSessions")
-          .doc(newSecondSessionId)
-          .set(breackSession.cloudToMap());
+      if (isUserExists) {
+        await _updateAndInsertDatafter24HCloud(
+            collectionName: "breakSessions",
+            sessionId: sesssionId,
+            updatedData: updatedData,
+            newSessionId: newSecondSessionId,
+            newSessionData: breackSession.cloudToMap());
+      } else {
+        _updateAndInsertDataAfter24HLokal(
+            collectionName: "break_sessions",
+            sessionId: sesssionId,
+            updatedData: updatedData,
+            newSessionData: breackSession.lokalToMap());
+      }
       if (!mounted) return;
       Navigator.of(context).pop();
       Constants.showInSnackBar(
           value: getLabels.lastSessionClosed, context: context);
     }
+  }
+
+  Future<void> _updateAndInsertDataAfter24HLokal(
+      {required String collectionName,
+      required Map<String, dynamic> updatedData,
+      required String sessionId,
+      required Map<String, dynamic> newSessionData}) async {
+    TrackingDB db = TrackingDB();
+    await db.updateData(
+        tableName: collectionName,
+        data: updatedData,
+        columnId: "id",
+        id: sessionId);
+    if (!mounted) return;
+    await db.insertData(tableName: collectionName, data: newSessionData);
+  }
+
+  Future<void> _updateAndInsertDatafter24HCloud(
+      {String? collectionName,
+      required String sessionId,
+      required Map<String, dynamic> updatedData,
+      required String newSessionId,
+      required Map<String, dynamic> newSessionData}) async {
+    await FirebaseFirestore.instance
+        .collection(collectionName!)
+        .doc(sessionId)
+        .update(updatedData);
+    if (!mounted) return;
+    await FirebaseFirestore.instance
+        .collection(collectionName)
+        .doc(newSessionId)
+        .set(newSessionData);
   }
 
 //Closed Not Closed Session
@@ -375,8 +433,16 @@ class _StartTimePageState extends State<StartTimePage> {
         return Constants.showInSnackBar(
             value: getLabels.closeBreakFirst, context: context);
       }
-      DateTime startTime = trackingSessionMap['startTime'].toDate();
-      int year = startTime.year;
+
+      DateTime? startTime;
+
+      if (isUserExists) {
+        startTime = trackingSessionMap['startTime'].toDate();
+      } else {
+        startTime = DateFormat("yyyy-MM-dd HH:mm:ss")
+            .tryParse(trackingSessionMap['startTime']);
+      }
+      int year = startTime!.year;
       int mounth = startTime.month;
       int day = startTime.day;
       int hours = 23;
@@ -386,9 +452,9 @@ class _StartTimePageState extends State<StartTimePage> {
       int firstDurationMinutes = firstEndTime.difference(startTime).inMinutes;
       String sesssionId = trackingSessionMap["id"];
       Map<String, dynamic> updatedData = {
-        "isSplit": true,
-        "isCompleted": true,
-        "endTime": firstEndTime,
+        "isSplit": isUserExists ? true : 1,
+        "isCompleted": isUserExists ? true : 1,
+        "endTime": isUserExists ? firstEndTime : firstEndTime.toString(),
         "durationMinutes": firstDurationMinutes,
       };
       // now Second Splited Session
@@ -408,18 +474,26 @@ class _StartTimePageState extends State<StartTimePage> {
           isCompleted: true,
           userId: trackingSessionMap["userId"],
           taskDescription: _todoController.text,
-          trackingSessionId: trackingSessionMap["trackingSessionId"],
+          trackingSessionId:
+              "${trackingSessionMap["trackingSessionId"] + Random().nextInt(10)}",
+          trackingSessionIdCommun: trackingSessionMap["trackingSessionId"],
           durationMinutes: secondSessionDurationInMinute,
           endTime: finishedTime);
-      await FirebaseFirestore.instance
-          .collection("trackingSessions")
-          .doc(sesssionId)
-          .update(updatedData);
-      if (!mounted) return;
-      await FirebaseFirestore.instance
-          .collection("trackingSessions")
-          .doc(newSecondSessionId)
-          .set(trackingSession.cloudToMap());
+
+      if (isUserExists) {
+        await _updateAndInsertDatafter24HCloud(
+            sessionId: sesssionId,
+            updatedData: updatedData,
+            newSessionId: newSecondSessionId,
+            newSessionData: trackingSession.cloudToMap());
+      } else {
+        await _updateAndInsertDataAfter24HLokal(
+            collectionName: 'tracking_sessions',
+            updatedData: updatedData,
+            sessionId: sesssionId,
+            newSessionData: trackingSession.lokalToMap());
+      }
+
       if (!mounted) return;
       Navigator.of(context).pop();
       Constants.showInSnackBar(
@@ -460,7 +534,7 @@ class _StartTimePageState extends State<StartTimePage> {
       required List<Map<String, dynamic>> notClosedTime,
       required bool isForTrackingTime}) async {
     Navigator.of(context).pop();
-    print(isForTrackingTime);
+
     await showDialog(
       barrierDismissible: false,
       builder: (context) {
@@ -1782,7 +1856,7 @@ class _StartTimePageState extends State<StartTimePage> {
     Map<String, dynamic> getNotClosedBreakAsMap =
         await getNotClosedBreak(categoryId: categoryId);
     if (!mounted) return;
-    print(getNotClosedBreakAsMap);
+
     List<Map<String, dynamic>> getTraickingsDayDataList =
         await getDataSameDateLikeToday(categoryIdGet: categoryId);
     if (!mounted) return;
@@ -2062,6 +2136,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
   bool isTrackingTimeOver24H({required Map<String, dynamic> getTrackingData}) {
     bool isTrackingOver24H = false;
+
     if (getTrackingData.isNotEmpty) {
       if (isUserExists) {
         String startTime = "";
@@ -2203,7 +2278,7 @@ class _StartTimePageState extends State<StartTimePage> {
                           //     .first;
                           // c.isUnlocked = false;
                           TrackingDB db = TrackingDB();
-                          db.deleteDB();
+                          // db.deleteDB();
                           final data = await db.readData(
                               sql: "select * FROM tracking_sessions");
                           print(data);
