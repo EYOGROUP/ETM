@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/profile/account/change_password.dart';
+import 'package:time_management/app/config/routes/app_pages.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/provider/user_provider.dart';
 
 class UserAccount extends StatefulWidget {
-  final Map<String, dynamic> userDataGet;
-  const UserAccount({super.key, required this.userDataGet});
+  const UserAccount({super.key});
 
   @override
   State<UserAccount> createState() => _UserAccountState();
@@ -20,7 +22,11 @@ class _UserAccountState extends State<UserAccount> {
   @override
   void initState() {
     super.initState();
-    userData = widget.userDataGet;
+
+    // 1) Grab the raw arguments
+    final args = Get.arguments;
+    userData = args as Map<String, dynamic>?;
+
     dottedEmailAddress();
   }
 
@@ -67,10 +73,13 @@ class _UserAccountState extends State<UserAccount> {
             Gap(20.0),
             ElevatedButtonCreated(
                 onTap: () {
-                  Navigator.of(context).push(MaterialPageRoute(
-                    builder: (context) =>
-                        ChangePasswordUser(userDataGet: userData ?? {}),
-                  ));
+                  Get.toNamed(Routes.changePasswordUser,
+                      arguments: userData ?? {});
+
+                  // Navigator.of(context).push(MaterialPageRoute(
+                  //   builder: (context) =>
+                  //       ChangePasswordUser(userDataGet: userData ?? {}),
+                  // ));
                 },
                 textWidget: Text(getLabels.changePassword)),
             Spacer(),

@@ -9,10 +9,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_datetime_picker_bdaya/flutter_datetime_picker_bdaya.dart';
 
 import 'package:gap/gap.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_instance/get_instance.dart';
+import 'package:get/get_navigation/get_navigation.dart';
+import 'package:get/get_navigation/src/root/get_material_app.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:time_management/app/config/routes/app_pages.dart';
+import 'package:time_management/app/config/themes/app_theme.dart';
+import 'package:time_management/app/features/dashboard/views/screens/dashboard_screen.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/controller/architecture.dart';
 import 'package:time_management/controller/category_architecture.dart';
@@ -2277,11 +2284,29 @@ class _StartTimePageState extends State<StartTimePage> {
                           //     )
                           //     .first;
                           // c.isUnlocked = false;
-                          TrackingDB db = TrackingDB();
+                          // Register the controller (if not already registered)
+                          if (!Get.isRegistered<DashboardController>()) {
+                            Get.put(DashboardController());
+                          }
+
+                          // Now navigate
+                          Get.toNamed(Routes.dashboard);
+                          // Navigator.push(
+                          //     context,
+                          //     MaterialPageRoute(
+                          //       builder: (context) => GetMaterialApp(
+                          //         title: 'Project Management',
+                          //         debugShowCheckedModeBanner: false,
+                          //         theme: AppTheme.basic,
+                          //         initialRoute: AppPages.initial,
+                          //         getPages: AppPages.routes,
+                          //       ),
+                          //     ));
+                          // TrackingDB db = TrackingDB();
                           // db.deleteDB();
-                          final data = await db.readData(
-                              sql: "select * FROM tracking_sessions");
-                          print(data);
+                          // final data = await db.readData(
+                          //     sql: "select * FROM tracking_sessions");
+                          // print(data);
 
                           // // final data = await db.deleteData(
                           //     sql:

@@ -1,14 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/profile/account/password_forgetton.dart';
+import 'package:time_management/app/config/routes/app_pages.dart';
 import 'package:time_management/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/provider/user_provider.dart';
 
 class ChangePasswordUser extends StatefulWidget {
-  final Map<String, dynamic> userDataGet;
-  const ChangePasswordUser({super.key, required this.userDataGet});
+  const ChangePasswordUser({
+    super.key,
+  });
 
   @override
   State<ChangePasswordUser> createState() => _ChangePasswordUserState();
@@ -27,7 +31,9 @@ class _ChangePasswordUserState extends State<ChangePasswordUser> {
   @override
   void initState() {
     super.initState();
-    userData = widget.userDataGet;
+    final arg = Get.arguments;
+    // 1) Grab the raw arguments
+    userData = arg as Map<String, dynamic>?;
   }
 
   @override

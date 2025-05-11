@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/provider/support_provider.dart';
@@ -9,8 +11,9 @@ import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ContactUs extends StatefulWidget {
-  final Map<String, dynamic> userDataGet;
-  const ContactUs({super.key, required this.userDataGet});
+  const ContactUs({
+    super.key,
+  });
 
   @override
   State<ContactUs> createState() => _ContactUsState();
@@ -45,7 +48,8 @@ class _ContactUsState extends State<ContactUs> {
   @override
   void initState() {
     super.initState();
-    userData = widget.userDataGet;
+    final args = Get.arguments;
+    userData = args;
 
     WidgetsBinding.instance.addPostFrameCallback(
       (_) {

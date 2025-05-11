@@ -1,8 +1,12 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/pagination.dart';
+import 'package:time_management/app/config/routes/app_pages.dart';
 import 'package:time_management/constants.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:time_management/db/mydb.dart';
@@ -36,7 +40,7 @@ class _WelcomePageState extends State<WelcomePage> {
     final mediaQuery = MediaQuery.of(context);
 
     final isPortrait = mediaQuery.orientation == Orientation.portrait;
-
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SizedBox(
         height: MediaQuery.of(context).size.height,
@@ -85,7 +89,7 @@ class _WelcomePageState extends State<WelcomePage> {
                         )),
                     Gap(MediaQuery.of(context).size.height * 0.04),
                     Text(
-                      '${AppLocalizations.of(context)?.welcomeTo} ETM!',
+                      '${l10n?.welcomeTo} ETM!',
                       style: TextStyle(
                           color: Theme.of(context).colorScheme.primary,
                           fontSize: isPortrait
@@ -96,7 +100,7 @@ class _WelcomePageState extends State<WelcomePage> {
                     Gap(MediaQuery.of(context).size.height * 0.0009),
                     Center(
                       child: Text(
-                        AppLocalizations.of(context)!.subtitleWelcomePage,
+                        l10n?.subtitleWelcomePage ?? " ",
                         style: TextStyle(
                           fontSize: MediaQuery.of(context).size.width * 0.028,
                         ),
@@ -112,12 +116,13 @@ class _WelcomePageState extends State<WelcomePage> {
                             fixedSize: WidgetStatePropertyAll(Size(
                                 MediaQuery.of(context).size.width * 0.6,
                                 MediaQuery.of(context).size.height * 0.06))),
-                        onPressed: () =>
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => PagesController(),
-                            )),
+                        onPressed: () => Get.toNamed(Routes.pageController)
+                        // Navigator.of(context).push(MaterialPageRoute(
+                        //   builder: (context) => PagesController(),
+                        // )),
+                        ,
                         child: Text(
-                          AppLocalizations.of(context)!.startNow,
+                          l10n?.startNow ?? "Start Now",
                           style: TextStyle(
                               fontSize: isPortrait
                                   ? MediaQuery.of(context).size.width * 0.04

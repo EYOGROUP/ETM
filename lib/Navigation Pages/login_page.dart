@@ -5,9 +5,12 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:loader_overlay/loader_overlay.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/register_page.dart';
+import 'package:time_management/app/config/routes/app_pages.dart';
 import 'package:time_management/constants.dart';
 import 'package:time_management/provider/user_provider.dart';
 
@@ -219,9 +222,7 @@ class _LoginPageState extends State<LoginPage> {
                         Gap(MediaQuery.of(context).size.height * 0.01),
                         TextButton(
                           onPressed: () {
-                            Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) => RegisterPage(),
-                            ));
+                            Get.toNamed(Routes.forgotPassword);
                           },
                           child: Text(
                             getLabels.forgotPassword.toUpperCase(),
@@ -241,9 +242,7 @@ class _LoginPageState extends State<LoginPage> {
                             ),
                             TextButton(
                               onPressed: () async {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => RegisterPage(),
-                                ));
+                                Get.toNamed(Routes.register);
                               },
                               child: Text(
                                 getLabels.registerNow.toUpperCase(),

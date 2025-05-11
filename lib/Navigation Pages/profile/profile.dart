@@ -6,6 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import 'package:gap/gap.dart';
+import 'package:get/get_core/src/get_main.dart';
+import 'package:get/get_navigation/get_navigation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:time_management/Navigation%20Pages/contact_us.dart';
@@ -15,6 +17,7 @@ import 'package:time_management/Navigation%20Pages/profile/account/account_user.
 import 'package:time_management/Navigation%20Pages/profile/infos/info.dart';
 import 'package:time_management/Navigation%20Pages/profile/privacy_settings/Navigation/privacy_settings.dart';
 import 'package:time_management/Navigation%20Pages/register_page.dart';
+import 'package:time_management/app/config/routes/app_pages.dart';
 import 'package:time_management/constants.dart';
 
 import 'package:time_management/db/mydb.dart';
@@ -131,9 +134,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             onTap: () {
                               if (!isTrackingAsLokalOn(
                                   eTManagement: tmProvider)) {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => LoginPage(),
-                                ));
+                                Get.toNamed(Routes.login);
                               }
                             },
                           ),
@@ -144,9 +145,7 @@ class _ProfilePageState extends State<ProfilePage> {
                             onTap: () {
                               if (!isTrackingAsLokalOn(
                                   eTManagement: tmProvider)) {
-                                Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (context) => RegisterPage(),
-                                ));
+                                Get.toNamed(Routes.register);
                               }
                             },
                           ),
@@ -292,12 +291,8 @@ class _ProfilePageState extends State<ProfilePage> {
                                         ),
                                         SettingsCardButton(
                                           onTap: () {
-                                            Navigator.of(context)
-                                                .push(MaterialPageRoute(
-                                              builder: (context) => UserAccount(
-                                                userDataGet: userData ?? {},
-                                              ),
-                                            ));
+                                            Get.to(() => UserAccount(),
+                                                arguments: userData ?? {});
                                           },
                                           iconData:
                                               Icons.manage_accounts_outlined,
@@ -315,11 +310,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         ListTile(
                           title: Text(getLabels.contactUs),
                           trailing: InkWell(
-                            onTap: () =>
-                                Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) =>
-                                  ContactUs(userDataGet: userData ?? {}),
-                            )),
+                            onTap: () => Get.toNamed(Routes.contactUs,
+                                arguments: userData ?? {}),
                             child: Icon(Platform.isIOS
                                 ? Icons.arrow_forward_ios_rounded
                                 : Icons.arrow_forward_outlined),
@@ -329,11 +321,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           title: Text(getLabels.privacyPolicy),
                           trailing: GestureDetector(
                             onTap: () =>
-                                Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) =>
-                                  const PrivacyPolicyOrTermsOfUseETM(
-                                      infoApp: InfosApp.privacyPolicy),
-                            )),
+                                Get.toNamed(Routes.privacyPolicy, arguments: {
+                              "info": InfosApp.privacyPolicy,
+                            }),
                             child: Icon(Platform.isIOS
                                 ? Icons.arrow_forward_ios_rounded
                                 : Icons.arrow_forward_outlined),
@@ -342,12 +332,11 @@ class _ProfilePageState extends State<ProfilePage> {
                         ListTile(
                           title: Text(getLabels.termOfUse),
                           trailing: GestureDetector(
-                            onTap: () =>
-                                Navigator.of(context).push(MaterialPageRoute(
-                              builder: (context) =>
-                                  const PrivacyPolicyOrTermsOfUseETM(
-                                      infoApp: InfosApp.termOfUse),
-                            )),
+                            onTap: () => Get.toNamed(Routes.termsAndConditions,
+                                arguments: {
+                                  "info": InfosApp.termOfUse,
+                                }),
+                            // ,
                             child: Icon(Platform.isIOS
                                 ? Icons.arrow_forward_ios_rounded
                                 : Icons.arrow_forward_outlined),
@@ -369,8 +358,8 @@ class _ProfilePageState extends State<ProfilePage> {
                         Spacer(),
                         InkWell(
                             onTap: () {
-                              final delete = TrackingDB();
-                              delete.deleteDB();
+                              // final delete = TrackingDB();
+                              // delete.deleteDB();
                             },
                             child: Text("hey")),
                         Center(
