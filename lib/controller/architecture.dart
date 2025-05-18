@@ -51,7 +51,7 @@ class TrackingSession {
       'categoryId': categoryId,
       "taskDescription": taskDescription,
       'isCompleted': isCompleted,
-      "trackingSession": trackingSessionId,
+      "trackingSessionId": trackingSessionId,
       "userId": userId,
       "isSplit": isSplit
     };

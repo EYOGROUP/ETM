@@ -738,4 +738,32 @@ class UserProvider extends ChangeNotifier {
       }
     }
   }
+
+  // check if user have access to the admin panel
+  Future<bool> isUserHaveAccessToAdminPanel(
+      {required BuildContext context, required String userRoleId}) async {
+    bool isUserHaveAccess = false;
+    try {
+      final userRoleDoc = await FirebaseFirestore.instance
+          .collection('roles')
+          .where("id", isEqualTo: userRoleId)
+          .get();
+      if (context.mounted) {
+        if (userRoleDoc.docs.isNotEmpty) {
+          Map<String, dynamic> userData = userRoleDoc.docs.first.data();
+          List<dynamic> userRolePermissions = userData["permission"];
+          String element = "access to the admin panel";
+
+          if (userRolePermissions.contains(element)) {
+            isUserHaveAccess = true;
+          }
+        }
+      }
+    } on FirebaseException catch (error) {
+      if (context.mounted) {
+        Constants.showInSnackBar(value: error.toString(), context: context);
+      }
+    }
+    return isUserHaveAccess;
+  }
 }

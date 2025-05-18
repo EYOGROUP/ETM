@@ -184,15 +184,22 @@ class _StartTimePageState extends State<StartTimePage> {
     bool isAlreadyTrackingOver24H = isTrackingTimeOver24H(
         getTrackingData:
             getNotClosedWork.isNotEmpty ? getNotClosedWork.first : {});
-
+    print("isAlreadyStartedWork $isAlreadStartedWork");
+    print("isNotClosedAfterTime $isNotClosedAfterTime");
+    print("is already over 24H $isAlreadyTrackingOver24H");
+    bool isTimeInNewDayCheck =
+        isTimeInNewDay(getTrackingData: getNotClosedWork.first);
+    print("isTimeInNewDayCheck $isTimeInNewDayCheck");
     if (isAlreadStartedWork &&
         isNotClosedAfterTime &&
-        !isAlreadyTrackingOver24H) {
+        !isAlreadyTrackingOver24H &&
+        !isTimeInNewDayCheck) {
       await completedWork(getLabels: getLabels);
       if (!mounted) return;
+      print("not works now");
       return;
     }
-
+    print("works now");
     if (categoryProvider.selectedCategory.isNotEmpty) {
       String categoryId = categoryProvider.selectedCategory["id"];
 
@@ -215,13 +222,14 @@ class _StartTimePageState extends State<StartTimePage> {
           }
         }
       }
-
+      print("isAnotherCategory: $isAnotherCategory");
       if (getNotClosedWork.isNotEmpty) {
         await requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
             notClosedTime: getNotClosedWork,
             isNotClosed: true,
             isTrackingTime: true,
             isOver24H: isAlreadyTrackingOver24H,
+            isTodayAnotherDay: isTimeInNewDayCheck,
             getLabels: getLabels);
         return;
       }
@@ -268,10 +276,11 @@ class _StartTimePageState extends State<StartTimePage> {
   Future<void> requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
       {required bool isNotClosed,
       required bool isOver24H,
+      required bool isTodayAnotherDay,
       required List<Map<String, dynamic>> notClosedTime,
       required bool isTrackingTime,
       required AppLocalizations getLabels}) async {
-    if (isNotClosed && isOver24H) {
+    if (isNotClosed && (isOver24H || isTodayAnotherDay)) {
       await Constants.showDialogConfirmation(
           leftButtonTitle: isTrackingTime
               ? getLabels.discardSession
@@ -410,6 +419,7 @@ class _StartTimePageState extends State<StartTimePage> {
       required Map<String, dynamic> updatedData,
       required String newSessionId,
       required Map<String, dynamic> newSessionData}) async {
+    print(collectionName);
     await FirebaseFirestore.instance
         .collection(collectionName!)
         .doc(sessionId)
@@ -482,13 +492,14 @@ class _StartTimePageState extends State<StartTimePage> {
           userId: trackingSessionMap["userId"],
           taskDescription: _todoController.text,
           trackingSessionId:
-              "${trackingSessionMap["trackingSessionId"] + Random().nextInt(10)}",
+              "${trackingSessionMap["trackingSessionId"]}/${Random().nextInt(10)}",
           trackingSessionIdCommun: trackingSessionMap["trackingSessionId"],
           durationMinutes: secondSessionDurationInMinute,
           endTime: finishedTime);
 
       if (isUserExists) {
         await _updateAndInsertDatafter24HCloud(
+            collectionName: 'trackingSessions',
             sessionId: sesssionId,
             updatedData: updatedData,
             newSessionId: newSecondSessionId,
@@ -1026,9 +1037,10 @@ class _StartTimePageState extends State<StartTimePage> {
     sliderForBreakTime = AppLocalizations.of(context)!.startBreak;
 
     if (!isSwitchCategory) {
-      await getCategoryIfWorkAlreadyStarted(isClosedWork: false);
+      if (!isUserExists) {
+        await getCategoryIfWorkAlreadyStarted(isClosedWork: false);
+      }
     }
-
     await getWorkTime(
         isSelectedCategory: isSwitchCategory,
         category: categoryProvider.selectedCategory.isNotEmpty
@@ -1102,7 +1114,6 @@ class _StartTimePageState extends State<StartTimePage> {
       Map<String, dynamic>? data,
       bool? isAlreadyStartWork}) async {
     String? categoryId;
-    TrackingDB db = TrackingDB();
 
     if (!isClosedWork) {
       List<Map<String, dynamic>> getNoClosedWork =
@@ -1116,7 +1127,9 @@ class _StartTimePageState extends State<StartTimePage> {
     if (isClosedWork) {
       categoryId = data?['categoryId'];
     }
+
     if (categoryId != null) {
+      TrackingDB db = TrackingDB();
       final getLokalCategory = await db.readData(
           sql: "select * from categories where id='$categoryId'");
       if (!mounted) return;
@@ -1183,11 +1196,11 @@ class _StartTimePageState extends State<StartTimePage> {
 
   Future<void> checkIfWorkAndBreakForTodayNotFinished() async {
     final getLabels = AppLocalizations.of(context)!;
-    TrackingDB db = TrackingDB();
+
     String dateToday = DateFormat('yyyy-MM-dd').format(DateTime.now());
     List<Map<String, dynamic>> trackingSessions = [];
     dynamic etmProvider;
-
+    TrackingDB? db;
     if (isUserExists) {
       final userId = FirebaseAuth.instance.currentUser?.uid;
       DateTime? dateFilter =
@@ -1212,6 +1225,7 @@ class _StartTimePageState extends State<StartTimePage> {
             .toList();
       }
     } else {
+      db = TrackingDB();
       etmProvider = Provider.of<TimeManagementPovider>(context, listen: false);
       trackingSessions = await db.readData(
               sql:
@@ -1219,6 +1233,7 @@ class _StartTimePageState extends State<StartTimePage> {
           as List<Map<String, dynamic>>;
     }
     if (trackingSessions.isNotEmpty) {
+      db = TrackingDB();
       bool isBreak =
           await isBreakTooken(getWorkDayData: trackingSessions.first, db: db);
       bool isClosedBreak = await isAlreadyClosedBreak(
@@ -1577,6 +1592,7 @@ class _StartTimePageState extends State<StartTimePage> {
     bool isBreakTooken = false;
 
     String trackingSessionId = getWorkDayData['trackingSessionId'];
+
     List<Map<String, dynamic>> breakSessions = [];
     if (isUserExists) {
       final checkBreakSession = await FirebaseFirestore.instance
@@ -1870,6 +1886,7 @@ class _StartTimePageState extends State<StartTimePage> {
     if (getNotClosedBreakAsMap.isNotEmpty && getTraickingsDayDataList.isEmpty) {
       List<Map<String, dynamic>> notClosedbreaks = [getNotClosedBreakAsMap];
       await requestToRecoveryFinishedTimeOrDeleteTheTrackingOrBreak(
+          isTodayAnotherDay: true,
           getLabels: getLabels,
           isOver24H: true,
           isTrackingTime: false,
@@ -2141,6 +2158,27 @@ class _StartTimePageState extends State<StartTimePage> {
     _timer?.cancel();
   }
 
+//check Time if in new day
+  bool isTimeInNewDay({required Map<String, dynamic> getTrackingData}) {
+    bool isNewDay = false;
+    DateTime? startTime;
+    if (isUserExists) {
+      startTime = getTrackingData["startTime"].toDate();
+    } else {
+      startTime =
+          DateFormat("yyyy-MM-dd hh:mm").tryParse(getTrackingData["startTime"]);
+    }
+    DateTime now = DateTime.now();
+    if (startTime?.day != now.day ||
+        startTime?.month != now.month ||
+        startTime?.year != now.year) {
+      isNewDay = true;
+    }
+    return isNewDay;
+  }
+
+// check if tracking time is over 24H
+
   bool isTrackingTimeOver24H({required Map<String, dynamic> getTrackingData}) {
     bool isTrackingOver24H = false;
 
@@ -2158,7 +2196,7 @@ class _StartTimePageState extends State<StartTimePage> {
 
         int dateAfterT24HFromStartTime =
             DateTime.now().difference(startTrackDate!).inHours;
-
+        print(dateAfterT24HFromStartTime);
         if (dateAfterT24HFromStartTime > 24) {
           isTrackingOver24H = true;
         }
@@ -2202,7 +2240,7 @@ class _StartTimePageState extends State<StartTimePage> {
       }
       bool isTackingOver24HFromStartTime =
           isTrackingTimeOver24H(getTrackingData: getTrackingData.first);
-
+      print(isTackingOver24HFromStartTime);
       if (isTackingOver24HFromStartTime) {
         return;
       }

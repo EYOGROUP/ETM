@@ -285,5 +285,6 @@
     "category": "Kategorie",
     "resetFilters": "Filter zurücksetzen",
     "somethingWentWrong": "Etwas ist schiefgelaufen, bitte versuchen Sie es erneut.",
-    "discardBreak": "Pause verwerfen"
+    "discardBreak": "Pause verwerfen",
+    "adminPanel": "Admin-Bereich"
 }

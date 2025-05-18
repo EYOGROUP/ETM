@@ -64,7 +64,7 @@ class _Sidebar extends StatelessWidget {
               ],
               onSelected: (index, value) {
                 if (index == 6) {
-                  Get.offAllNamed('/welcome');
+                  Get.offAllNamed(Routes.profile);
                 }
                 log("index : $index | label : ${value.label}");
               },

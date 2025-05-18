@@ -22,6 +22,7 @@ class Routes {
   static const notifications = _Paths.notifications;
   static const help = _Paths.help;
   static const feedback = _Paths.feedback;
+  static const profile = _Paths.profile;
 
   // Example :
   // static const index = '/';
@@ -50,6 +51,7 @@ class _Paths {
   static const notifications = '/notifications';
   static const help = '/help';
   static const feedback = '/feedback';
+  static const profile = '/profile';
 
   // Example :
   // static const index = '/';

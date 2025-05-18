@@ -13,6 +13,7 @@ import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.d
 import 'package:time_management/Navigation%20Pages/profile/account/account_user.dart';
 import 'package:time_management/Navigation%20Pages/profile/account/change_password.dart';
 import 'package:time_management/Navigation%20Pages/profile/account/password_forgetton.dart';
+import 'package:time_management/Navigation%20Pages/profile/profile.dart';
 import 'package:time_management/Navigation%20Pages/register_page.dart';
 import 'package:time_management/Navigation%20Pages/welcome.dart';
 import 'package:time_management/app/config/routes/app_pages.dart';
@@ -107,6 +108,9 @@ class MyApp extends StatelessWidget {
             GetPage(
                 name: Routes.termsAndConditions,
                 page: () => const PrivacyPolicyOrTermsOfUseETM()),
+            GetPage(
+                name: Routes.profile,
+                page: () => PagesController(indexPage: 2)),
           ],
 
           // home: const MyHomePage(),

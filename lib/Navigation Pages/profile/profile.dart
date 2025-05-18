@@ -6,21 +6,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 
 import 'package:gap/gap.dart';
+import 'package:get/get.dart';
 import 'package:get/get_core/src/get_main.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:time_management/Navigation%20Pages/contact_us.dart';
-import 'package:time_management/Navigation%20Pages/login_page.dart';
-import 'package:time_management/Navigation%20Pages/privacy_policy_terms_of_use.dart';
+
 import 'package:time_management/Navigation%20Pages/profile/account/account_user.dart';
 import 'package:time_management/Navigation%20Pages/profile/infos/info.dart';
 import 'package:time_management/Navigation%20Pages/profile/privacy_settings/Navigation/privacy_settings.dart';
-import 'package:time_management/Navigation%20Pages/register_page.dart';
 import 'package:time_management/app/config/routes/app_pages.dart';
+import 'package:time_management/app/features/dashboard/views/screens/dashboard_screen.dart';
 import 'package:time_management/constants.dart';
-
-import 'package:time_management/db/mydb.dart';
 
 import 'package:time_management/provider/tm_provider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -40,6 +37,7 @@ class _ProfilePageState extends State<ProfilePage> {
   bool? isUserLogedInOrExists;
   Map<String, dynamic>? userData;
   bool isInternetConnectedCheck = false;
+  bool? isUserHaveAccessToAdminPanel;
 
   @override
   void initState() {
@@ -66,6 +64,13 @@ class _ProfilePageState extends State<ProfilePage> {
         context: context,
         mounted: mounted,
         isUserExists: isUserLogedInOrExists!);
+    if (!mounted) return;
+    if (userData != null) {
+      isUserHaveAccessToAdminPanel =
+          await userProvider.isUserHaveAccessToAdminPanel(
+              context: context, userRoleId: userData?['role']);
+    }
+    print(isUserHaveAccessToAdminPanel);
     setState(() {});
   }
 
@@ -238,6 +243,20 @@ class _ProfilePageState extends State<ProfilePage> {
                                           ],
                                         ),
                                         Gap(20.0),
+                                        if (isUserHaveAccessToAdminPanel!)
+                                          SettingsCardButton(
+                                            onTap: () {
+                                              if (!Get.isRegistered<
+                                                  DashboardController>()) {
+                                                Get.put(DashboardController());
+                                              }
+
+                                              // Now navigate
+                                              Get.toNamed(Routes.dashboard);
+                                            },
+                                            iconData: Icons.person_outline,
+                                            title: getLabels.adminPanel,
+                                          ),
                                         SettingsCardButton(
                                           onTap: () {
                                             Navigator.of(context)
